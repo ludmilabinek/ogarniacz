@@ -480,48 +480,48 @@ S-01 is single-user, low-QPS by PRD definition. The only choices with performanc
 
 #### Automated
 
-- [x] 1.1 ./gradlew build succeeds
-- [x] 1.2 ./gradlew test passes (existing contextLoads, actuatorHealthIsPublic still green)
-- [x] 1.3 anonymousGetAppRedirectsToLogin passes
-- [x] 1.4 seededUserCanAuthenticate passes
-- [x] 1.5 persistentLoginsTableExists passes
+- [x] 1.1 ./gradlew build succeeds — 2d67975
+- [x] 1.2 ./gradlew test passes (existing contextLoads, actuatorHealthIsPublic still green) — 2d67975
+- [x] 1.3 anonymousGetAppRedirectsToLogin passes — 2d67975
+- [x] 1.4 seededUserCanAuthenticate passes — 2d67975
+- [x] 1.5 persistentLoginsTableExists passes — 2d67975
 
 #### Manual
 
-- [x] 1.6 SPRING_DATASOURCE_URL/USERNAME/PASSWORD exported, ./gradlew bootRun boots without errors on :8080
-- [x] 1.7 GET / in a browser redirects to a login form (Spring Security's default-rendered one in Phase 1)
-- [x] 1.8 GET /actuator/health returns {"status":"UP"} without authentication
-- [x] 1.9 A user inserted via psql with a BCrypt-hashed password can log in via the default form. Default formLogin redirects to / (or SavedRequest), not /app — Phase 2 swaps the success URL.
-- [x] 1.10 Neon schema verification: psql "$SPRING_DATASOURCE_URL" -c "\d persistent_logins" and "\d app_user" show the expected column types (series/username/token varchar(64), last_used timestamp; id uuid, email varchar(254) UNIQUE, password_hash varchar(60), created_at timestamp)
+- [x] 1.6 SPRING_DATASOURCE_URL/USERNAME/PASSWORD exported, ./gradlew bootRun boots without errors on :8080 — 2d67975
+- [x] 1.7 GET / in a browser redirects to a login form (Spring Security's default-rendered one in Phase 1) — 2d67975
+- [x] 1.8 GET /actuator/health returns {"status":"UP"} without authentication — 2d67975
+- [x] 1.9 A user inserted via psql with a BCrypt-hashed password can log in via the default form. Default formLogin redirects to / (or SavedRequest), not /app — Phase 2 swaps the success URL. — 2d67975
+- [x] 1.10 Neon schema verification: psql "$SPRING_DATASOURCE_URL" -c "\d persistent_logins" and "\d app_user" show the expected column types (series/username/token varchar(64), last_used timestamp; id uuid, email varchar(254) UNIQUE, password_hash varchar(60), created_at timestamp) — 2d67975
 
 ### Phase 2: User flows + UI (signup, login, /app, logout)
 
 #### Automated
 
-- [ ] 2.1 ./gradlew test passes (all Phase 1 tests still green + all Phase 2 tests below)
-- [ ] 2.2 getSignupPageIsPublic passes
-- [ ] 2.3 signupHappyPathCreatesUserAndAutoLogsIn passes
-- [ ] 2.4 signupDuplicateEmailRendersFieldError passes
-- [ ] 2.5 signupMixedCaseEmailNormalizesToLowercase passes
-- [ ] 2.6 signupShortPasswordRendersFieldError passes
-- [ ] 2.7 getLoginPageIsPublic passes
-- [ ] 2.8 loginHappyPath passes
-- [ ] 2.9 loginMixedCaseEmailAuthenticates passes
-- [ ] 2.10 loginBadPasswordShowsGenericError passes
-- [ ] 2.11 getAppAuthenticatedShowsEmail passes
-- [ ] 2.12 logoutInvalidatesSessionAndRedirects passes
-- [ ] 2.13 rootRedirectsAnonymousToLogin passes
-- [ ] 2.14 rootRedirectsAuthenticatedToApp passes
+- [x] 2.1 ./gradlew test passes (all Phase 1 tests still green + all Phase 2 tests below)
+- [x] 2.2 getSignupPageIsPublic passes
+- [x] 2.3 signupHappyPathCreatesUserAndAutoLogsIn passes
+- [x] 2.4 signupDuplicateEmailRendersFieldError passes
+- [x] 2.5 signupMixedCaseEmailNormalizesToLowercase passes
+- [x] 2.6 signupShortPasswordRendersFieldError passes
+- [x] 2.7 getLoginPageIsPublic passes
+- [x] 2.8 loginHappyPath passes
+- [x] 2.9 loginMixedCaseEmailAuthenticates passes
+- [x] 2.10 loginBadPasswordShowsGenericError passes
+- [x] 2.11 getAppAuthenticatedShowsEmail passes
+- [x] 2.12 logoutInvalidatesSessionAndRedirects passes
+- [x] 2.13 rootRedirectsAnonymousToLogin passes
+- [x] 2.14 rootRedirectsAuthenticatedToApp passes
 
 #### Manual
 
-- [ ] 2.15 ./gradlew bootRun (with SERVER_SERVLET_SESSION_COOKIE_SECURE=false env override for local) — visit http://localhost:8080/: redirected to /login showing the custom form
-- [ ] 2.16 Click "Sign up", fill a valid email + 12-char password, submit: lands on /app showing the email in the header and the empty-state message
-- [ ] 2.17 Click "Log out": session invalidated, redirected to /login?logout with the "Logged out" notice visible
-- [ ] 2.18 Log back in with the same credentials: lands on /app again
-- [ ] 2.19 Try signup with a 6-char password: page re-renders with the inline length error visible next to the password field
-- [ ] 2.20 Try login with the wrong password: redirected to /login?error with the generic "Invalid email or password." message
-- [ ] 2.21 Sign up with `Alice@Example.COM`, log out, log back in as `ALICE@example.com` — same account; `app_user` table shows `alice@example.com` as the only row
+- [x] 2.15 ./gradlew bootRun (with SERVER_SERVLET_SESSION_COOKIE_SECURE=false env override for local) — visit http://localhost:8080/: redirected to /login showing the custom form
+- [x] 2.16 Click "Sign up", fill a valid email + 12-char password, submit: lands on /app showing the email in the header and the empty-state message
+- [x] 2.17 Click "Log out": session invalidated, redirected to /login?logout with the "Logged out" notice visible
+- [x] 2.18 Log back in with the same credentials: lands on /app again
+- [x] 2.19 Try signup with a 6-char password: page re-renders with the inline length error visible next to the password field
+- [x] 2.20 Try login with the wrong password: redirected to /login?error with the generic "Invalid email or password." message
+- [x] 2.21 Sign up with `Alice@Example.COM`, log out, log back in as `ALICE@example.com` — same account; `app_user` table shows `alice@example.com` as the only row
 
 ### Phase 3: Partition contract + remember-me verification
 

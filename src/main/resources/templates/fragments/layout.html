@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${title} ?: 'Ogarniacz'">Ogarniacz</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; color: #1f2328; }
+        header.topbar {
+            background: #f6f8fa; border-bottom: 1px solid #d0d7de;
+            padding: 0.75rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        header.topbar .user-email { font-weight: 500; }
+        header.topbar form { margin: 0; }
+        header.topbar button {
+            background: none; border: 1px solid #d0d7de; padding: 0.4rem 0.9rem;
+            border-radius: 6px; cursor: pointer;
+        }
+        main.auth-page, main.app-page { max-width: 28rem; margin: 4rem auto; padding: 0 1.5rem; }
+        main.app-page { max-width: 40rem; text-align: center; }
+        main.app-page .empty-state { color: #57606a; margin-top: 4rem; }
+        form.stacked label { display: block; margin: 0.75rem 0; }
+        form.stacked input { display: block; width: 100%; padding: 0.5rem; box-sizing: border-box; }
+        form.stacked button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+        .field-error { color: #cf222e; font-size: 0.875rem; display: block; margin-top: 0.25rem; }
+        .form-error { color: #cf222e; padding: 0.5rem; border: 1px solid #cf222e; border-radius: 6px; margin-bottom: 1rem; }
+        .form-notice { color: #1a7f37; padding: 0.5rem; border: 1px solid #1a7f37; border-radius: 6px; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+<header th:fragment="topbar" class="topbar">
+    <span class="user-email" th:text="${userEmail}">user@example.com</span>
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">Log out</button>
+    </form>
+</header>
+</body>
+</html>

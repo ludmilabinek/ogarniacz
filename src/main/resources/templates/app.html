@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ogarniacz')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="app-page">
+    <p>Signed in as <span th:text="${userEmail}">user@example.com</span>.</p>
+    <p class="empty-state">No events yet. Manual entry coming in the next slice.</p>
+</main>
+</body>
+</html>
