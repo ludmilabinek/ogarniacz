@@ -299,7 +299,13 @@ D.2 Edit the generated `fly.toml`. The file ships with Fly's auto-detected defau
 app = "ogarniacz"
 primary_region = "fra"
 
+# MVP: 1 machine only, no HA peer. Accepts ~5s downtime on deploy.
+# To re-enable HA later: `flyctl scale count 2` and switch strategy to "rolling".
+
 [build]
+
+[deploy]
+  strategy = "immediate"
 
 [http_service]
   internal_port = 8080
@@ -319,6 +325,9 @@ Key non-defaults vs Fly's auto-generated file:
 - `primary_region = "fra"` (not `ams`) — co-locate with Neon `eu-central-1`
 - `memory = "1gb"` (not the 512 MB default) — risk register #1
 - `auto_stop_machines = false` + `min_machines_running = 1` — keep JVM warm; cold-start budget would otherwise eat the 60s PRD extraction ceiling
+- `[deploy] strategy = "immediate"` — single-machine MVP; rolling deploy makes no sense with 1 machine. Accept ~5s downtime per release. Switch to `"rolling"` when `flyctl scale count ≥ 2`.
+
+⚠️ **HA peer caveat:** Despite `min_machines_running = 1`, Fly's `fly launch` and first `fly deploy` may auto-create a second Machine as an HA peer (this is Fly's default since ~2024). If you don't want HA, run `flyctl scale count 1 -a ogarniacz` after first deploy — verification §4.3 catches this.
 
 D.3 Commit:
 ```bash
@@ -499,13 +508,13 @@ jobs:
 
       - run: ./gradlew test
 
-      - uses: superfly/flyctl-actions/setup-flyctl@v1.5
+      - uses: superfly/flyctl-actions/setup-flyctl@1.5
 
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 ```
-Note: `superfly/flyctl-actions/setup-flyctl@v1.5` is the pinned tag (not `@master`) — pin updates land via a deliberate dependency-bump PR, not silent supply-chain drift.
+Note: `superfly/flyctl-actions/setup-flyctl@1.5` is the pinned tag (not `@master`) — pin updates land via a deliberate dependency-bump PR, not silent supply-chain drift. The tag has no `v` prefix; using `@v1.5` will fail with "tag not found" because the upstream action only publishes bare numeric tags.
 
 H.3 Commit and push — this triggers the first CI run end-to-end:
 ```bash
@@ -540,7 +549,7 @@ Run all of these after Phase H succeeds. They form the "first deploy is real" ac
 |---|---|---|---|---|
 | 4.1 | App health | `curl -i https://ogarniacz.fly.dev/actuator/health` | `HTTP/2 200` + `{"status":"UP"}` | Rollback per §5 |
 | 4.2 | Feed URL (placeholder until feed feature ships) | `curl -i https://ogarniacz.fly.dev/<feed-path>` | 404 expected at this stage (feed not implemented yet) — confirm app is reachable but feature absent | If 5xx, app instability — investigate logs |
-| 4.3 | Machine state | `fly status -a ogarniacz` | 1 Machine, region `fra`, state `started` | If `stopped`, `auto_stop_machines` wasn't disabled — re-edit `fly.toml` and redeploy |
+| 4.3 | Machine state | `fly status -a ogarniacz` | 1 Machine, region `fra`, state `started` | If `stopped`, `auto_stop_machines` wasn't disabled — re-edit `fly.toml` and redeploy. If **2 Machines** appear: Fly auto-created an HA peer despite `min_machines_running = 1` (default behavior on first launch). For MVP, run `flyctl scale count 1 -a ogarniacz` to remove the peer. |
 | 4.4 | No JVM OOM | `fly logs --since 5m -a ogarniacz \| grep -i 'OutOfMemoryError'` | Empty | Memory tuning failed — escalate per §5 |
 | 4.5 | No Hibernate pgbouncer collision | `fly logs --since 5m -a ogarniacz \| grep -i 'prepared statement.*already exists'` | Empty | `?prepareThreshold=0&preparedStatementCacheQueries=0` not actually appended in F.1 — re-run F.1 |
 | 4.6 | Neon DB reached | Open Neon Console → project `ogarniacz` → Monitoring tab | Non-zero compute hours in the last 30 min | App may be running but not hitting DB — confirm `SPRING_DATASOURCE_URL` is the pooled host |
@@ -589,7 +598,8 @@ Each row from `context/foundation/infrastructure.md` § "Risk Register" mapped t
 | Boot 4 + Fly examples mismatch (most blog posts are Boot 3.x) | Phase C.1 JAR filename verification; Phase E uses Boot 4 SecurityFilterChain idiom (not WebSecurityConfigurerAdapter) | Closed by explicit verification at each potential mismatch point. |
 | DB schema rollback divergence after Spring Boot auto-migration | §5.2 additive-only rule documented in `application.properties`; verification 4.5 detects active divergence | Closed for MVP; revisit when destructive changes are needed. |
 | GDPR — Neon defaults to US East at signup | Phase 2.2 explicit region pick + verification 4.9 | Closed. |
-| Auto-deploy lands in iCalendar poll window (503 during `immediate` strategy) | **Deferred** — accepted for single-user MVP per infrastructure.md "Auto-deploy lands in iCalendar poll window" row | Switch to `strategy = "rolling"` when `min_machines ≥ 2` (post-MVP). **Monitor-only.** |
+| Auto-deploy lands in iCalendar poll window (503 during `immediate` strategy) | **Deferred** — accepted for single-user MVP per infrastructure.md "Auto-deploy lands in iCalendar poll window" row. `fly.toml` now sets `[deploy] strategy = "immediate"` explicitly to acknowledge the trade-off. | Switch to `strategy = "rolling"` when `flyctl scale count ≥ 2` (post-MVP). **Monitor-only.** |
+| Fly auto-creates HA peer on first launch despite `min_machines_running = 1` | Verification §4.3 detects 2-Machine state; remediation = `flyctl scale count 1 -a ogarniacz`. `fly.toml` D.2 caveat documents the behavior so future re-deploys / `fly launch` runs don't silently regenerate the peer. | Fly's default since ~2024. Closed by detection + documented remediation. |
 
 **Explicit gaps (not mitigated by this plan):**
 - Neon free-tier ceiling — alert-only; no automated upgrade path.

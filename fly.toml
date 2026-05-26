@@ -5,7 +5,13 @@
 app = "ogarniacz"
 primary_region = "fra"
 
+# MVP: 1 machine only, no HA peer. Accepts ~5s downtime on deploy.
+# To re-enable HA later: `flyctl scale count 2` and switch strategy to "rolling".
+
 [build]
+
+[deploy]
+  strategy = "immediate"
 
 [http_service]
   internal_port = 8080
