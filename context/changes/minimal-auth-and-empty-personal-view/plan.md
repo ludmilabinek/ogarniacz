@@ -498,42 +498,42 @@ S-01 is single-user, low-QPS by PRD definition. The only choices with performanc
 
 #### Automated
 
-- [x] 2.1 ./gradlew test passes (all Phase 1 tests still green + all Phase 2 tests below)
-- [x] 2.2 getSignupPageIsPublic passes
-- [x] 2.3 signupHappyPathCreatesUserAndAutoLogsIn passes
-- [x] 2.4 signupDuplicateEmailRendersFieldError passes
-- [x] 2.5 signupMixedCaseEmailNormalizesToLowercase passes
-- [x] 2.6 signupShortPasswordRendersFieldError passes
-- [x] 2.7 getLoginPageIsPublic passes
-- [x] 2.8 loginHappyPath passes
-- [x] 2.9 loginMixedCaseEmailAuthenticates passes
-- [x] 2.10 loginBadPasswordShowsGenericError passes
-- [x] 2.11 getAppAuthenticatedShowsEmail passes
-- [x] 2.12 logoutInvalidatesSessionAndRedirects passes
-- [x] 2.13 rootRedirectsAnonymousToLogin passes
-- [x] 2.14 rootRedirectsAuthenticatedToApp passes
+- [x] 2.1 ./gradlew test passes (all Phase 1 tests still green + all Phase 2 tests below) — 6946c00
+- [x] 2.2 getSignupPageIsPublic passes — 6946c00
+- [x] 2.3 signupHappyPathCreatesUserAndAutoLogsIn passes — 6946c00
+- [x] 2.4 signupDuplicateEmailRendersFieldError passes — 6946c00
+- [x] 2.5 signupMixedCaseEmailNormalizesToLowercase passes — 6946c00
+- [x] 2.6 signupShortPasswordRendersFieldError passes — 6946c00
+- [x] 2.7 getLoginPageIsPublic passes — 6946c00
+- [x] 2.8 loginHappyPath passes — 6946c00
+- [x] 2.9 loginMixedCaseEmailAuthenticates passes — 6946c00
+- [x] 2.10 loginBadPasswordShowsGenericError passes — 6946c00
+- [x] 2.11 getAppAuthenticatedShowsEmail passes — 6946c00
+- [x] 2.12 logoutInvalidatesSessionAndRedirects passes — 6946c00
+- [x] 2.13 rootRedirectsAnonymousToLogin passes — 6946c00
+- [x] 2.14 rootRedirectsAuthenticatedToApp passes — 6946c00
 
 #### Manual
 
-- [x] 2.15 ./gradlew bootRun (with SERVER_SERVLET_SESSION_COOKIE_SECURE=false env override for local) — visit http://localhost:8080/: redirected to /login showing the custom form
-- [x] 2.16 Click "Sign up", fill a valid email + 12-char password, submit: lands on /app showing the email in the header and the empty-state message
-- [x] 2.17 Click "Log out": session invalidated, redirected to /login?logout with the "Logged out" notice visible
-- [x] 2.18 Log back in with the same credentials: lands on /app again
-- [x] 2.19 Try signup with a 6-char password: page re-renders with the inline length error visible next to the password field
-- [x] 2.20 Try login with the wrong password: redirected to /login?error with the generic "Invalid email or password." message
-- [x] 2.21 Sign up with `Alice@Example.COM`, log out, log back in as `ALICE@example.com` — same account; `app_user` table shows `alice@example.com` as the only row
+- [x] 2.15 ./gradlew bootRun (with SERVER_SERVLET_SESSION_COOKIE_SECURE=false env override for local) — visit http://localhost:8080/: redirected to /login showing the custom form — 6946c00
+- [x] 2.16 Click "Sign up", fill a valid email + 12-char password, submit: lands on /app showing the email in the header and the empty-state message — 6946c00
+- [x] 2.17 Click "Log out": session invalidated, redirected to /login?logout with the "Logged out" notice visible — 6946c00
+- [x] 2.18 Log back in with the same credentials: lands on /app again — 6946c00
+- [x] 2.19 Try signup with a 6-char password: page re-renders with the inline length error visible next to the password field — 6946c00
+- [x] 2.20 Try login with the wrong password: redirected to /login?error with the generic "Invalid email or password." message — 6946c00
+- [x] 2.21 Sign up with `Alice@Example.COM`, log out, log back in as `ALICE@example.com` — same account; `app_user` table shows `alice@example.com` as the only row — 6946c00
 
 ### Phase 3: Partition contract + remember-me verification
 
 #### Automated
 
-- [ ] 3.1 ./gradlew test passes (all Phase 1 + Phase 2 tests still green + the two new tests)
-- [ ] 3.2 appShowsOwnEmailOnlyNotOtherUsersEmail passes
-- [ ] 3.3 rememberMeCookieReAuthenticatesAfterSessionEnds passes
+- [x] 3.1 ./gradlew test passes (all Phase 1 + Phase 2 tests still green + the two new tests)
+- [x] 3.2 appShowsOwnEmailOnlyNotOtherUsersEmail passes
+- [x] 3.3 rememberMeCookieReAuthenticatesAfterSessionEnds passes
 
 #### Manual
 
-- [ ] 3.4 ./gradlew bootRun against Neon (or local Postgres): sign up user A in browser profile 1, user B in profile 2 (or one Chrome window + one private/Firefox window). Confirm each /app shows only the respective email.
-- [ ] 3.5 In profile 1: log out, then log back in (no checkbox — persistent cookie is always issued). Close the browser entirely (not just the tab). Reopen, navigate to http://localhost:8080/app. Confirm you land on /app without being asked to log in.
-- [ ] 3.6 After the remember-me re-auth above, confirm a persistent_logins row for user A exists (psql against Neon dev DB or H2 console: SELECT username, last_used FROM persistent_logins;).
-- [ ] 3.7 Log out from /app: confirm the next GET /app is bounced to /login (cookie + session both gone).
+- [x] 3.4 ./gradlew bootRun against Neon (or local Postgres): sign up user A in browser profile 1, user B in profile 2 (or one Chrome window + one private/Firefox window). Confirm each /app shows only the respective email.
+- [x] 3.5 In profile 1: log out, then log back in (no checkbox — persistent cookie is always issued). Close the browser entirely (not just the tab). Reopen, navigate to http://localhost:8080/app. Confirm you land on /app without being asked to log in.
+- [x] 3.6 After the remember-me re-auth above, confirm a persistent_logins row for user A exists (psql against Neon dev DB or H2 console: SELECT username, last_used FROM persistent_logins;).
+- [x] 3.7 Log out from /app: confirm the next GET /app is bounced to /login (cookie + session both gone).

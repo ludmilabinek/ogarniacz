@@ -2,15 +2,18 @@ package com.example.app;
 
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -207,6 +210,48 @@ class AppApplicationTests {
 	void rootRedirectsAuthenticatedToApp() throws Exception {
 		mvc.perform(get("/").with(user("rootauth@example.com")))
 				.andExpect(redirectedUrl("/app"));
+	}
+
+	@Test
+	void appShowsOwnEmailOnlyNotOtherUsersEmail() throws Exception {
+		String alice = "alice-partition@example.com";
+		String bob = "bob-partition@example.com";
+		appUserRepository.save(new AppUser(alice, passwordEncoder.encode("verylongpassword12")));
+		appUserRepository.save(new AppUser(bob, passwordEncoder.encode("verylongpassword12")));
+
+		mvc.perform(get("/app").with(user(alice)))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString(alice)))
+				.andExpect(content().string(not(containsString(bob))));
+	}
+
+	@Test
+	void rememberMeCookieReAuthenticatesAfterSessionEnds() throws Exception {
+		String email = "remember@example.com";
+		String password = "correctHorseBatteryStaple";
+		appUserRepository.save(new AppUser(email, passwordEncoder.encode(password)));
+
+		MvcResult loginResult = mvc.perform(formLogin("/login").user(email).password(password))
+				.andExpect(authenticated())
+				.andReturn();
+
+		Cookie rememberMeCookie = loginResult.getResponse().getCookie("remember-me");
+		assertThat(rememberMeCookie).as("remember-me cookie should be issued (alwaysRemember=true)").isNotNull();
+		assertThat(rememberMeCookie.getValue()).isNotBlank();
+
+		try (Connection conn = dataSource.getConnection();
+		     PreparedStatement ps = conn.prepareStatement(
+				     "SELECT count(*) FROM persistent_logins WHERE username = ?")) {
+			ps.setString(1, email);
+			try (ResultSet rs = ps.executeQuery()) {
+				assertThat(rs.next()).isTrue();
+				assertThat(rs.getInt(1)).as("persistent_logins row should exist for the user").isEqualTo(1);
+			}
+		}
+
+		mvc.perform(get("/app").cookie(rememberMeCookie))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString(email)));
 	}
 
 }
