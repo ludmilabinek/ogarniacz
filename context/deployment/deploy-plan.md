@@ -68,9 +68,9 @@ Each step must be completed by the human before the next agent phase. Gate phras
 - **Why:** Mitigates risk register row #5 (trial expiry → silent Machine stop → feed 404) **as well as the unbounded-bill failure mode**. Since Fly doesn't expose a clickable cap, the safety net is composed of: verified-inbox (catches Fly's emails about trial/suspended state) + bank-side transaction alert (catches actual charges) + `fly.toml`-as-cap (limits what can be charged in the first place) + weekly dashboard check (catches drift before it compounds). This closes the silent-outage AND silent-overage failure modes together, given the platform's actual capabilities.
 
 ### 2.2 Neon Postgres project in EU + pooled connection string ⚠️
-- **Action:** Sign up at `console.neon.tech`. Create a project named `ogarniacz`. **At project creation, explicitly select region `eu-central-1` (Frankfurt). Do NOT accept the US East default.** **Select Postgres major version 17** (matches local validation in Phase C.3; one less variable when chasing "works locally, fails in Fly" bugs). **Do NOT enable Neon Auth, Neon Branching, or Neon AI add-ons** — real auth is out of scope per §8, and the additive-only-migrations rule in §5.2 assumes the application is the sole schema writer; Neon Auth would create a `neon_auth` schema that JPA's `ddl-auto=update` would see and potentially mishandle. Once provisioned, open the connection-string panel and copy the **pooled** connection string. **Append the query params `?prepareThreshold=0&preparedStatementCacheQueries=0`** to the URL — these disable Hibernate's prepared-statement cache and avoid the `prepared statement S_X already exists` failure mode under pgbouncer transaction mode. **Free-tier usage alert: Neon does NOT expose configurable user-defined thresholds on the free plan.** Instead, Neon automatically emails the account address at ~75–80% and 100% of the compute-hour ceiling. The actionable equivalent is therefore: **confirm the Neon account email is an inbox you read daily** — that's what actually closes the risk register row, not a clickable threshold setting.
+- **Action:** Sign up at `console.neon.tech`. Create a project named `ogarniacz`. **At project creation, explicitly select region `eu-central-1` (Frankfurt). Do NOT accept the US East default.** **Select Postgres major version 17** (matches local validation in Phase C.3; one less variable when chasing "works locally, fails in Fly" bugs). **Do NOT enable Neon Auth, Neon Branching, or Neon AI add-ons** — real auth is out of scope per §8, and the additive-only-migrations rule in §5.2 assumes the application is the sole schema writer; Neon Auth would create a `neon_auth` schema that JPA's `ddl-auto=update` would see and potentially mishandle. Once provisioned, open the connection-string panel and copy the **pooled** connection string. **Append the query params** `&prepareThreshold=0&preparedStatementCacheQueries=0` **to the URL — note the leading `&`, not `?`.** Neon pooled URLs already start with `?sslmode=require`; a second `?` produces an invalid JDBC URL where Postgres parses `sslmode` as the literal value `requireprepareThreshold=0`, crashing the first deploy with `PSQLException: Invalid sslmode value`. These params disable Hibernate's prepared-statement cache and avoid the `prepared statement S_X already exists` failure mode under pgbouncer transaction mode. **Free-tier usage alert: Neon does NOT expose configurable user-defined thresholds on the free plan.** Instead, Neon automatically emails the account address at ~75–80% and 100% of the compute-hour ceiling. The actionable equivalent is therefore: **confirm the Neon account email is an inbox you read daily** — that's what actually closes the risk register row, not a clickable threshold setting.
 - **Values to record:**
-  - `SPRING_DATASOURCE_URL` = `<pooled JDBC URL>?prepareThreshold=0&preparedStatementCacheQueries=0`
+  - `SPRING_DATASOURCE_URL` = `<pooled JDBC URL>&prepareThreshold=0&preparedStatementCacheQueries=0` (Neon pooled URL already ends with `?sslmode=require`, so the appended params start with `&`)
   - `SPRING_DATASOURCE_USERNAME` = `<neon role>`
   - `SPRING_DATASOURCE_PASSWORD` = `<neon password>`
 - **Gate condition:** Agent waits until human confirms: `"Neon ready in eu-central-1, pooled URL with prepareThreshold=0"`
@@ -264,11 +264,11 @@ docker run --rm -m 1g -p 8080:8080 \
 ```
 Expected: Spring context starts, `Tomcat started on port 8080`, no `OutOfMemoryError`. The JVM should report `Max heap ≈ 768 MB` given `MaxRAMPercentage=75` of the 1 GB cgroup limit. The pgbouncer prepared-statement collision mode does not apply here (local Postgres is not behind pgbouncer) — that path is verified in Phase G against real Neon logs.
 
-C.4 In a second terminal, smoke `/actuator/health`. **It will return 401 at this point** because Spring Security is still default-locked-down; Phase E adds the `SecurityFilterChain`. For now confirm only that:
+C.4 In a second terminal, smoke `/actuator/health`. **Expected: 200 on Spring Boot 4, 401 on Spring Boot 3** — both prove the endpoint exists. Boot 4's `management.endpoint.health.access=read-only` (set in Phase B.2) makes actuator endpoints anonymously readable via the new access mechanism, *bypassing* the still-default-locked-down Spring Security. Boot 3 doesn't have this mechanism; security wins and you get 401 until Phase E permits it. Either way, what Phase C validates is that the endpoint is reachable. For now confirm:
 ```bash
 curl -i http://localhost:8080/actuator/health
 ```
-returns `HTTP/1.1 401` with `WWW-Authenticate: Basic ...` — that proves the endpoint exists and Spring Security is actively guarding it (not a 404, which would mean actuator never registered).
+returns either `HTTP/1.1 200` with an `application/vnd.spring-boot.actuator.v3+json` body, OR `HTTP/1.1 401` with `WWW-Authenticate: Basic ...` — both prove the endpoint exists. A 404 is the actual failure case (actuator never registered).
 
 C.5 Cleanup — stop both containers:
 ```bash
@@ -288,7 +288,7 @@ Expected: both containers removed (each was started with `--rm`).
 
 D.1 Run launch in non-interactive mode where possible, but the human needs to confirm the app-name override since `rootProject.name='app'` will produce a default suggestion of `app`:
 ```bash
-fly launch --no-deploy --name ogarniacz --region fra --no-github
+flyctl launch --no-deploy --name ogarniacz --region fra --no-github-workflow --no-db --no-redis --no-object-storage --yes
 ```
 Expected: `fly.toml` written at repo root, app `ogarniacz` reserved in Fly's global namespace.
 
@@ -363,7 +363,7 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         .httpBasic(httpBasic -> {});
-    return http;
+    return http.build();
   }
 }
 ```
@@ -377,7 +377,7 @@ package com.example.app;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -548,7 +548,7 @@ Run all of these after Phase H succeeds. They form the "first deploy is real" ac
 | # | Check | Command / endpoint | Expected | If it fails |
 |---|---|---|---|---|
 | 4.1 | App health | `curl -i https://ogarniacz.fly.dev/actuator/health` | `HTTP/2 200` + `{"status":"UP"}` | Rollback per §5 |
-| 4.2 | Feed URL (placeholder until feed feature ships) | `curl -i https://ogarniacz.fly.dev/<feed-path>` | 404 expected at this stage (feed not implemented yet) — confirm app is reachable but feature absent | If 5xx, app instability — investigate logs |
+| 4.2 | Feed URL (placeholder until feed feature ships) | `curl -i https://ogarniacz.fly.dev/<feed-path>` | 401 or 404 expected at this stage — feed not implemented yet, and the Phase E `SecurityFilterChain` returns 401 before route resolution for any non-`/actuator/health` path. 401 means "endpoint absent + auth-guarded" (the MVP-correct state); 404 would only appear if Spring resolves a public route. Both confirm the app is reachable. | If 5xx, app instability — investigate logs |
 | 4.3 | Machine state | `fly status -a ogarniacz` | 1 Machine, region `fra`, state `started` | If `stopped`, `auto_stop_machines` wasn't disabled — re-edit `fly.toml` and redeploy. If **2 Machines** appear: Fly auto-created an HA peer despite `min_machines_running = 1` (default behavior on first launch). For MVP, run `flyctl scale count 1 -a ogarniacz` to remove the peer. |
 | 4.4 | No JVM OOM | `fly logs --since 5m -a ogarniacz \| grep -i 'OutOfMemoryError'` | Empty | Memory tuning failed — escalate per §5 |
 | 4.5 | No Hibernate pgbouncer collision | `fly logs --since 5m -a ogarniacz \| grep -i 'prepared statement.*already exists'` | Empty | `?prepareThreshold=0&preparedStatementCacheQueries=0` not actually appended in F.1 — re-run F.1 |
@@ -641,7 +641,7 @@ Echoed from `infrastructure.md` § "Out of Scope" so the plan does not scope-cre
 
 ## Output artifact
 
-On plan approval (after Plan Mode exits), the approved version of this file should be copied to `context/changes/deploy-plan.md` per `CLAUDE.md` Module 1 Lesson 5 contract — that path is the long-term audit trail for "what was supposed to happen" when production goes sideways months later.
+On plan approval (after Plan Mode exits), the approved version of this file lives at `context/deployment/deploy-plan.md` per `CLAUDE.md` Module 1 Lesson 5 contract — that path is the long-term audit trail for "what was supposed to happen" when production goes sideways months later. (The path is `context/deployment/`, not `context/changes/`; the latter is for the in-flight change log, not foundation-level deploy artifacts.)
 
 ## Verification of the plan itself (before execution)
 
