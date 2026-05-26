@@ -1,0 +1,59 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+# Fly + Docker
+.fly/
+*.log
+heapdump.hprof
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Claude Code user-local
+.claude/settings.local.json
+
+# 10x-cli artifacts — installed per-user via `10x-cli get`, not shipped with repo
+.claude/.10x-cli-manifest.json
+.claude/skills/10x-*/
+
+# Environment variables — never commit secrets; .env.example is allowed as a template
+.env
+.env.*
+!.env.example
+!.env.sample
