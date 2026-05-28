@@ -8,8 +8,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.List;
 import java.util.Locale;
 
 @Controller
@@ -27,18 +28,15 @@ public class SignupController {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserDetailsService userDetailsService;
     private final RememberMeServices rememberMeServices;
     private final SecurityContextRepository securityContextRepository;
 
     public SignupController(AppUserRepository appUserRepository,
                             PasswordEncoder passwordEncoder,
-                            UserDetailsService userDetailsService,
                             RememberMeServices rememberMeServices,
                             SecurityContextRepository securityContextRepository) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
-        this.userDetailsService = userDetailsService;
         this.rememberMeServices = rememberMeServices;
         this.securityContextRepository = securityContextRepository;
     }
@@ -68,14 +66,19 @@ public class SignupController {
         }
 
         String hash = passwordEncoder.encode(form.getPassword());
+        AppUser saved;
         try {
-            appUserRepository.saveAndFlush(new AppUser(form.getEmail(), hash));
+            saved = appUserRepository.saveAndFlush(new AppUser(form.getEmail(), hash));
         } catch (DataIntegrityViolationException dup) {
             result.rejectValue("email", "duplicate", "Email already in use.");
             return "signup";
         }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(form.getEmail());
+        // Keep authorities = List.of() in sync with AppUserDetailsService.
+        UserDetails userDetails = User.withUsername(saved.getEmail())
+                .password(saved.getPasswordHash())
+                .authorities(List.of())
+                .build();
         UsernamePasswordAuthenticationToken auth = UsernamePasswordAuthenticationToken.authenticated(
                 userDetails, null, userDetails.getAuthorities());
         SecurityContext context = SecurityContextHolder.createEmptyContext();

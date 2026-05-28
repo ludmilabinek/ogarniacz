@@ -1,5 +1,6 @@
 package com.example.app.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,8 +22,13 @@ import javax.sql.DataSource;
 @Configuration
 public class SecurityConfig {
 
-  private static final String REMEMBER_ME_KEY = "ogarniacz-remember-me-key";
   private static final int THIRTY_DAYS_SECONDS = 60 * 60 * 24 * 30;
+
+  private final String rememberMeKey;
+
+  public SecurityConfig(@Value("${REMEMBER_ME_KEY}") String rememberMeKey) {
+    this.rememberMeKey = rememberMeKey;
+  }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -47,11 +53,13 @@ public class SecurityConfig {
 
   @Bean
   public RememberMeServices rememberMeServices(PersistentTokenRepository tokenRepository,
-                                                UserDetailsService userDetailsService) {
+                                                UserDetailsService userDetailsService,
+                                                @Value("${server.servlet.session.cookie.secure:true}") boolean secureCookie) {
     PersistentTokenBasedRememberMeServices svc = new PersistentTokenBasedRememberMeServices(
-        REMEMBER_ME_KEY, userDetailsService, tokenRepository);
+        rememberMeKey, userDetailsService, tokenRepository);
     svc.setTokenValiditySeconds(THIRTY_DAYS_SECONDS);
     svc.setAlwaysRemember(true);
+    svc.setUseSecureCookie(secureCookie);
     return svc;
   }
 
@@ -75,7 +83,7 @@ public class SecurityConfig {
         .logout(logout -> logout.logoutSuccessUrl("/login?logout"))
         .rememberMe(rm -> rm
             .rememberMeServices(rememberMeServices)
-            .key(REMEMBER_ME_KEY)
+            .key(rememberMeKey)
         )
         .securityContext(sc -> sc.securityContextRepository(securityContextRepository));
     return http.build();
