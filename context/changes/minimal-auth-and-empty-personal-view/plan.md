@@ -527,13 +527,13 @@ S-01 is single-user, low-QPS by PRD definition. The only choices with performanc
 
 #### Automated
 
-- [x] 3.1 ./gradlew test passes (all Phase 1 + Phase 2 tests still green + the two new tests)
-- [x] 3.2 appShowsOwnEmailOnlyNotOtherUsersEmail passes
-- [x] 3.3 rememberMeCookieReAuthenticatesAfterSessionEnds passes
+- [x] 3.1 ./gradlew test passes (all Phase 1 + Phase 2 tests still green + the two new tests) — 7ec0919
+- [x] 3.2 appShowsOwnEmailOnlyNotOtherUsersEmail passes — 7ec0919
+- [x] 3.3 rememberMeCookieReAuthenticatesAfterSessionEnds passes — 7ec0919
 
 #### Manual
 
-- [x] 3.4 ./gradlew bootRun against Neon (or local Postgres): sign up user A in browser profile 1, user B in profile 2 (or one Chrome window + one private/Firefox window). Confirm each /app shows only the respective email.
-- [x] 3.5 In profile 1: log out, then log back in (no checkbox — persistent cookie is always issued). Close the browser entirely (not just the tab). Reopen, navigate to http://localhost:8080/app. Confirm you land on /app without being asked to log in.
-- [x] 3.6 After the remember-me re-auth above, confirm a persistent_logins row for user A exists (psql against Neon dev DB or H2 console: SELECT username, last_used FROM persistent_logins;).
-- [x] 3.7 Log out from /app: confirm the next GET /app is bounced to /login (cookie + session both gone).
+- [x] 3.4 ./gradlew bootRun against Neon (or local Postgres): sign up user A in browser profile 1, user B in profile 2 (or one Chrome window + one private/Firefox window). Confirm each /app shows only the respective email. — 7ec0919
+- [x] 3.5 In profile 1: log out, then log back in (no checkbox — persistent cookie is always issued). Close the browser entirely (not just the tab). Reopen, navigate to http://localhost:8080/app. Confirm you land on /app without being asked to log in. — 7ec0919
+- [x] 3.6 After the remember-me re-auth above, confirm a persistent_logins row for user A exists (psql against Neon dev DB or H2 console: SELECT username, last_used FROM persistent_logins;). — 7ec0919
+- [x] 3.7 Log out from /app: confirm the next GET /app is bounced to /login (cookie + session both gone). — 7ec0919

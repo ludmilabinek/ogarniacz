@@ -37,7 +37,7 @@
   - Tradeoff: SignupController loses its injected RememberMeServices — would need to read it back from the filter chain (awkward) or duplicate the configuration.
   - Confidence: MEDIUM — Fix A is strictly less work.
   - Blind spot: None significant.
-- **Decision**: FIXED via Fix A — SecurityConfig now reads `REMEMBER_ME_KEY` via constructor `@Value`; AppApplicationTests sets `REMEMBER_ME_KEY=test-key-not-for-production` via `@TestPropertySource`. **Action required before next prod deploy**: `flyctl secrets set REMEMBER_ME_KEY=$(openssl rand -hex 32)`.
+- **Decision**: FIXED in 7313523 via Fix A — SecurityConfig now reads `REMEMBER_ME_KEY` via constructor `@Value`; AppApplicationTests sets `REMEMBER_ME_KEY=test-key-not-for-production` via `@TestPropertySource`. **Action required before next prod deploy**: `flyctl secrets set REMEMBER_ME_KEY=$(openssl rand -hex 32)`.
 
 ### F2 — Signup auto-login outside any transaction boundary
 
@@ -56,7 +56,7 @@
   - Tradeoff: Two-step UX on a rare failure; need a new login-page banner string. More code than Fix A.
   - Confidence: MEDIUM — works but inferior to eliminating the re-read entirely.
   - Blind spot: None significant.
-- **Decision**: FIXED via Fix A — SignupController now builds UserDetails inline from the saved AppUser (no re-read); UserDetailsService dependency dropped from the controller (still used by Spring Security for the login path).
+- **Decision**: FIXED in 7313523 via Fix A — SignupController now builds UserDetails inline from the saved AppUser (no re-read); UserDetailsService dependency dropped from the controller (still used by Spring Security for the login path).
 
 ### F3 — Remember-me cookie defaults: HttpOnly only, no Secure / SameSite
 
@@ -66,7 +66,7 @@
 - **Location**: src/main/java/com/example/app/config/SecurityConfig.java:51-55 (application.properties:19-22 covers JSESSIONID only)
 - **Detail**: `server.servlet.session.cookie.secure=true` applies to JSESSIONID, not to the persistent remember-me cookie. The remember-me cookie is the long-lived credential — losing it over plaintext is worse than losing the session cookie. Default `PersistentTokenBasedRememberMeServices` sets HttpOnly=true but NOT Secure. Fly's edge terminates HTTPS, but defense-in-depth matters when the cookie outlives the session by 30 days.
 - **Fix**: Add `svc.setUseSecureCookie(true);` in the `rememberMeServices(...)` bean (SecurityConfig.java:55). If local-dev parity matters, gate via env var the same way the session-cookie comment block does.
-- **Decision**: FIXED via Fix differently — bean method now reads `@Value("${server.servlet.session.cookie.secure:true}")` and calls `svc.setUseSecureCookie(...)`. Reuses the existing `SERVER_SERVLET_SESSION_COOKIE_SECURE` env var so one toggle flips both cookies.
+- **Decision**: FIXED in 7313523 via Fix differently — bean method now reads `@Value("${server.servlet.session.cookie.secure:true}")` and calls `svc.setUseSecureCookie(...)`. Reuses the existing `SERVER_SERVLET_SESSION_COOKIE_SECURE` env var so one toggle flips both cookies.
 
 ### F4 — Unplanned GET /login mapping in AppController
 
@@ -96,7 +96,7 @@
 - **Location**: src/main/java/com/example/app/web/AppController.java (index uses SecurityContextHolder static; app uses parameter)
 - **Detail**: `index()` reads `SecurityContextHolder.getContext().getAuthentication()` directly while `app()` takes `Authentication` as a method parameter. Parameter injection is more testable (no static call to mock). Minor; works as-is.
 - **Fix**: Optional — change `index()` to take `Authentication auth` as a method parameter for consistency.
-- **Decision**: FIXED — `index()` now takes `Authentication auth` parameter; removed unused `SecurityContextHolder` import.
+- **Decision**: FIXED in 7313523 — `index()` now takes `Authentication auth` parameter; removed unused `SecurityContextHolder` import.
 
 ## What passed cleanly
 

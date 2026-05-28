@@ -1,9 +1,9 @@
 ---
 change_id: minimal-auth-and-empty-personal-view
 title: Minimal auth + empty personal view
-status: implementing
+status: impl_reviewed
 created: 2026-05-26
-updated: 2026-05-26
+updated: 2026-05-27
 archived_at: null
 ---
 
