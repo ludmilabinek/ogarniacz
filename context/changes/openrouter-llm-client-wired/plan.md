@@ -350,23 +350,23 @@ The actual acceptance gate of F-01: a real image hits real OpenRouter and produc
 
 #### Automated
 
-- [x] 1.1 `./gradlew dependencies --configuration runtimeClasspath | grep spring-ai-starter-model-openai` shows the starter resolved against BOM 1.0.x
-- [x] 1.2 `./gradlew test` passes (existing 16 tests green; no new tests yet in Phase 1)
-- [x] 1.3 `./gradlew bootRun` boots locally with no `OPENROUTER_API_KEY` set — log line `Started AppApplication in <N> seconds` appears; no `IllegalArgumentException`, no `BeanCreationException` mentioning `spring.ai`
+- [x] 1.1 `./gradlew dependencies --configuration runtimeClasspath | grep spring-ai-starter-model-openai` shows the starter resolved against BOM 1.0.x — 2bcb189
+- [x] 1.2 `./gradlew test` passes (existing 16 tests green; no new tests yet in Phase 1) — 2bcb189
+- [x] 1.3 `./gradlew bootRun` boots locally with no `OPENROUTER_API_KEY` set — log line `Started AppApplication in <N> seconds` appears; no `IllegalArgumentException`, no `BeanCreationException` mentioning `spring.ai` — 2bcb189
 
 #### Manual
 
-- [x] 1.4 Eyeball resolved BOM version with `./gradlew dependencyInsight --dependency spring-ai-starter-model-openai` — confirm it's 1.0.x and not pulling in a milestone (`1.1.0-M1`) or `2.0.0-M3` by accident
-- [x] 1.5 Stop `bootRun`, export `OPENROUTER_API_KEY=placeholder-not-a-real-key`, restart — should still boot clean
-- [x] 1.6 Re-read the new `spring.ai.*` lines in `application.properties` for typos (single-character mistake in `base-url` is the highest-likelihood failure mode at this phase)
+- [x] 1.4 Eyeball resolved BOM version with `./gradlew dependencyInsight --dependency spring-ai-starter-model-openai` — confirm it's 1.0.x and not pulling in a milestone (`1.1.0-M1`) or `2.0.0-M3` by accident — 2bcb189
+- [x] 1.5 Stop `bootRun`, export `OPENROUTER_API_KEY=placeholder-not-a-real-key`, restart — should still boot clean — 2bcb189
+- [x] 1.6 Re-read the new `spring.ai.*` lines in `application.properties` for typos (single-character mistake in `base-url` is the highest-likelihood failure mode at this phase) — 2bcb189
 
 ### Phase 2: Vision client + DTO
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test --tests com.example.app.llm.LlmVisionClientTest` passes all 5 tests
-- [ ] 2.2 Full `./gradlew test` is green with no real OpenRouter call (verify by running with `OPENROUTER_API_KEY=` empty — should still pass)
-- [ ] 2.3 `./gradlew bootRun` still starts clean and `curl -i http://localhost:8080/actuator/health` returns 200
+- [x] 2.1 `./gradlew test --tests com.example.app.llm.LlmVisionClientTest` passes all 5 tests
+- [x] 2.2 Full `./gradlew test` is green with no real OpenRouter call (verify by running with `OPENROUTER_API_KEY=` empty — should still pass)
+- [x] 2.3 `./gradlew bootRun` still starts clean and `curl -i http://localhost:8080/actuator/health` returns 200
 
 #### Manual
 
