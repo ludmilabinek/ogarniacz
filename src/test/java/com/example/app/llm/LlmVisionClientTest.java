@@ -81,6 +81,20 @@ class LlmVisionClientTest {
 	}
 
 	@Test
+	void extractHandlesTrailingWhitespaceAfterFence() {
+		String fenced = "```json\n"
+				+ "[{\"date\":\"2026-10-15\",\"time\":null,\"title\":\"Pasowanie\","
+				+ "\"requirements\":null,\"notes\":null}]\n"
+				+ "```\n\n\n";
+		when(chatModel.call(any(Prompt.class))).thenReturn(chatResponseOf(fenced));
+
+		LlmExtractionResult result = llmVisionClient.extract(FAKE_IMAGE, MimeTypeUtils.IMAGE_PNG);
+
+		assertThat(result.proposedEvents()).hasSize(1);
+		assertThat(result.proposedEvents().get(0).title()).isEqualTo("Pasowanie");
+	}
+
+	@Test
 	void extractWrapsSocketTimeoutAsTimeoutKind() {
 		OpenAIIoException ioEx = new OpenAIIoException(
 				"Request timed out", new SocketTimeoutException("read timed out"));

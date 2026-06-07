@@ -1,7 +1,7 @@
 ---
 change_id: openrouter-llm-client-wired
 title: Wire OpenRouter vision-LLM client via Spring AI starter (F-01)
-status: implemented
+status: impl_reviewed
 created: 2026-06-01
 updated: 2026-06-07
 archived_at: null

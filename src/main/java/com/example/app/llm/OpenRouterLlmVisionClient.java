@@ -8,9 +8,12 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeType;
@@ -31,10 +34,15 @@ public class OpenRouterLlmVisionClient implements LlmVisionClient {
 
 	private final ChatClient chatClient;
 	private final ObjectMapper objectMapper;
+	private final String configuredModel;
 
-	public OpenRouterLlmVisionClient(ChatClient.Builder chatClientBuilder, ObjectMapper objectMapper) {
+	public OpenRouterLlmVisionClient(
+			ChatClient.Builder chatClientBuilder,
+			ObjectMapper objectMapper,
+			@Value("${spring.ai.openai.chat.options.model}") String configuredModel) {
 		this.chatClient = chatClientBuilder.build();
 		this.objectMapper = objectMapper;
+		this.configuredModel = configuredModel;
 	}
 
 	@Override
@@ -52,36 +60,46 @@ public class OpenRouterLlmVisionClient implements LlmVisionClient {
 					.user(u -> u.text(SYSTEM_PROMPT).media(mimeType, resource))
 					.call()
 					.content();
-			String json = stripMarkdownFences(raw);
+			String json = extractJsonArray(raw);
 			List<LlmExtractionResult.ProposedEvent> events =
 					objectMapper.readValue(json, new TypeReference<>() {});
 			long elapsedMs = (System.nanoTime() - start) / 1_000_000L;
-			log.info("llm.extract imageHash={} bytes={} mimeType={} latencyMs={} outcome=SUCCESS events={}",
-					imageHash, image.length, mimeType, elapsedMs, events.size());
+			log.info("llm.extract model={} imageHash={} bytes={} mimeType={} latencyMs={} outcome=SUCCESS events={}",
+					configuredModel, imageHash, image.length, mimeType, elapsedMs, events.size());
 			return new LlmExtractionResult(events, raw, elapsedMs);
 		} catch (OpenAIIoException e) {
 			long elapsedMs = (System.nanoTime() - start) / 1_000_000L;
-			log.info("llm.extract imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:TIMEOUT",
-					imageHash, image.length, mimeType, elapsedMs);
+			log.info("llm.extract model={} imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:TIMEOUT",
+					configuredModel, imageHash, image.length, mimeType, elapsedMs);
 			throw LlmExtractionException.timeout(e);
 		} catch (OpenAIServiceException e) {
 			long elapsedMs = (System.nanoTime() - start) / 1_000_000L;
-			String body = e.body() != null ? e.body().toString() : null;
-			log.info("llm.extract imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:PROVIDER_ERROR httpStatus={}",
-					imageHash, image.length, mimeType, elapsedMs, e.statusCode());
-			throw LlmExtractionException.provider(e.statusCode(), body, e);
+			String providerMessage = "code=" + e.code().orElse("?")
+					+ " type=" + e.type().orElse("?")
+					+ " param=" + e.param().orElse("?");
+			log.info("llm.extract model={} imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:PROVIDER_ERROR httpStatus={}",
+					configuredModel, imageHash, image.length, mimeType, elapsedMs, e.statusCode());
+			throw LlmExtractionException.provider(e.statusCode(), providerMessage, e);
 		} catch (OpenAIInvalidDataException | JacksonException e) {
 			long elapsedMs = (System.nanoTime() - start) / 1_000_000L;
-			log.info("llm.extract imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:MALFORMED_RESPONSE",
-					imageHash, image.length, mimeType, elapsedMs);
+			log.info("llm.extract model={} imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:MALFORMED_RESPONSE",
+					configuredModel, imageHash, image.length, mimeType, elapsedMs);
 			throw LlmExtractionException.malformed(e);
+		} catch (RuntimeException e) {
+			long elapsedMs = (System.nanoTime() - start) / 1_000_000L;
+			log.info("llm.extract model={} imageHash={} bytes={} mimeType={} latencyMs={} outcome=FAILED:UNKNOWN",
+					configuredModel, imageHash, image.length, mimeType, elapsedMs);
+			throw LlmExtractionException.provider(0, e.getMessage(), e);
 		}
 	}
 
-	private static String stripMarkdownFences(String raw) {
+	private static final Pattern JSON_ARRAY = Pattern.compile("\\[.*\\]", Pattern.DOTALL);
+
+	private static String extractJsonArray(String raw) {
 		if (raw == null) {
 			return "";
 		}
-		return raw.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
+		Matcher m = JSON_ARRAY.matcher(raw);
+		return m.find() ? m.group() : raw.trim();
 	}
 }
