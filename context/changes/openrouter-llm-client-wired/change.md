@@ -3,13 +3,20 @@ change_id: openrouter-llm-client-wired
 title: Wire OpenRouter vision-LLM client via Spring AI starter (F-01)
 status: implementing
 created: 2026-06-01
-updated: 2026-06-06
+updated: 2026-06-07
 archived_at: null
 ---
 
 ## Notes
 
 F-01 z @context/foundation/roadmap.md
+
+### Live verification (2026-06-07)
+
+- **Default model changed**: `google/gemini-2.0-flash-001` (planned) → **`google/gemini-2.5-flash`** (committed). The 2.0-flash slug was retired from OpenRouter — a live call returned `HTTP 404: No endpoints found for google/gemini-2.0-flash-001` (the entire Gemini 2.0 line is gone from the catalog). `gemini-2.5-flash` is the verified replacement: vision-capable Flash tier, ~$1.55 per 1000 announcements, picked over `flash-lite` for robustness on poor-quality photos and over `3.5-flash` on cost (printed-text OCR gains marginal).
+- **Smoke result**: `LlmVisionSmokeTest` PASS against real OpenRouter — `outcome=SUCCESS events=2`, 2.7 s wall (budget 55 s), `rawResponse` a clean JSON array matching the `ProposedEvent` contract (`date`=`YYYY-MM-DD`, `time`=`HH:MM`, `null` where absent), Polish text + `LocalDate`/`LocalTime` deserialized correctly.
+- **Exception-translation table validated end-to-end**: the pre-fix 404 surfaced as `NotFoundException` → `Kind.PROVIDER_ERROR (HTTP 404)`, exactly per the design.
+- **Still pending (operator-run)**: 3.4 Fly secret rotation (`AI_PROVIDER_API_KEY`) — manual, deploy-plan §7 irreversible gate.
 
 ### Runbook
 

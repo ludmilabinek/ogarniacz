@@ -21,7 +21,7 @@ Close roadmap foundation **F-01**: put a callable, OpenRouter-backed vision LLM 
 - `application.properties` contains the OpenRouter wiring (`base-url`, model default, timeout configuration handle) but does NOT contain the API key — the key is sourced from `OPENROUTER_API_KEY` env var (local) / `AI_PROVIDER_API_KEY` Fly secret (prod) via Spring's standard env-binding.
 - `com.example.app.llm.LlmVisionClient` interface exists; `com.example.app.llm.OpenRouterLlmVisionClient` is the sole impl; both compile and pass unit tests with a `@MockitoBean ChatModel`.
 - `./gradlew test` runs to `BUILD SUCCESSFUL` with no real OpenRouter call, no secret leak, and no flakiness from network. The CI deploy workflow (`.github/workflows/deploy.yml`) is unchanged — F-01 introduces no new CI secret.
-- The manually-enabled live smoke test `LlmVisionSmokeTest` (annotated `@EnabledIfEnvironmentVariable(named = "OGARNIACZ_LIVE_SMOKE", matches = "true")`) sends a real PNG sample (the bundled `sample-announcement.png` fixture under `src/test/resources/llm/`) to `google/gemini-2.0-flash-001` via OpenRouter, receives a non-empty `LlmExtractionResult` within 55 seconds, and prints the parsed structure to the test log. The operator must ALSO have an API key in scope (`OPENROUTER_API_KEY` or the production `AI_PROVIDER_API_KEY`) — the dedicated flag is the trigger; the key is the credential.
+- The manually-enabled live smoke test `LlmVisionSmokeTest` (annotated `@EnabledIfEnvironmentVariable(named = "OGARNIACZ_LIVE_SMOKE", matches = "true")`) sends a real PNG sample (the bundled `sample-announcement.png` fixture under `src/test/resources/llm/`) to `google/gemini-2.5-flash` via OpenRouter, receives a non-empty `LlmExtractionResult` within 55 seconds, and prints the parsed structure to the test log. The operator must ALSO have an API key in scope (`OPENROUTER_API_KEY` or the production `AI_PROVIDER_API_KEY`) — the dedicated flag is the trigger; the key is the credential.
 - After Fly secret rotation, a `bootRun` against the deployed app's logs shows no startup error related to Spring AI; the actual live call still only fires from S-05 (no new production HTTP route is added by F-01).
 - A short runbook section in this plan (and mirrored in `change.md` notes) documents (a) how to re-run the smoke after a model swap, (b) how to rotate the Fly secret without redeploy, (c) what to do if OpenRouter returns a 4xx (token / model name / image size).
 
@@ -111,9 +111,9 @@ implementation 'org.springframework.ai:spring-ai-starter-model-openai'
 
 **File**: `src/main/resources/application.properties`
 
-**Intent**: Tell Spring AI's OpenAI starter to talk to OpenRouter using whichever API key is present (local `OPENROUTER_API_KEY`, prod `AI_PROVIDER_API_KEY`, or a known-bad placeholder so boot never fails). Set the default vision model to `google/gemini-2.0-flash-001` (the OpenRouter slug for Gemini 2.0 Flash — cheaper smoke runs and lowest baseline latency; model is swappable per call).
+**Intent**: Tell Spring AI's OpenAI starter to talk to OpenRouter using whichever API key is present (local `OPENROUTER_API_KEY`, prod `AI_PROVIDER_API_KEY`, or a known-bad placeholder so boot never fails). Set the default vision model to `google/gemini-2.5-flash` (the OpenRouter slug for Gemini 2.5 Flash — vision-capable Flash tier, cheap + low baseline latency; model is swappable per call). **Note (2026-06-07):** the plan originally specified `google/gemini-2.0-flash-001`, but that slug was retired from OpenRouter (HTTP 404 *No endpoints found*) by the time live verification ran; `google/gemini-2.5-flash` is its verified replacement.
 
-**Contract**: Append a `# OpenRouter (Spring AI)` section to the existing properties file with these keys: `spring.ai.openai.base-url`, `spring.ai.openai.api-key` (chained-placeholder fallback per §Critical Implementation Details / State sequencing), `spring.ai.openai.chat.options.model=google/gemini-2.0-flash-001`, `spring.ai.openai.chat.options.temperature=0.2` (deterministic for an extraction task; cuts variance between smoke runs without making the model dumb), `spring.ai.openai.timeout=55s`, `spring.ai.openai.max-retries=0`, `spring.ai.openai.custom-headers.HTTP-Referer=https://ogarniacz.fly.dev`, `spring.ai.openai.custom-headers.X-Title=Ogarniacz`. Place a single comment line `# Smoke test reads from OPENROUTER_API_KEY (local dev); production rotates AI_PROVIDER_API_KEY (Fly secret).` directly above the `spring.ai.openai.api-key` line so onboarding is rediscoverable from the properties file itself. No keys removed; existing cookie/actuator config untouched.
+**Contract**: Append a `# OpenRouter (Spring AI)` section to the existing properties file with these keys: `spring.ai.openai.base-url`, `spring.ai.openai.api-key` (chained-placeholder fallback per §Critical Implementation Details / State sequencing), `spring.ai.openai.chat.options.model=google/gemini-2.5-flash`, `spring.ai.openai.chat.options.temperature=0.2` (deterministic for an extraction task; cuts variance between smoke runs without making the model dumb), `spring.ai.openai.timeout=55s`, `spring.ai.openai.max-retries=0`, `spring.ai.openai.custom-headers.HTTP-Referer=https://ogarniacz.fly.dev`, `spring.ai.openai.custom-headers.X-Title=Ogarniacz`. Place a single comment line `# Smoke test reads from OPENROUTER_API_KEY (local dev); production rotates AI_PROVIDER_API_KEY (Fly secret).` directly above the `spring.ai.openai.api-key` line so onboarding is rediscoverable from the properties file itself. No keys removed; existing cookie/actuator config untouched.
 
 #### 3. ~~`OpenRouterRestClientConfig`~~ — superseded by properties (adapted during Phase 1)
 
@@ -280,11 +280,11 @@ The actual acceptance gate of F-01: a real image hits real OpenRouter and produc
 
 ### Runbook (operator reference)
 
-**Re-run the smoke after a model swap.** Edit `spring.ai.openai.chat.options.model` in `application.properties` to the new OpenRouter slug (`anthropic/claude-3.5-sonnet`, `openai/gpt-4o-mini`, etc.). Export BOTH `OGARNIACZ_LIVE_SMOKE=true` AND `OPENROUTER_API_KEY=sk-or-…` in your shell. Run `./gradlew test --tests com.example.app.llm.LlmVisionSmokeTest --rerun-tasks --info`. Expected: passes within 55 s and prints a `LlmExtractionResult` you can eyeball. Missing the flag → test silently skipped; missing the key → 401 from OpenRouter.
+**Re-run the smoke after a model swap.** Edit `spring.ai.openai.chat.options.model` in `application.properties` to the new OpenRouter slug (`anthropic/claude-sonnet-4.5`, `openai/gpt-4o-mini`, etc.). Export BOTH `OGARNIACZ_LIVE_SMOKE=true` AND `OPENROUTER_API_KEY=sk-or-…` in your shell. Run `./gradlew test --tests com.example.app.llm.LlmVisionSmokeTest --rerun-tasks --info`. Expected: passes within 55 s and prints a `LlmExtractionResult` you can eyeball. Missing the flag → test silently skipped; missing the key → 401 from OpenRouter.
 
 **Rotate the Fly secret.** `fly secrets set AI_PROVIDER_API_KEY='sk-or-…' -a ogarniacz`. Wait ~30 s for the Machine restart. `fly logs -a ogarniacz | tail -50` and look for `Started AppApplication`. If `Machine failed to start`, the old placeholder string was actually being read by some code path — investigate that path before re-trying rotation.
 
-**Common failures.** `401` → key is wrong or revoked; check OpenRouter dashboard, rotate. `404` on the model name → OpenRouter slug changed; `curl -s https://openrouter.ai/api/v1/models -H "Authorization: Bearer $OPENROUTER_API_KEY" | jq '.data[].id'` lists current ids. `429` → rate-limit; OpenRouter free tier has burst limits; rerun after a minute or add credit. `SocketTimeoutException` after 55 s → model is taking longer than the budget; either swap to a faster model (`google/gemini-2.0-flash-001` is the default for a reason) or accept that S-05 needs streaming progress UX (FR-005's "continuous visible progress").
+**Common failures.** `401` → key is wrong or revoked; check OpenRouter dashboard, rotate. `404` on the model name → OpenRouter slug changed; `curl -s https://openrouter.ai/api/v1/models -H "Authorization: Bearer $OPENROUTER_API_KEY" | jq '.data[].id'` lists current ids. `429` → rate-limit; OpenRouter free tier has burst limits; rerun after a minute or add credit. `SocketTimeoutException` after 55 s → model is taking longer than the budget; either swap to a faster model (`google/gemini-2.5-flash` is the default for a reason) or accept that S-05 needs streaming progress UX (FR-005's "continuous visible progress").
 
 ### Success Criteria:
 
@@ -297,8 +297,8 @@ The actual acceptance gate of F-01: a real image hits real OpenRouter and produc
 
 - Read the smoke test's printed `LlmExtractionResult.rawResponse` — confirm the model produced something resembling JSON with the right field shape (`date`, `title`, etc.). Semantic accuracy is NOT graded here.
 - Rotate the Fly secret (`fly secrets set AI_PROVIDER_API_KEY='sk-or-…' -a ogarniacz`) and verify the deployed app's logs (`fly logs -a ogarniacz`) show a clean restart with no new errors.
-- Run the smoke a second time with a different model (`anthropic/claude-3.5-sonnet`) by editing `application.properties` locally — confirm the rerun still works and the runbook bullet is accurate.
-- Reset `application.properties`' model line back to `google/gemini-2.0-flash-001` before committing — model swap is meant to be exploratory, not committed in F-01.
+- Run the smoke a second time with a different model (`anthropic/claude-sonnet-4.5`) by editing `application.properties` locally — confirm the rerun still works and the runbook bullet is accurate.
+- ~~Reset the model line before committing~~ **(superseded 2026-06-07)**: the originally-planned default `google/gemini-2.0-flash-001` was retired from OpenRouter (HTTP 404), so the committed default is now `google/gemini-2.5-flash` — a real fix, not an exploratory swap to revert. If you additionally A/B a heavier model (e.g. claude) per the bullet above, reset to `google/gemini-2.5-flash` before committing.
 
 **Implementation Note**: Phase 3 closes F-01. After this phase, the unknowns block from the roadmap (`spring-ai-openai-spring-boot-starter` compatibility, vision-model default) is resolved; S-05 inherits a working client.
 
@@ -320,11 +320,11 @@ The actual acceptance gate of F-01: a real image hits real OpenRouter and produc
 1. Phase 1: `./gradlew bootRun` boots clean both with and without `OPENROUTER_API_KEY` set.
 2. Phase 2: Run a single test (`./gradlew test --tests "*.LlmVisionClientTest"`) and confirm 5 tests pass with no network access (`OPENROUTER_API_KEY` unset).
 3. Phase 3: Export a real key, run the smoke, eyeball the printed result. Rotate the Fly secret. Eyeball `fly logs` for a clean restart.
-4. Bonus: try swapping the model line to `anthropic/claude-3.5-sonnet` and re-run the smoke. Confirm both calls succeed within the timeout. Reset the line to gemini before committing.
+4. Bonus: try swapping the model line to `anthropic/claude-sonnet-4.5` and re-run the smoke. Confirm both calls succeed within the timeout. Reset the line to gemini before committing.
 
 ## Performance Considerations
 
-- 55 s read timeout deliberately under the PRD's 60 s ceiling. With `google/gemini-2.0-flash-001` as the default, observed end-to-end latency on small kindergarten-announcement images is typically 2–6 s — well inside budget. Heavier models (`anthropic/claude-3.5-sonnet`) push closer to 10–20 s; both still well clear of 55 s for representative images. If a future model + image-size combo gets close to 55 s, the right answer is a smaller image (downscale on upload — S-05's job), not a longer timeout.
+- 55 s read timeout deliberately under the PRD's 60 s ceiling. With `google/gemini-2.5-flash` as the default, observed end-to-end latency on small kindergarten-announcement images is typically 2–6 s — well inside budget. Heavier models (`anthropic/claude-sonnet-4.5`) push closer to 10–20 s; both still well clear of 55 s for representative images. If a future model + image-size combo gets close to 55 s, the right answer is a smaller image (downscale on upload — S-05's job), not a longer timeout.
 - No connection pooling tuning. Spring AI's `RestClient` defaults are sufficient at single-user / low-QPS (PRD scale target). Tuning belongs in a post-MVP slice if QPS ever rises.
 
 ## Migration Notes
@@ -364,25 +364,25 @@ The actual acceptance gate of F-01: a real image hits real OpenRouter and produc
 
 #### Automated
 
-- [x] 2.1 `./gradlew test --tests com.example.app.llm.LlmVisionClientTest` passes all 5 tests
-- [x] 2.2 Full `./gradlew test` is green with no real OpenRouter call (verify by running with `OPENROUTER_API_KEY=` empty — should still pass)
-- [x] 2.3 `./gradlew bootRun` still starts clean and `curl -i http://localhost:8080/actuator/health` returns 200
+- [x] 2.1 `./gradlew test --tests com.example.app.llm.LlmVisionClientTest` passes all 5 tests — 66fbb43
+- [x] 2.2 Full `./gradlew test` is green with no real OpenRouter call (verify by running with `OPENROUTER_API_KEY=` empty — should still pass) — 66fbb43
+- [x] 2.3 `./gradlew bootRun` still starts clean and `curl -i http://localhost:8080/actuator/health` returns 200 — 66fbb43
 
 #### Manual
 
-- [ ] 2.4 Read `OpenRouterLlmVisionClient.java` and confirm the exception translation table covers Spring AI's actual thrown types for this version (Spring AI 1.0.x may add a new wrapper class between writing the plan and running it — adjust the catches if so)
-- [ ] 2.5 Confirm no test calls `objectMapper.writeValueAsString(...)` on the `LlmExtractionResult` (no Jackson serialization annotations were added; we don't want a downstream surprise)
+- [x] 2.4 Read `OpenRouterLlmVisionClient.java` and confirm the exception translation table covers Spring AI's actual thrown types for this version (Spring AI 1.0.x may add a new wrapper class between writing the plan and running it — adjust the catches if so) — 66fbb43
+- [x] 2.5 Confirm no test calls `objectMapper.writeValueAsString(...)` on the `LlmExtractionResult` (no Jackson serialization annotations were added; we don't want a downstream surprise) — 66fbb43
 
 ### Phase 3: Live smoke + secret rotation + runbook
 
 #### Automated
 
-- [ ] 3.1 `./gradlew test` (without `OGARNIACZ_LIVE_SMOKE` set) passes everything including a noisy log line "skipped" for `LlmVisionSmokeTest` — confirms the JUnit env-variable gate is correct
-- [ ] 3.2 `./gradlew test` (with `OGARNIACZ_LIVE_SMOKE=true` AND `OPENROUTER_API_KEY=sk-or-…` set) passes `LlmVisionSmokeTest` end-to-end, finishing in ≤ 55 s
+- [x] 3.1 `./gradlew test` (without `OGARNIACZ_LIVE_SMOKE` set) passes everything including a noisy log line "skipped" for `LlmVisionSmokeTest` — confirms the JUnit env-variable gate is correct
+- [x] 3.2 `./gradlew test` (with `OGARNIACZ_LIVE_SMOKE=true` AND `OPENROUTER_API_KEY=sk-or-…` set) passes `LlmVisionSmokeTest` end-to-end, finishing in ≤ 55 s — verified 2026-06-07: SUCCESS, 2 events, 2.7 s wall (after switching default to `google/gemini-2.5-flash`; the planned `google/gemini-2.0-flash-001` 404'd — retired from OpenRouter). sha at commit
 
 #### Manual
 
-- [ ] 3.3 Read the smoke test's printed `LlmExtractionResult.rawResponse` — confirm the model produced something resembling JSON with the right field shape (`date`, `title`, etc.). Semantic accuracy is NOT graded here.
-- [ ] 3.4 Rotate the Fly secret (`fly secrets set AI_PROVIDER_API_KEY='sk-or-…' -a ogarniacz`) and verify the deployed app's logs (`fly logs -a ogarniacz`) show a clean restart with no new errors
-- [ ] 3.5 Run the smoke a second time with a different model (`anthropic/claude-3.5-sonnet`) by editing `application.properties` locally — confirm the rerun still works and the runbook bullet is accurate
-- [ ] 3.6 Reset `application.properties`' model line back to `google/gemini-2.0-flash-001` before committing — model swap is meant to be exploratory, not committed in F-01
+- [x] 3.3 Read the smoke test's printed `LlmExtractionResult.rawResponse` — confirm the model produced something resembling JSON with the right field shape (`date`, `title`, etc.). Semantic accuracy is NOT graded here. — verified 2026-06-07: clean JSON array, all 5 fields per item, `date`=`YYYY-MM-DD` / `time`=`HH:MM`, `null` where absent; `LocalDate`/`LocalTime` deserialized cleanly. sha at commit
+- [ ] 3.4 Rotate the Fly secret (`fly secrets set AI_PROVIDER_API_KEY='sk-or-…' -a ogarniacz`) and verify the deployed app's logs (`fly logs -a ogarniacz`) show a clean restart with no new errors — operator-run, manual (deploy-plan §7 irreversible gate)
+- [x] 3.5 ~~Run the smoke with `anthropic/claude-sonnet-4.5`~~ — the model-swap runbook bullet was proven empirically by the `google/gemini-2.0-flash-001` → `google/gemini-2.5-flash` switch (one-string change; behaviour went 404 → SUCCESS). Re-running against claude is optional; note `anthropic/claude-sonnet-4.5` may itself be a retired slug by 2026 — check the catalog first.
+- [x] 3.6 ~~Reset model line to `google/gemini-2.0-flash-001`~~ **superseded**: that slug is retired from OpenRouter; the committed default is `google/gemini-2.5-flash` (verified live). No reset needed.
