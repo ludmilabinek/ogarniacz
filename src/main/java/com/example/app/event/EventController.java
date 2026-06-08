@@ -44,11 +44,15 @@ public class EventController {
                 form.getEventDate(),
                 form.getEventTime(),
                 form.getTitle().trim(),
-                form.getRequirements(),
-                form.getNotes()
+                trimOrNull(form.getRequirements()),
+                trimOrNull(form.getNotes())
         );
         eventRepository.save(event);
 
         return "redirect:/app";
+    }
+
+    private static String trimOrNull(String value) {
+        return value == null ? null : value.trim();
     }
 }

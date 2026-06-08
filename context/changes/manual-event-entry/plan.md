@@ -230,6 +230,8 @@ Wire the personal view to fetch and render the current user's upcoming events. S
 
 **Contract**: `@ConfigurationProperties(prefix = "app")` annotated record (or class) with `ZoneId timezone` and a nested `Reminder reminder` containing `int hour`. Spring Boot's `ZoneId` converter resolves `Europe/Warsaw` automatically. Register the class via `@EnableConfigurationProperties(AppEventProperties.class)` on `AppApplication.java` (or a dedicated `@Configuration` — match existing project convention, S-01 added beans via `SecurityConfig`).
 
+**Addendum (2026-06-08, post-impl)**: Final shape is `AppEventProperties(ZoneId timezone, EventSettings event)` with `EventSettings(Reminder reminder)` and accessor chain `properties.event().reminder().hour()` — an extra nesting level beyond the sketch above is required so the Phase 2 property key `app.event.reminder.hour` binds correctly. The nested type was named `EventSettings` (not `Event`) to avoid shadowing the JPA `@Entity Event` in the same package; the §2 helper line therefore reads `properties.event().reminder().hour()` not `properties.reminder().hour()`.
+
 #### 2. `EventReminder` helper
 
 **File**: `src/main/java/com/example/app/event/EventReminder.java` (new)

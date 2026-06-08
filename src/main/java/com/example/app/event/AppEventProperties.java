@@ -5,19 +5,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.ZoneId;
 
 @ConfigurationProperties(prefix = "app")
-public record AppEventProperties(ZoneId timezone, Event event) {
+public record AppEventProperties(ZoneId timezone, EventSettings event) {
 
     public AppEventProperties {
         if (timezone == null) {
             timezone = ZoneId.of("Europe/Warsaw");
         }
         if (event == null) {
-            event = new Event(new Reminder(8));
+            event = new EventSettings(new Reminder(8));
         }
     }
 
-    public record Event(Reminder reminder) {
-        public Event {
+    public record EventSettings(Reminder reminder) {
+        public EventSettings {
             if (reminder == null) {
                 reminder = new Reminder(8);
             }

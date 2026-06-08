@@ -16,7 +16,7 @@ class EventReminderTest {
     private static final ZoneId WARSAW = ZoneId.of("Europe/Warsaw");
 
     private final EventReminder reminder = new EventReminder(
-            new AppEventProperties(WARSAW, new AppEventProperties.Event(new AppEventProperties.Reminder(8)))
+            new AppEventProperties(WARSAW, new AppEventProperties.EventSettings(new AppEventProperties.Reminder(8)))
     );
 
     @Test
