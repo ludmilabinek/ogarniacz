@@ -378,28 +378,28 @@ Hibernate `ddl-auto=update` creates `app_event` additively on first boot after d
 
 #### Automated
 
-- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes (4 test methods)
-- [x] 1.2 `./gradlew test` keeps all existing S-01 + LLM tests green
-- [x] 1.3 `./gradlew build` succeeds
+- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes (4 test methods) — 0645ab6
+- [x] 1.2 `./gradlew test` keeps all existing S-01 + LLM tests green — 0645ab6
+- [x] 1.3 `./gradlew build` succeeds — 0645ab6
 
 #### Manual
 
-- [x] 1.4 `./gradlew bootRun` against live Postgres starts and Hibernate logs `create table app_event …`
-- [x] 1.5 `psql` shows `\d app_event` with the FK to `app_user(id)` and the `ix_app_event_user_date` index
+- [x] 1.4 `./gradlew bootRun` against live Postgres starts and Hibernate logs `create table app_event …` — 0645ab6
+- [x] 1.5 `psql` shows `\d app_event` with the FK to `app_user(id)` and the `ix_app_event_user_date` index — 0645ab6
 
 ### Phase 2: Manual entry form, controller, validation
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (8 test methods)
-- [ ] 2.2 `./gradlew test` keeps all S-01 + Phase 1 + LLM tests green
-- [ ] 2.3 `./gradlew build` succeeds
+- [x] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (8 test methods)
+- [x] 2.2 `./gradlew test` keeps all S-01 + Phase 1 + LLM tests green
+- [x] 2.3 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 2.4 `bootRun`, log in, navigate to `/events/new`, submit a valid form; browser lands on `/app` with HTTP 302
-- [ ] 2.5 A row appears in `app_event` with the correct `user_id` matching the logged-in user
-- [ ] 2.6 Submitting with a blank title shows the inline error and does NOT navigate away
+- [x] 2.4 `bootRun`, log in, navigate to `/events/new`, submit a valid form; browser lands on `/app` with HTTP 302
+- [x] 2.5 A row appears in `app_event` with the correct `user_id` matching the logged-in user
+- [x] 2.6 Submitting with a blank title shows the inline error and does NOT navigate away
 
 ### Phase 3: Populated personal view, reminder helper, partition test
 
