@@ -405,15 +405,15 @@ Hibernate `ddl-auto=update` creates `app_event` additively on first boot after d
 
 #### Automated
 
-- [x] 3.1 `./gradlew test --tests com.example.app.event.EventReminderTest` passes (5 test methods, all DST/boundary cases)
-- [x] 3.2 `./gradlew test --tests com.example.app.AppApplicationTests` includes `appShowsUpcomingEventsForCurrentUserOnly` and passes
-- [x] 3.3 `./gradlew test --tests com.example.app.event.EventControllerTest` includes `appHidesPastEventsForCurrentUser` and passes
-- [x] 3.4 `./gradlew test` passes the full suite (S-01 + Phase 1 + Phase 2 + Phase 3)
-- [x] 3.5 `./gradlew build` succeeds
+- [x] 3.1 `./gradlew test --tests com.example.app.event.EventReminderTest` passes (5 test methods, all DST/boundary cases) — 72ff5b5
+- [x] 3.2 `./gradlew test --tests com.example.app.AppApplicationTests` includes `appShowsUpcomingEventsForCurrentUserOnly` and passes — 72ff5b5
+- [x] 3.3 `./gradlew test --tests com.example.app.event.EventControllerTest` includes `appHidesPastEventsForCurrentUser` and passes — 72ff5b5
+- [x] 3.4 `./gradlew test` passes the full suite (S-01 + Phase 1 + Phase 2 + Phase 3) — 72ff5b5
+- [x] 3.5 `./gradlew build` succeeds — 72ff5b5
 
 #### Manual
 
-- [x] 3.6 `bootRun`, log in, add a future event; on redirect to `/app` the event appears with date and title rendered
-- [x] 3.7 Two events same date — timed one orders before untimed one (nulls-last on `event_time`)
-- [x] 3.8 Sign up a second user; their `/app` shows no events (not the first user's)
-- [x] 3.9 Add an event with a past date; form accepts it, the row is in the DB, but `/app` does not show it
+- [x] 3.6 `bootRun`, log in, add a future event; on redirect to `/app` the event appears with date and title rendered — 72ff5b5
+- [x] 3.7 Two events same date — timed one orders before untimed one (nulls-last on `event_time`) — 72ff5b5
+- [x] 3.8 Sign up a second user; their `/app` shows no events (not the first user's) — 72ff5b5
+- [x] 3.9 Add an event with a past date; form accepts it, the row is in the DB, but `/app` does not show it — 72ff5b5
