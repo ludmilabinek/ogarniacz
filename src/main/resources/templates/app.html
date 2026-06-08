@@ -5,7 +5,19 @@
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="app-page">
     <p>Signed in as <span th:text="${userEmail}">user@example.com</span>.</p>
-    <p class="empty-state">No events yet. Manual entry coming in the next slice.</p>
+    <p><a th:href="@{/events/new}" class="primary-action">Add event</a></p>
+    <ul class="event-list" th:if="${!#lists.isEmpty(events)}">
+        <li th:each="e : ${events}">
+            <span class="event-when">
+                <span th:text="${#temporals.format(e.eventDate, 'EEE d MMM yyyy')}">Mon 1 Jan 2026</span>
+                <span th:if="${e.eventTime != null}" th:text="${#temporals.format(e.eventTime, 'HH:mm')}">09:00</span>
+            </span>
+            <strong th:text="${e.title}">Event title</strong>
+            <p class="event-requirements" th:if="${e.requirements != null and !#strings.isEmpty(e.requirements)}" th:text="${e.requirements}"></p>
+            <p class="event-notes" th:if="${e.notes != null and !#strings.isEmpty(e.notes)}" th:text="${e.notes}"></p>
+        </li>
+    </ul>
+    <p class="empty-state" th:if="${#lists.isEmpty(events)}">No events yet. Add one above.</p>
 </main>
 </body>
 </html>

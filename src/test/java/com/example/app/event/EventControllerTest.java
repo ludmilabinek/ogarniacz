@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -140,5 +141,19 @@ class EventControllerTest {
                         .param("eventDate", LocalDate.now().plusDays(1).toString())
                         .param("title", "no-csrf"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void appHidesPastEventsForCurrentUser() throws Exception {
+        String email = "alice-pasthide@example.com";
+        AppUser alice = appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+
+        eventRepository.save(new Event(alice, LocalDate.now().minusDays(2), null, "past-event-title-pasthide", null, null));
+        eventRepository.save(new Event(alice, LocalDate.now().plusDays(2), null, "future-event-title-pasthide", null, null));
+
+        mvc.perform(get("/app").with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("future-event-title-pasthide")))
+                .andExpect(content().string(not(containsString("past-event-title-pasthide"))));
     }
 }

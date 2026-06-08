@@ -391,29 +391,29 @@ Hibernate `ddl-auto=update` creates `app_event` additively on first boot after d
 
 #### Automated
 
-- [x] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (8 test methods)
-- [x] 2.2 `./gradlew test` keeps all S-01 + Phase 1 + LLM tests green
-- [x] 2.3 `./gradlew build` succeeds
+- [x] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (8 test methods) — 68d7ee3
+- [x] 2.2 `./gradlew test` keeps all S-01 + Phase 1 + LLM tests green — 68d7ee3
+- [x] 2.3 `./gradlew build` succeeds — 68d7ee3
 
 #### Manual
 
-- [x] 2.4 `bootRun`, log in, navigate to `/events/new`, submit a valid form; browser lands on `/app` with HTTP 302
-- [x] 2.5 A row appears in `app_event` with the correct `user_id` matching the logged-in user
-- [x] 2.6 Submitting with a blank title shows the inline error and does NOT navigate away
+- [x] 2.4 `bootRun`, log in, navigate to `/events/new`, submit a valid form; browser lands on `/app` with HTTP 302 — 68d7ee3
+- [x] 2.5 A row appears in `app_event` with the correct `user_id` matching the logged-in user — 68d7ee3
+- [x] 2.6 Submitting with a blank title shows the inline error and does NOT navigate away — 68d7ee3
 
 ### Phase 3: Populated personal view, reminder helper, partition test
 
 #### Automated
 
-- [ ] 3.1 `./gradlew test --tests com.example.app.event.EventReminderTest` passes (5 test methods, all DST/boundary cases)
-- [ ] 3.2 `./gradlew test --tests com.example.app.AppApplicationTests` includes `appShowsUpcomingEventsForCurrentUserOnly` and passes
-- [ ] 3.3 `./gradlew test --tests com.example.app.event.EventControllerTest` includes `appHidesPastEventsForCurrentUser` and passes
-- [ ] 3.4 `./gradlew test` passes the full suite (S-01 + Phase 1 + Phase 2 + Phase 3)
-- [ ] 3.5 `./gradlew build` succeeds
+- [x] 3.1 `./gradlew test --tests com.example.app.event.EventReminderTest` passes (5 test methods, all DST/boundary cases)
+- [x] 3.2 `./gradlew test --tests com.example.app.AppApplicationTests` includes `appShowsUpcomingEventsForCurrentUserOnly` and passes
+- [x] 3.3 `./gradlew test --tests com.example.app.event.EventControllerTest` includes `appHidesPastEventsForCurrentUser` and passes
+- [x] 3.4 `./gradlew test` passes the full suite (S-01 + Phase 1 + Phase 2 + Phase 3)
+- [x] 3.5 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 3.6 `bootRun`, log in, add a future event; on redirect to `/app` the event appears with date and title rendered
-- [ ] 3.7 Two events same date — timed one orders before untimed one (nulls-last on `event_time`)
-- [ ] 3.8 Sign up a second user; their `/app` shows no events (not the first user's)
-- [ ] 3.9 Add an event with a past date; form accepts it, the row is in the DB, but `/app` does not show it
+- [x] 3.6 `bootRun`, log in, add a future event; on redirect to `/app` the event appears with date and title rendered
+- [x] 3.7 Two events same date — timed one orders before untimed one (nulls-last on `event_time`)
+- [x] 3.8 Sign up a second user; their `/app` shows no events (not the first user's)
+- [x] 3.9 Add an event with a past date; form accepts it, the row is in the DB, but `/app` does not show it

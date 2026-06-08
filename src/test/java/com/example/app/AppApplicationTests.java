@@ -1,5 +1,7 @@
 package com.example.app;
 
+import com.example.app.event.Event;
+import com.example.app.event.EventRepository;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
 import jakarta.servlet.http.Cookie;
@@ -16,6 +18,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -42,6 +45,9 @@ class AppApplicationTests {
 
 	@Autowired
 	AppUserRepository appUserRepository;
+
+	@Autowired
+	EventRepository eventRepository;
 
 	@Autowired
 	PasswordEncoder passwordEncoder;
@@ -186,9 +192,12 @@ class AppApplicationTests {
 
 	@Test
 	void getAppAuthenticatedShowsEmail() throws Exception {
-		mvc.perform(get("/app").with(user("showmail@example.com")))
+		String email = "showmail@example.com";
+		appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+
+		mvc.perform(get("/app").with(user(email)))
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("showmail@example.com")));
+				.andExpect(content().string(containsString(email)));
 	}
 
 	@Test
@@ -225,6 +234,22 @@ class AppApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(content().string(containsString(alice)))
 				.andExpect(content().string(not(containsString(bob))));
+	}
+
+	@Test
+	void appShowsUpcomingEventsForCurrentUserOnly() throws Exception {
+		String aliceEmail = "alice-event-partition@example.com";
+		String bobEmail = "bob-event-partition@example.com";
+		AppUser alice = appUserRepository.save(new AppUser(aliceEmail, passwordEncoder.encode("verylongpassword12")));
+		AppUser bob = appUserRepository.save(new AppUser(bobEmail, passwordEncoder.encode("verylongpassword12")));
+
+		eventRepository.save(new Event(alice, LocalDate.now().plusDays(3), null, "alice-only-event-title", null, null));
+		eventRepository.save(new Event(bob, LocalDate.now().plusDays(4), null, "bob-only-event-title", null, null));
+
+		mvc.perform(get("/app").with(user(aliceEmail)))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("alice-only-event-title")))
+				.andExpect(content().string(not(containsString("bob-only-event-title"))));
 	}
 
 	@Test
