@@ -30,7 +30,7 @@ The **product wedge** — the one trait that, if removed, makes the product indi
 | ID    | Issue | Change ID                                    | Outcome (user can …)                                                                                                            | Prerequisites    | PRD refs                                       | Status   |
 | ----- | ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------- | -------- |
 | F-01  | [#1](https://github.com/ludmilabinek/ogarniacz/issues/1) | openrouter-llm-client-wired                  | (foundation) OpenRouter vision-LLM client is callable from the app and returns a structured response on a smoke test            | —                | FR-004, FR-005, NFR (extraction latency)       | done     |
-| S-01  | [#2](https://github.com/ludmilabinek/ogarniacz/issues/2) | minimal-auth-and-empty-personal-view         | sign up, log in, log out, and land on an empty personal view scoped to their account                                            | —                | FR-001, FR-009 (partial), US-01 (login), §Access Control, NFR (zero cross-account leakage) | ready    |
+| S-01  | [#2](https://github.com/ludmilabinek/ogarniacz/issues/2) | minimal-auth-and-empty-personal-view         | sign up, log in, log out, and land on an empty personal view scoped to their account                                            | —                | FR-001, FR-009 (partial), US-01 (login), §Access Control, NFR (zero cross-account leakage) | done     |
 | S-02  | [#3](https://github.com/ludmilabinek/ogarniacz/issues/3) | manual-event-entry                           | manually create an event with date/time/title/requirements/notes; it appears in their personal view with the default reminder    | S-01             | FR-003, FR-008, FR-009, US-02                  | done     |
 | S-04  | [#4](https://github.com/ludmilabinek/ogarniacz/issues/4) | icalendar-feed-and-subscription              | view + copy their unique iCalendar URL from settings; events from the personal view appear in their subscribed calendar         | S-02             | FR-012, FR-013, US-03, NFR (token entropy, feed freshness) | proposed |
 | S-05  | [#5](https://github.com/ludmilabinek/ogarniacz/issues/5) | image-extraction-and-review-acceptance       | upload an image, see AI-proposed events with editable fields, accept or reject each individually, see accepted ones in calendar | F-01, S-02       | FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, US-01 (full) | proposed |
@@ -89,7 +89,7 @@ What's already in place in the codebase as of 2026-05-25 (auto-researched + user
 - **Unknowns:**
   - UI tech for forms + personal view shell (Thymeleaf vs. HTMX vs. static HTML + minimal JS)? Owner: dev (decide in `/10x-plan`). Block: no — implementation detail, not a roadmap call.
 - **Risk:** Per-user data partition contract is introduced HERE and inherited by every subsequent slice. If S-01 ships with partition only enforced ad hoc, the NFR "zero cross-account leakage" silently breaks the first time a second user is added. The slice must include at least one negative test (user A cannot read user B's personal view) to lock the contract.
-- **Status:** ready
+- **Status:** done
 
 ### S-02: Manual event entry
 
@@ -196,3 +196,4 @@ _Empty on first generation. `/10x-archive` appends here (and flips the matching 
 
 - **F-01: (foundation) OpenRouter vision-LLM client is callable from the app and returns a structured response on a smoke test** — Archived 2026-06-07 → `context/archive/2026-06-01-openrouter-llm-client-wired/`. Lesson: —.
 - **S-02: parent can manually create an event with date, optional time, title, requirements, and notes; on save it appears in the personal view, attributed to their account, with the default morning-of-day-before reminder attached.** — Archived 2026-06-09 → `context/archive/2026-06-07-manual-event-entry/`. Lesson: —.
+- **S-01: parent can sign up with email and password, log in, log out, stay logged in across browser sessions, and land on an empty personal view scoped to their own account.** — Archived 2026-06-09 → `context/archive/2026-05-26-minimal-auth-and-empty-personal-view/`. Lesson: —.
