@@ -1,10 +1,10 @@
 ---
 change_id: manual-event-entry
 title: Manual event entry
-status: impl_reviewed
+status: archived
 created: 2026-06-07
-updated: 2026-06-08
-archived_at: null
+updated: 2026-06-09
+archived_at: 2026-06-09T07:33:21Z
 ---
 
 ## Notes
