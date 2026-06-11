@@ -91,10 +91,12 @@ After this plan ships:
 - `src/test/java/com/example/app/llm/LlmExtractionRecordedRegressionTest.java`
   runs in CI by default. For every fixture under
   `src/test/resources/llm/fixtures/<id>/`, it stubs `ChatModel.call(...)`
-  with the captured raw response and asserts the per-field tolerant
-  diff against the human label. After this plan, the seed fixture
-  `01-sample` is on disk and the class is **enabled**, not vacuously
-  passing.
+  with the captured raw response and asserts the observed
+  per-field-diff divergence set against the documented
+  `KNOWN_DIVERGENCES` entry (clean match — zero divergences — if the
+  fixture isn't listed). After this plan, the seed fixture
+  `01-sample` is on disk as a documented-divergence fixture and the
+  class is **enabled**, not vacuously passing.
 - `src/test/java/com/example/app/llm/LlmExtractionLiveRegressionTest.java`
   is env-gated by `OGARNIACZ_LIVE_SMOKE=true` + `OPENROUTER_API_KEY`.
   When `recorded-response.json` is missing AND
@@ -600,6 +602,26 @@ present; recording mode (atomic write into the source tree + sidecar)
 when missing AND `OGARNIACZ_RECORD_FIXTURES=true`; loud failure
 otherwise. **Never** overwrites an existing recording.
 
+**Grading-mode assertion inherits the Phase 2 pivot.** "Run the same
+diff loop as Phase 2" below means the divergence-set assertion against
+`KNOWN_DIVERGENCES[fixtureId]` introduced in Phase 2, NOT a direct
+"first failing field aborts" diff. Two consequences flow from this and
+are intentional:
+
+- A *clean* model improvement on a documented-divergence fixture
+  (e.g. a future model swap that correctly extracts `requirements`
+  for `01-sample`) surfaces as a "missing divergence" failure, not
+  a silent pass. That failure is the curator's signal to re-evaluate
+  the fixture: either remove the entry from `KNOWN_DIVERGENCES`
+  (the fixture is now a clean-match case) or revise it (the model
+  drift is different from the documented one). This is by design —
+  per the 2026-06-11 pivot direction, drift between recordings and
+  documented divergences is a load-bearing signal, not noise.
+- A model *regression* (the live response disagrees with
+  `expected.json` on a NEW field) surfaces as an "extra divergence"
+  failure with the diff details on the failure surface, exactly as
+  Phase 2's deliberate-break manual check exercises.
+
 ### Changes Required
 
 #### 1. Live variant test class
@@ -646,6 +668,15 @@ parameterised test method drives both. Never wired into CI.
        and pass (recording-mode assertion is "rawResponse is non-blank
        and contains a `[`", documenting that the captured payload at
        least looks JSON-array-shaped).
+       **Note on KNOWN_DIVERGENCES**: writing a fresh
+       `recorded-response.json` does NOT touch the test class's
+       `KNOWN_DIVERGENCES` constant. The curator must re-run the
+       recorded-mock variant (Phase 2 class) after recording lands;
+       if the divergence set has shifted, update the constant
+       per `fixtures/README.md` §Fixture categories (add for
+       documented divergence; remove for clean match). Phase 3
+       cannot do this automatically — `KNOWN_DIVERGENCES` is the
+       curator's accept-list, not a derived property.
      - Otherwise (missing recording + flag unset):
        `fail("fixture %s has no recording at %s; rerun with OGARNIACZ_RECORD_FIXTURES=true to capture".formatted(fixtureDir.getFileName(), recordedInSource))`.
 - `private void writeRecordingAtomically(Path sourceFixtureDir, LlmExtractionResult result, String model) throws IOException`
@@ -742,7 +773,14 @@ boundary failure modes) remains TBD until its phase ships.
   `recorded-response.json` (run the live variant with
   `OGARNIACZ_LIVE_SMOKE=true` + `OGARNIACZ_RECORD_FIXTURES=true`,
   flags must be set *together* — never set `RECORD_FIXTURES` without
-  `LIVE_SMOKE`); the *recordings-from-model, labels-from-human* rule.
+  `LIVE_SMOKE`); the *recordings-from-model, labels-from-human* rule;
+  and the post-capture acceptance step: after Phase 3 writes a fresh
+  `recorded-response.json`, re-run
+  `LlmExtractionRecordedRegressionTest` once; if it reports
+  divergences, follow `fixtures/README.md` §Fixture categories to
+  decide whether to add a `KNOWN_DIVERGENCES` entry (documented
+  divergence) or re-record / re-label (clean match). A fixture
+  without an entry asserts zero divergences.
 - **Adding a parser invariant test** — extend `LlmVisionClientTest`
   with a mock-backed case; reference the existing fence-stripping /
   malformed-JSON cases at `LlmVisionClientTest.java:67-95, 138-149`.
@@ -943,27 +981,27 @@ Verification block above. The cross-phase manual flow:
 
 #### Automated
 
-- [x] 2.1 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` passes (observed divergence set equals `KNOWN_DIVERGENCES["01-sample"]`)
-- [x] 2.2 `./gradlew test` (full suite) passes
+- [x] 2.1 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` passes (observed divergence set equals `KNOWN_DIVERGENCES["01-sample"]`) — 1323e74
+- [x] 2.2 `./gradlew test` (full suite) passes — 1323e74
 
 #### Manual
 
-- [x] 2.3 Deliberate-break check: edit `fixtures/01-sample/expected.json` to add a new divergence (e.g. change a date); re-run; confirm failure message names fixture id + model + extra divergence + missing documented divergence on the affected event; revert
-- [x] 2.4 Parameterised test display name shows the `01-sample` fixture path (single iteration)
+- [x] 2.3 Deliberate-break check: edit `fixtures/01-sample/expected.json` to add a new divergence (e.g. change a date); re-run; confirm failure message names fixture id + model + extra divergence + missing documented divergence on the affected event; revert — 1323e74
+- [x] 2.4 Parameterised test display name shows the `01-sample` fixture path (single iteration) — 1323e74
 
 ### Phase 3: Live variant + recording mode
 
 #### Automated
 
-- [ ] 3.1 `./gradlew test` (no env vars) skips `LlmExtractionLiveRegressionTest`; full suite green
+- [x] 3.1 `./gradlew test` (no env vars) skips `LlmExtractionLiveRegressionTest`; full suite green
 
 #### Manual
 
-- [ ] 3.2 `OGARNIACZ_LIVE_SMOKE=true OPENROUTER_API_KEY=… ./gradlew test --tests com.example.app.llm.LlmExtractionLiveRegressionTest --info` — `01-sample` runs in grading mode, under 55 s, diff passes
-- [ ] 3.3 Throwaway fixture `99-throwaway` with no recording + no `OGARNIACZ_RECORD_FIXTURES` → test fails with the documented "no recording; rerun with `OGARNIACZ_RECORD_FIXTURES=true`" message
-- [ ] 3.4 Same throwaway + `OGARNIACZ_RECORD_FIXTURES=true` → test passes; `recorded-response.json` + `recorded-meta.json` appear on disk
-- [ ] 3.5 Third run with the recording in place + flag still set → test passes in grading mode; recording files are NOT overwritten
-- [ ] 3.6 `git rm` the throwaway `99-throwaway` directory; `git status` clean for `01-sample/`
+- [x] 3.2 `OGARNIACZ_LIVE_SMOKE=true OPENROUTER_API_KEY=… ./gradlew test --tests com.example.app.llm.LlmExtractionLiveRegressionTest --info` — `01-sample` runs in grading mode, under 55 s, diff passes
+- [x] 3.3 Throwaway fixture `99-throwaway` with no recording + no `OGARNIACZ_RECORD_FIXTURES` → test fails with the documented "no recording; rerun with `OGARNIACZ_RECORD_FIXTURES=true`" message
+- [x] 3.4 Same throwaway + `OGARNIACZ_RECORD_FIXTURES=true` → test passes; `recorded-response.json` + `recorded-meta.json` appear on disk
+- [x] 3.5 Third run with the recording in place + flag still set → test passes in grading mode; recording files are NOT overwritten
+- [x] 3.6 `git rm` the throwaway `99-throwaway` directory; `git status` clean for `01-sample/`
 
 ### Phase 4: Cookbook, test-plan sync, regex finding
 
