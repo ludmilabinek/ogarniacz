@@ -1,0 +1,16 @@
+  {
+  "events": [
+    {
+      "date": "2026-06-12",
+      "time": "09:00",
+      "title": "Wycieczka do ZOO",
+      "requirements": "Prosimy o przygotowanie: kanapka i picie w plecaczku, czapka z daszkiem, wygodne buty"
+    },
+    {
+      "date": "2026-06-20",
+      "time": "14:00",
+      "title": "Festyn rodzinny",
+      "requirements": "Każda rodzina przynosi coś słodkiego."
+    }
+  ]
+}
