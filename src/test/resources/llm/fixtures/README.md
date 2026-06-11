@@ -71,6 +71,42 @@ fixtures/
   flagged as a regression. Write events in whatever order reads most
   naturally from the image.
 
+## Fixture categories
+
+Each fixture falls into one of two categories at the harness layer:
+
+- **Clean match** — `expected.json` and the parsed
+  `recorded-response.json` agree on every graded field under the
+  per-field tolerant diff. This is the default; a fixture is in this
+  category implicitly when it has no entry in
+  `LlmExtractionRecordedRegressionTest#KNOWN_DIVERGENCES`. The
+  recorded-mock harness asserts zero divergences.
+- **Documented divergence** — `expected.json` is the curator's truth
+  from the image, but the model's recorded response disagrees on one
+  or more fields in a known, accepted way (e.g. condenses polite
+  filler, routes free text into `notes` instead of `requirements`).
+  The fixture id is listed in
+  `LlmExtractionRecordedRegressionTest#KNOWN_DIVERGENCES` with the
+  exact `(event-title, field, reason)` tuples the model is expected
+  to produce. The harness asserts the divergence set matches the
+  documented set — extra entries flag a parser / diff regression,
+  missing entries flag recording drift.
+
+The seed `01-sample` is a **documented-divergence** fixture (the
+synthetic seed image is not representative of production-style
+ogłoszenia and the curator chose to preserve the discrepancy as a
+load-bearing signal rather than re-label or re-record). Clean-match
+fixtures land as the curator collects real announcements.
+
+**Decision rule when adding a fixture**: write `expected.json` from
+the image. After Phase 3 captures `recorded-response.json`, re-run
+the recorded-mock harness once: if it reports zero divergences, leave
+the fixture out of `KNOWN_DIVERGENCES` (clean match). If it reports
+divergences and the curator accepts each one as a real model trait
+worth preserving, add the entry to `KNOWN_DIVERGENCES`. Never edit
+`expected.json` toward the recording to silence a divergence — that
+recreates the oracle-problem failure mode (§ "The oracle rule").
+
 ## `recorded-meta.json` schema
 
 ```json
