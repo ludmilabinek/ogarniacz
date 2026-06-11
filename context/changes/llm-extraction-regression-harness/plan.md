@@ -1007,12 +1007,12 @@ Verification block above. The cross-phase manual flow:
 
 #### Automated
 
-- [x] 4.1 `./gradlew test` (full suite) passes — no test changes in Phase 4
-- [x] 4.2 `grep -c "TBD — see §3 Phase 1" context/foundation/test-plan.md` returns `0`
-- [x] 4.3 `grep -F "in progress" context/foundation/test-plan.md | grep -F "LLM extraction regression harness"` matches one line
-- [x] 4.4 `grep -F "## Findings" context/changes/llm-extraction-regression-harness/change.md` matches
+- [x] 4.1 `./gradlew test` (full suite) passes — no test changes in Phase 4 — d0d9498
+- [x] 4.2 `grep -c "TBD — see §3 Phase 1" context/foundation/test-plan.md` returns `0` — d0d9498
+- [x] 4.3 `grep -F "in progress" context/foundation/test-plan.md | grep -F "LLM extraction regression harness"` matches one line — d0d9498
+- [x] 4.4 `grep -F "## Findings" context/changes/llm-extraction-regression-harness/change.md` matches — d0d9498
 
 #### Manual
 
-- [x] 4.5 Cold-read `test-plan.md` §6.4 — a fresh reader can add a new fixture without consulting `plan.md` or `research.md`
-- [x] 4.6 `change.md` Findings entry names file:line + symptom + hand-off path; no implementation-level prescription is baked in
+- [x] 4.5 Cold-read `test-plan.md` §6.4 — a fresh reader can add a new fixture without consulting `plan.md` or `research.md` — d0d9498
+- [x] 4.6 `change.md` Findings entry names file:line + symptom + hand-off path; no implementation-level prescription is baked in — d0d9498
