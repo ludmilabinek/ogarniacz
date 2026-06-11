@@ -993,26 +993,26 @@ Verification block above. The cross-phase manual flow:
 
 #### Automated
 
-- [x] 3.1 `./gradlew test` (no env vars) skips `LlmExtractionLiveRegressionTest`; full suite green
+- [x] 3.1 `./gradlew test` (no env vars) skips `LlmExtractionLiveRegressionTest`; full suite green — 189f5aa
 
 #### Manual
 
-- [x] 3.2 `OGARNIACZ_LIVE_SMOKE=true OPENROUTER_API_KEY=… ./gradlew test --tests com.example.app.llm.LlmExtractionLiveRegressionTest --info` — `01-sample` runs in grading mode, under 55 s, diff passes
-- [x] 3.3 Throwaway fixture `99-throwaway` with no recording + no `OGARNIACZ_RECORD_FIXTURES` → test fails with the documented "no recording; rerun with `OGARNIACZ_RECORD_FIXTURES=true`" message
-- [x] 3.4 Same throwaway + `OGARNIACZ_RECORD_FIXTURES=true` → test passes; `recorded-response.json` + `recorded-meta.json` appear on disk
-- [x] 3.5 Third run with the recording in place + flag still set → test passes in grading mode; recording files are NOT overwritten
-- [x] 3.6 `git rm` the throwaway `99-throwaway` directory; `git status` clean for `01-sample/`
+- [x] 3.2 `OGARNIACZ_LIVE_SMOKE=true OPENROUTER_API_KEY=… ./gradlew test --tests com.example.app.llm.LlmExtractionLiveRegressionTest --info` — `01-sample` runs in grading mode, under 55 s, diff passes — 189f5aa
+- [x] 3.3 Throwaway fixture `99-throwaway` with no recording + no `OGARNIACZ_RECORD_FIXTURES` → test fails with the documented "no recording; rerun with `OGARNIACZ_RECORD_FIXTURES=true`" message — 189f5aa
+- [x] 3.4 Same throwaway + `OGARNIACZ_RECORD_FIXTURES=true` → test passes; `recorded-response.json` + `recorded-meta.json` appear on disk — 189f5aa
+- [x] 3.5 Third run with the recording in place + flag still set → test passes in grading mode; recording files are NOT overwritten — 189f5aa
+- [x] 3.6 `git rm` the throwaway `99-throwaway` directory; `git status` clean for `01-sample/` — 189f5aa
 
 ### Phase 4: Cookbook, test-plan sync, regex finding
 
 #### Automated
 
-- [ ] 4.1 `./gradlew test` (full suite) passes — no test changes in Phase 4
-- [ ] 4.2 `grep -c "TBD — see §3 Phase 1" context/foundation/test-plan.md` returns `0`
-- [ ] 4.3 `grep -F "in progress" context/foundation/test-plan.md | grep -F "LLM extraction regression harness"` matches one line
-- [ ] 4.4 `grep -F "## Findings" context/changes/llm-extraction-regression-harness/change.md` matches
+- [x] 4.1 `./gradlew test` (full suite) passes — no test changes in Phase 4
+- [x] 4.2 `grep -c "TBD — see §3 Phase 1" context/foundation/test-plan.md` returns `0`
+- [x] 4.3 `grep -F "in progress" context/foundation/test-plan.md | grep -F "LLM extraction regression harness"` matches one line
+- [x] 4.4 `grep -F "## Findings" context/changes/llm-extraction-regression-harness/change.md` matches
 
 #### Manual
 
-- [ ] 4.5 Cold-read `test-plan.md` §6.4 — a fresh reader can add a new fixture without consulting `plan.md` or `research.md`
-- [ ] 4.6 `change.md` Findings entry names file:line + symptom + hand-off path; no implementation-level prescription is baked in
+- [x] 4.5 Cold-read `test-plan.md` §6.4 — a fresh reader can add a new fixture without consulting `plan.md` or `research.md`
+- [x] 4.6 `change.md` Findings entry names file:line + symptom + hand-off path; no implementation-level prescription is baked in
