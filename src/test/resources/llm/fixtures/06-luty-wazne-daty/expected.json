@@ -1,0 +1,37 @@
+{
+  "events": [
+    {
+      "date": "2026-02-02",
+      "time": null,
+      "title": "Dzień zabawki",
+      "requirements": null
+    },
+    {
+      "date": "2026-02-13",
+      "time": null,
+      "title": "St. Valentine's Day - WALENTYNKI",
+      "requirements": null
+    },
+    {
+      "date": "2026-02-17",
+      "time": null,
+      "title": "Podkoziołek - pożegnanie karnawału w rytmie disco",
+      "requirements": "Prosimy o kostiumy z epoki",
+      "notes": "Lata 80. XX wieku"
+    },
+    {
+      "date": "2026-02-17",
+      "time": null,
+      "title": "Warsztaty ekonomiczne o podatkach",
+      "requirements": null,
+      "notes": "Żonkile, Eukaliptusy, Wrzosy oraz Smyki. Temat: \"Jak się bawić, by wszystkich pieniędzy się nie pozbawić?\""
+    },
+    {
+      "date": "2026-02-24",
+      "time": null,
+      "title": "Warsztaty muzealne",
+      "requirements": null,
+      "notes": "Żonkile, Eukaliptusy, Wrzosy"
+    }
+  ]
+}

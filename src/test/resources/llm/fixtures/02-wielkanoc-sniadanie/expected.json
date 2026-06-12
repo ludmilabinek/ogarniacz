@@ -1,0 +1,18 @@
+{
+  "events": [
+    {
+      "date": "2026-04-01",
+      "time": "08:30",
+      "title": "Uroczyste śniadanie wielkanocne",
+      "requirements": "Prosimy o odświętny ubiór",
+      "notes": "Wrzosy, Eukaliptusy"
+    },
+    {
+      "date": "2026-04-01",
+      "time": "09:00",
+      "title": "Uroczyste śniadanie wielkanocne",
+      "requirements": "Prosimy o odświętny ubiór",
+      "notes": "Żonkile, Koniczynki"
+    }
+  ]
+}

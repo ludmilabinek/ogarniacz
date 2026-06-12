@@ -1,0 +1,63 @@
+{
+  "events": [
+    {
+      "date": "2026-06-01",
+      "time": null,
+      "title": "Dzień zabawki",
+      "requirements": null
+    },
+    {
+      "date": "2026-06-01",
+      "time": null,
+      "title": "Sportowe niespodzianki z okazji Dnia Dziecka",
+      "requirements": null
+    },
+    {
+      "date": "2026-06-02",
+      "time": null,
+      "title": "Wiosenne przygody - nocowanie",
+      "requirements": null,
+      "notes": "Klasa \"0\". Noc z 2 na 3 czerwca."
+    },
+    {
+      "date": "2026-06-16",
+      "time": null,
+      "title": "Spektakl Teatru Kulturka \"Bajka Szachrajka\"",
+      "requirements": "Prosimy o odświętny ubiór"
+    },
+    {
+      "date": "2026-06-19",
+      "time": "09:00",
+      "title": "Uroczyste zakończenie roku przedszkolnego 2025/26",
+      "requirements": "Prosimy, by wszystkie dzieci przyszły w strojach galowych",
+      "notes": "Eukaliptusy, Żonkile. Spektakl dyplomowy \"Brzydkie kaczątko / The Ugly Duckling\""
+    },
+    {
+      "date": "2026-06-19",
+      "time": "11:30",
+      "title": "Uroczyste zakończenie roku przedszkolnego 2025/26",
+      "requirements": "Prosimy, by wszystkie dzieci przyszły w strojach galowych",
+      "notes": "Wrzosy, Koniczynki. Spektakl dyplomowy \"Brzydkie kaczątko / The Ugly Duckling\""
+    },
+    {
+      "date": "2026-06-19",
+      "time": "13:00",
+      "title": "Pożegnanie przedszkolne",
+      "requirements": "Prosimy, by wszystkie dzieci przyszły w strojach galowych",
+      "notes": "Wrzosy \"0\" (odchodzące do I klasy SP)"
+    },
+    {
+      "date": "2026-06-23",
+      "time": "09:00",
+      "title": "Warsztaty muzealne \"Muzyczni detektywi\"",
+      "requirements": null,
+      "notes": "Żonkile, Eukaliptusy, Wrzosy. Wyjście do Muzeum Instrumentów Muzycznych, powrót ok. 11:00"
+    },
+    {
+      "date": "2026-06-26",
+      "time": null,
+      "title": "Powitanie lata - zabawa z balonem i piosenką",
+      "requirements": "Prosimy wszystkie dzieci o przybycie w strojach letnich/wakacyjnych"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Triage — seed fixture batch (9 announcements)
 
-Curator: Ludmiła. Triaged: 2026-06-12.
+Curator: Ludmiła. Triaged + processed: 2026-06-12.
 
 Source batch: 9 pre-anonymized real kindergarten announcements supplied by the
 curator, varied in source (poster photos, web layouts) and quality. PII screen
@@ -9,21 +9,44 @@ was whited-out by curator during this triage session — see row notes.
 
 ## Per-fixture triage table
 
-| ID | Category | Source format | Event count | Notable | PII status | Status |
-|----|----------|---------------|-------------|---------|------------|--------|
-| `02-wielkanoc-sniadanie` | clean (single, two-time) | poster photo | 1 event with 2 group times (8:30 + 9:00) | Tests whether model emits 1 event or splits into 2 per group | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `03-marzec-bez-godzin` | **ambiguous** | poster photo | 3 events (20 III, 31 III, 1 IV) | Most events lack explicit `HH:MM` times — tests missing-time-field handling | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `04-marzec-wazne-daty` | clean (multi) | poster photo | 5 events (2/3/5/12/19 III) | Varied `requirements` (yellow dress for Welsh day, sport gear, green for Patrick's) | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `05-zdjecia-dyplomowe` | clean (single) | poster photo | 1 event (26 maja, no time) | Conditional dress code (girls vs boys) in `requirements` | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `06-luty-wazne-daty` | clean (multi) | poster photo | 4 events (2/13/17/24 II) | Curator whited-out parent name line during triage (originally "pani Natalia - mama Antka i Adasia"); blank block at that position now | screened (post-triage edit) | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `07-czerwiec-wazne-daty` | clean (multi, dense) | poster photo | 6+ events including year-end ceremony with per-group times | Densest fixture; tests model's robustness on rich layout | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `08-grzybobranie` | clean (single) | poster photo | 1 event (27 IX 2025, 10:00–12:00) | Rich `requirements` list (basket, weather-appropriate clothing, reusable picnic gear, zero-waste) | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `09-niepodleglosci-www` | clean (single) | **web layout (HTML)** | 1 event (6.11.2025, no explicit time) | Tests non-poster input format — webpage capture with `Wydarzenia / Important dates` styling | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
-| `10-warsztaty-www` | clean (single) | **web layout (HTML)** | 1 event (15.05.2026, 9:00–12:00) | Web layout with explicit times + transport note ("tramwajem linii 9") | screened | ☐ image · ☐ expected.json · ☐ recorded · ☐ accept-list reviewed |
+| ID | Category | Source format | Events (oracle) | Status | Divergences after capture |
+|----|----------|---------------|------------------|--------|----------------------------|
+| `02-wielkanoc-sniadanie` | clean (single, two-time) | poster photo | 2 (one per group time) | ✅ done | 2× `requirements-norm-mismatch` — model puts group label in `requirements` instead of dress code |
+| `03-marzec-bez-godzin` | **ambiguous** (no times) | poster photo | 5 (incl. 1 IV repeated from fixture 02) | ✅ done | 5× `date-mismatch` — model emits 2024 instead of oracle year 2026 (**year-resolution prompt bug, [[task_199a06fd]]**) |
+| `04-marzec-wazne-daty` | clean (multi) | poster photo | 5 | ✅ done | 5× `date-mismatch` — 2023 instead of 2026 |
+| `05-zdjecia-dyplomowe` | clean (single) | poster photo | 1 (revised down from 2 after capture) | ✅ done | 1× `date-mismatch` — 2025 instead of 2026. After capture, curator agreed the model's reading of "one event with spectacle as supporting context" was defensible and revised oracle from 2 events to 1 |
+| `06-luty-wazne-daty` | clean (multi) | poster photo | 5 | ✅ done | 5× `date-mismatch` — 2023 instead of 2026. Curator whited-out a parent-name line ("pani Natalia - mama Antka i Adasia") during triage; the blank block did not confuse extraction |
+| `07-czerwiec-wazne-daty` | clean (multi, dense) | poster photo | 9 (oracle) vs 10 (model) | ⚠️ disabled | event-count mismatch — model emits a redundant umbrella entry for 19 VI in addition to the 3 per-group time slots. **No accept-list slot** for count mismatches today; fixture is in `DISABLED_FIXTURES` until [[task_199a06fd]] also tightens the don't-emit-umbrella behaviour |
+| `08-grzybobranie` | clean (single, rich requirements) | poster photo | 1 | ✅ done | 1× `requirements-norm-mismatch` — model's phrasing of the equipment list differs from oracle (also caught a curator misread of "Leśniczówce Łęsko"/"wjazdem" — the poster actually says "Leśnictwie Łękno"/"wigwam", `notes` corrected post-capture) |
+| `09-niepodleglosci-www` | clean (single) | **web layout (HTML)** | 1 | ✅ **clean match** | none — was 1× `title-norm-mismatch` (Polish typographic „..." vs ASCII `"..."`), curator fixed expected.json to use the same „..." the poster uses |
+| `10-warsztaty-www` | clean (single) | **web layout (HTML)** | 1 | ✅ done | 1× `time-mismatch` — model emits `null` for time despite poster saying "Wyjście o g.9.00"; prompt likely doesn't pull embedded times |
 
 Category target per `src/test/resources/llm/fixtures/README.md`:
 - ≥1 ambiguous → ✅ `03-marzec-bez-godzin`
 - ≥1 FR-005-unreadable → ❌ **not in this batch** (see Follow-ups)
+
+## Accuracy tally (PRD §Success Criteria primary)
+
+PRD definition: "date, title, and requirements correct on first extraction in ≥80% of representative real announcements". Any divergence — even an accept-listed one — means the parent has to fix something, so by the strict reading it does not count as first-extraction correct.
+
+| | Fixtures in batch | Of which **clean** (zero divergences) | Of which **measurable** (not disabled) | First-extraction accuracy |
+|---|---|---|---|---|
+| New batch (02-10) | 9 | **1** (`09-niepodleglosci-www`) | 8 (07 disabled) | **1/8 ≈ 12.5%** |
+| Including 01-sample | 10 | 1 | 9 | **1/9 ≈ 11.1%** |
+
+PRD §Success Criteria primary target: **≥80%**. Current baseline: ~11–12%. **Below target.**
+
+Dominant cause: year-resolution failure (model picks an arbitrary past year — 2023/2024/2025 — when the poster does not state a year). This single bug accounts for **15 of 22** documented divergences (68%). The spawned [[task_199a06fd]] ("Add year-resolution rule to LLM extraction prompt") targets this.
+
+Estimated post-prompt-fix accuracy (back-of-envelope): if the year fix resolves all `date-mismatch` entries, the clean-match fixtures would be:
+- `02` still red (requirements-mismatch — unrelated to year)
+- `03, 04, 05, 06` would become clean (year was their only issue) → **+4**
+- `08` still red (requirements-mismatch — unrelated)
+- `09` clean
+- `10` still red (time-mismatch — unrelated)
+- `07` would need recapture and accept-list review
+
+→ post-prompt-fix accuracy estimate: **5/8 ≈ 62.5%** (still below PRD target). Closing the gap to 80% would need a second pass on the prompt — likely around requirements-field semantics and embedded-time extraction.
 
 ## Follow-ups (tracked, not in this change)
 
@@ -34,28 +57,25 @@ Category target per `src/test/resources/llm/fixtures/README.md`:
   tally. Do **not** synthetically degrade a clean fixture — that violates the
   fixture sourcing policy ("real announcement").
 
-## Phase 2 — per-fixture capture procedure
+- **Prompt year-resolution rule** — already spawned as [[task_199a06fd]]. After it
+  lands and the curator re-records, prune all `date-mismatch` entries from
+  `KNOWN_DIVERGENCES` and re-evaluate the count-mismatch on `07-czerwiec-wazne-daty`
+  (re-enable from `DISABLED_FIXTURES` if the umbrella-event behaviour goes away).
 
-Authoritative procedure: `context/foundation/test-plan.md` §6.4. Summary:
+- **Field-confusion: groups vs dress code.** Fixture 02's divergence shows the
+  model puts target-group labels ("Dla Wrzosów i Eukaliptusów") in the
+  `requirements` field instead of the dress code ("Prosimy o odświętny ubiór").
+  Worth raising in the prompt-fix change as a second rule: `requirements` is for
+  what the parent needs to bring or wear, not who the event is for. The current
+  schema relegates groups to `notes` (which the diff does not compare).
 
-1. Image is already in `src/test/resources/llm/fixtures/<id>/image.png` (done at
-   triage time).
-2. Curator writes `expected.json` by reading the image — **oracle rule**: the
-   expected values come from human judgment of what the announcement says, never
-   from any model output.
-3. Capture: `OGARNIACZ_LIVE_SMOKE=true OGARNIACZ_RECORD_FIXTURES=true ./gradlew test --tests "*LiveRegression*"` — the live test atomically writes
-   `recorded-response.json` + `recorded-meta.json`.
-4. Verify: `./gradlew test --tests "*RecordedRegression*"` — see diff against
-   `expected.json`.
-5. Per divergence, curator decides: documented model limit (add to
-   `KNOWN_DIVERGENCES`) or real-and-uncovered (leave it red as a finding).
+- **Embedded time extraction.** Fixture 10 carries "Wyjście o g.9:00" in the body
+  text but the model leaves `time = null`. Either the prompt should be explicit
+  about pulling embedded start times, or the curator accepts time-null as
+  documented behaviour for body-text-time announcements.
 
-## Phase 3 — accuracy tally
-
-After all 9 fixtures have a recording and an accept-list decision:
-
-- Count fixtures with **zero divergences** vs fixtures with **any divergences**.
-- Ratio = first-extraction accuracy on this batch.
-- **Target: ≥8/10** to provisionally meet PRD §Success Criteria primary.
-- Sub-80% is **not** a harness failure — it's a signal for a separate
-  prompt/model-tuning change.
+- **Diff coverage of `notes` is currently zero.** Discovered while drafting this
+  batch — `LlmTestFixtures.diff(...)` only compares date/time/title/requirements.
+  Anything we put in `notes` is informational only. Either add to the diff (catch
+  notes drift as a regression signal) or remove the field from `ProposedEvent`
+  (vestigial). Tracked as a soft follow-up, not blocking this change.

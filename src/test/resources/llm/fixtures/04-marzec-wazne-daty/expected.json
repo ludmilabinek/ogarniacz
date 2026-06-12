@@ -1,0 +1,36 @@
+{
+  "events": [
+    {
+      "date": "2026-03-02",
+      "time": null,
+      "title": "Dzień zabawki",
+      "requirements": null
+    },
+    {
+      "date": "2026-03-03",
+      "time": null,
+      "title": "Spektakl Teatru Kulturka",
+      "requirements": "Prosimy o odświętny ubiór",
+      "notes": "Maria, która dostała Nobla"
+    },
+    {
+      "date": "2026-03-05",
+      "time": null,
+      "title": "ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"",
+      "requirements": "Prosimy o ubiór w kolorze żółtym"
+    },
+    {
+      "date": "2026-03-12",
+      "time": null,
+      "title": "Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców",
+      "requirements": "Prosimy o sportowy ubiór (dres i obuwie)",
+      "notes": "Wrzosy"
+    },
+    {
+      "date": "2026-03-19",
+      "time": null,
+      "title": "ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"",
+      "requirements": "Prosimy o ubiór w kolorze zielonym"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "events": [
+    {
+      "date": "2026-03-20",
+      "time": null,
+      "title": "Pożegnanie Zimy - korowód z Marzanną. Powitanie Wiosny gaikiem.",
+      "requirements": null
+    },
+    {
+      "date": "2026-03-31",
+      "time": null,
+      "title": "Spotkanie z wielkanocnym zajączkiem i jego przyjacielem",
+      "requirements": null,
+      "notes": "Wielkanocne niespodzianki"
+    },
+    {
+      "date": "2026-03-31",
+      "time": null,
+      "title": "Warsztaty florystyczne \"Stroiki na świąteczne stoły\"",
+      "requirements": null,
+      "notes": "Wielkanocne niespodzianki"
+    },
+    {
+      "date": "2026-04-01",
+      "time": "08:30",
+      "title": "Uroczyste śniadanie wielkanocne",
+      "requirements": "Prosimy o odświętny ubiór",
+      "notes": "Wrzosy, Eukaliptusy"
+    },
+    {
+      "date": "2026-04-01",
+      "time": "09:00",
+      "title": "Uroczyste śniadanie wielkanocne",
+      "requirements": "Prosimy o odświętny ubiór",
+      "notes": "Żonkile, Koniczynki"
+    }
+  ]
+}

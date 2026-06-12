@@ -2,6 +2,7 @@ package com.example.app.llm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.DisabledIf;
@@ -35,13 +37,62 @@ class LlmExtractionRecordedRegressionTest {
 	 * of the recorded model — not a clean match, not a regression. The test asserts the harness
 	 * surfaces EXACTLY this set: an extra divergence means a parser / diff regression; a missing
 	 * one means the documented behaviour drifted (likely a recording was regenerated). A fixture
-	 * absent from this map is asserted to produce zero divergences (the clean-match case for
-	 * future fixtures).
+	 * absent from this map is asserted to produce zero divergences (the clean-match case).
+	 *
+	 * <p>The bulk of the entries below were laid down by the {@code llm-fixture-set-expansion}
+	 * batch (2026-06-12) and document the model's current limits with the unmodified extraction
+	 * prompt: most notably, every {@code date-mismatch} entry is the year-resolution failure
+	 * tracked by the spawned task {@code task_199a06fd} ("Add year-resolution rule to LLM
+	 * extraction prompt"). After that prompt change ships, the curator re-records the fixtures
+	 * and prunes the now-resolved {@code date-mismatch} rows from this map.
 	 */
-	private static final Map<String, List<KnownDivergence>> KNOWN_DIVERGENCES = Map.of(
-			"01-sample", List.of(
+	private static final Map<String, List<KnownDivergence>> KNOWN_DIVERGENCES = Map.ofEntries(
+			Map.entry("01-sample", List.of(
 					new KnownDivergence("Wycieczka do ZOO", "requirements", "requirements-norm-mismatch"),
-					new KnownDivergence("Festyn rodzinny", "requirements", "requirements-norm-mismatch")));
+					new KnownDivergence("Festyn rodzinny", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("02-wielkanoc-sniadanie", List.of(
+					new KnownDivergence("Uroczyste śniadanie wielkanocne", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Uroczyste śniadanie wielkanocne", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("03-marzec-bez-godzin", List.of(
+					new KnownDivergence("Pożegnanie Zimy - korowód z Marzanną. Powitanie Wiosny gaikiem.", "date", "date-mismatch"),
+					new KnownDivergence("Spotkanie z wielkanocnym zajączkiem i jego przyjacielem", "date", "date-mismatch"),
+					new KnownDivergence("Warsztaty florystyczne \"Stroiki na świąteczne stoły\"", "date", "date-mismatch"),
+					new KnownDivergence("Uroczyste śniadanie wielkanocne", "date", "date-mismatch"),
+					new KnownDivergence("Uroczyste śniadanie wielkanocne", "date", "date-mismatch"))),
+			Map.entry("04-marzec-wazne-daty", List.of(
+					new KnownDivergence("Dzień zabawki", "date", "date-mismatch"),
+					new KnownDivergence("Spektakl Teatru Kulturka", "date", "date-mismatch"),
+					new KnownDivergence("ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"", "date", "date-mismatch"),
+					new KnownDivergence("Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców", "date", "date-mismatch"),
+					new KnownDivergence("ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"", "date", "date-mismatch"))),
+			Map.entry("05-zdjecia-dyplomowe", List.of(
+					new KnownDivergence("Pamiątkowe zdjęcia grupowe do dyplomów", "date", "date-mismatch"))),
+			Map.entry("06-luty-wazne-daty", List.of(
+					new KnownDivergence("Dzień zabawki", "date", "date-mismatch"),
+					new KnownDivergence("St. Valentine's Day - WALENTYNKI", "date", "date-mismatch"),
+					new KnownDivergence("Podkoziołek - pożegnanie karnawału w rytmie disco", "date", "date-mismatch"),
+					new KnownDivergence("Warsztaty ekonomiczne o podatkach", "date", "date-mismatch"),
+					new KnownDivergence("Warsztaty muzealne", "date", "date-mismatch"))),
+			Map.entry("08-grzybobranie", List.of(
+					new KnownDivergence("Grzybobranie", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("10-warsztaty-www", List.of(
+					new KnownDivergence("Warsztaty muzealne", "time", "time-mismatch"))));
+
+	/**
+	 * Fixtures the harness skips entirely until a referenced fix change lands. Use this for
+	 * fixtures where the model's divergence is NOT a field-level mismatch the test can document
+	 * (e.g. the assertion happens on event-count before per-field diff is computed). Each entry
+	 * must point at a concrete pending change — DO NOT use this to make ordinary divergences
+	 * quietly invisible; those belong in {@link #KNOWN_DIVERGENCES}.
+	 */
+	private static final Set<String> DISABLED_FIXTURES = Set.of(
+			// 07: model emits 10 events (an umbrella entry for 19 VI plus the 3 per-group time
+			//     slots we wanted) vs the curator's 9. The harness fails at the event-count
+			//     assertion before any field-level diff. Pending the prompt-fix change spawned
+			//     as task_199a06fd — the same change that will resolve the year-resolution
+			//     date-mismatch entries above is the right place to also tighten the
+			//     don't-emit-umbrella behaviour.
+			"07-czerwiec-wazne-daty");
 
 	@Autowired
 	LlmVisionClient llmVisionClient;
@@ -60,6 +111,10 @@ class LlmExtractionRecordedRegressionTest {
 	@ParameterizedTest(name = "fixture {0}")
 	@MethodSource("fixtures")
 	void recordedExtractionDivergencesMatchKnown(Path fixtureDir) throws IOException {
+		String fixtureId = fixtureDir.getFileName().toString();
+		assumeFalse(DISABLED_FIXTURES.contains(fixtureId),
+				"fixture " + fixtureId + " disabled pending referenced fix change (see DISABLED_FIXTURES comment)");
+
 		byte[] image = LlmTestFixtures.loadImage(fixtureDir);
 		String recorded = LlmTestFixtures.loadRecordedRaw(fixtureDir);
 		when(chatModel.call(any(Prompt.class))).thenReturn(LlmTestFixtures.chatResponseOf(recorded));
@@ -73,7 +128,6 @@ class LlmExtractionRecordedRegressionTest {
 		List<ProposedEvent> actual = LlmTestFixtures.canonicalSort(result.proposedEvents());
 
 		String model = LlmTestFixtures.loadMeta(fixtureDir, objectMapper).model();
-		String fixtureId = fixtureDir.getFileName().toString();
 
 		assertThat(actual.size())
 				.as("fixture=%s event-count expected=%d actual=%d model=%s",

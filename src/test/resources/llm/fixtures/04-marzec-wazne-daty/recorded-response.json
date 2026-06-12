@@ -1,0 +1,39 @@
+```json
+[
+  {
+    "date": "2023-03-02",
+    "time": null,
+    "title": "Dzień zabawki",
+    "requirements": null,
+    "notes": null
+  },
+  {
+    "date": "2023-03-03",
+    "time": null,
+    "title": "Spektakl Teatru Kulturka \"Maria, która dostała Nobla\"",
+    "requirements": "odświętny ubiór",
+    "notes": null
+  },
+  {
+    "date": "2023-03-05",
+    "time": null,
+    "title": "ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"",
+    "requirements": "ubiór w kolorze żółtym",
+    "notes": null
+  },
+  {
+    "date": "2023-03-12",
+    "time": null,
+    "title": "Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców",
+    "requirements": "sportowy ubiór (dres i obuwie) dla Wrzosów",
+    "notes": null
+  },
+  {
+    "date": "2023-03-19",
+    "time": null,
+    "title": "ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"",
+    "requirements": "ubiór w kolorze zielonym",
+    "notes": null
+  }
+]
+```

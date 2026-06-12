@@ -1,0 +1,18 @@
+```json
+[
+  {
+    "date": "2026-04-01",
+    "time": "08:30",
+    "title": "Uroczyste śniadanie wielkanocne",
+    "requirements": "Dla Wrzosów i Eukaliptusów",
+    "notes": "Prosimy o odświętny ubiór"
+  },
+  {
+    "date": "2026-04-01",
+    "time": "09:00",
+    "title": "Uroczyste śniadanie wielkanocne",
+    "requirements": "Dla Żonkili i Koniczynek",
+    "notes": "Prosimy o odświętny ubiór"
+  }
+]
+```
