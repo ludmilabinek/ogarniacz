@@ -15,6 +15,13 @@
 
 **Snapshot caveat:** Every Fly billing/trial/region fact in this plan was taken from `infrastructure.md` (`researched_at: 2026-05-21`). Phase 2.1 includes a mandatory live verification against `fly.io/pricing` before the human commits a card.
 
+> **🟨 Cost-mode decision (open question, revisit at every milestone):**
+> *"Which Fly Machine mode do I want right now — `stop`, `suspend`, or `warm`?"*
+>
+> This plan was originally written assuming the **`warm`** mode (`auto_stop_machines = false`, `min_machines_running = 1`) to minimize cold-start risk during first-deploy acceptance testing. **Current mode after the first deploy = `stop`** (commit `9ee9303`, 2026-05-22) — the project is still a scaffold and nobody is using it, so $0 idle beats a warm JVM.
+>
+> Full decision matrix + switching procedure: **[`cost-modes.md`](./cost-modes.md)**. Three lines in `fly.toml`, commit, push — the auto-deploy workflow applies the change. Do not edit Phase D.2 of this plan to flip modes — edit `cost-modes.md` and `fly.toml` instead.
+
 ---
 
 ## Context
@@ -41,7 +48,7 @@ Inspected at planning time (2026-05-21). `[x]` = present in repo; `[ ]` = pendin
 - [ ] `application.properties` exposes actuator health endpoint
 - [ ] `Dockerfile` authored (multi-stage temurin 21 jdk → jre, JVM mem flags)
 - [ ] `.dockerignore` authored
-- [ ] `fly.toml` committed with `primary_region = "fra"`, `[[vm]] memory = "1gb"`, `auto_stop_machines = false`, `min_machines_running = 1`, `internal_port = 8080`
+- [ ] `fly.toml` committed with `primary_region = "fra"`, `[[vm]] memory = "1gb"`, cost-mode per [`cost-modes.md`](./cost-modes.md) (currently: `auto_stop_machines = "stop"`, `min_machines_running = 0`), `internal_port = 8080`
 - [ ] `.git` initialized
 - [ ] GitHub remote configured (empty repo created in section 2.4)
 - [ ] `.github/workflows/deploy.yml` authored with pinned `superfly/flyctl-actions/setup-flyctl@v1.5`
@@ -61,7 +68,7 @@ Each step must be completed by the human before the next agent phase. Gate phras
 - **Action:** Sign up at `fly.io` (or use existing account), **then open `https://fly.io/pricing` in a browser and verify the current `shared-cpu-1x` 1 GB pricing matches infrastructure.md's snapshot (`shared-cpu-1x` 1 GB ≈ $6.80/mo). If it differs significantly, pause and refresh the infra research.** Add a billing card if not already attached. Then do the three things that actually work as cost controls:
   1. **Verify the account email is an inbox you read daily.** Go to `Account` (top-right avatar) → `Settings`; confirm email shows a "verified" badge. If not, Fly mailed a confirmation link at signup — check inbox/spam. This is the only channel Fly uses to reach you about anything (trial-expiry, suspended Machine, etc.).
   2. **Set a per-transaction alert at your bank** on the card attached to Fly — e.g. "SMS me on any transaction ≥ $10 from merchant `FLY.IO`". Most banks support this in their app/online portal. This is your *de facto* $10 alert, since Fly itself won't send one.
-  3. **Treat `fly.toml` resource config as the de facto cap.** With `memory = "1gb"`, `min_machines_running = 1`, `auto_stop_machines = false` (all already in Phase D.2), the *physical maximum* this deployment can charge is ~$7/mo for compute + bandwidth. Without manual scaling actions, the bill cannot run away on its own. The "cap" is the resource ceiling in the file, not a clickable setting.
+  3. **Treat `fly.toml` resource config as the de facto cap.** With `memory = "1gb"` and the cost-mode set in [`cost-modes.md`](./cost-modes.md) (worst case = `warm` mode: `min_machines_running = 1`, `auto_stop_machines = false`), the *physical maximum* this deployment can charge is ~$7/mo for compute + bandwidth. The current `stop` mode gives ~$0 idle — the `warm` figure is a hard ceiling you can't exceed without a manual config change. Without manual scaling actions, the bill cannot run away on its own. The "cap" is the resource ceiling in the file, not a clickable setting.
   4. **Add a recurring calendar reminder** (weekly, e.g. every Monday) — *"check fly.io dashboard → current month to date bill"*. This is the monitoring loop Fly explicitly recommends.
 - **Values to record:** none (Fly account email + org slug already known to human)
 - **Gate condition:** Agent waits until human confirms either form: `"Fly email verified, bank-side alert set, weekly dashboard reminder added"` OR (equivalent stronger form, when the card itself has a hard balance limit) `"Fly email verified, card has hard balance limit, transaction alerts set"`. The card-balance-limit variant is actually a stronger control than what Fly would offer platform-side — a declined charge produces a Machine suspension that Fly notifies about via the verified email channel, closing the same loop more decisively.
@@ -310,9 +317,11 @@ primary_region = "fra"
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = false
+  # ⬇️ Cost-mode lines — current pick: "stop" (zero idle cost, ~10-25s cold start).
+  # Other modes ("suspend", "warm") + decision matrix: see cost-modes.md.
+  auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
   processes = ["app"]
 
 [[vm]]
@@ -324,7 +333,7 @@ primary_region = "fra"
 Key non-defaults vs Fly's auto-generated file:
 - `primary_region = "fra"` (not `ams`) — co-locate with Neon `eu-central-1`
 - `memory = "1gb"` (not the 512 MB default) — risk register #1
-- `auto_stop_machines = false` + `min_machines_running = 1` — keep JVM warm; cold-start budget would otherwise eat the 60s PRD extraction ceiling
+- `auto_stop_machines` + `min_machines_running` — **decision deferred to [`cost-modes.md`](./cost-modes.md)**. Original first-deploy plan assumed `warm` (=`false` + `1`) to keep the JVM ready inside the PRD's 60s extraction ceiling. Current production setting is `"stop"` + `0` because the extraction endpoint doesn't exist yet — re-evaluate the trade-off when it does.
 - `[deploy] strategy = "immediate"` — single-machine MVP; rolling deploy makes no sense with 1 machine. Accept ~5s downtime per release. Switch to `"rolling"` when `flyctl scale count ≥ 2`.
 
 ⚠️ **HA peer caveat:** Despite `min_machines_running = 1`, Fly's `fly launch` and first `fly deploy` may auto-create a second Machine as an HA peer (this is Fly's default since ~2024). If you don't want HA, run `flyctl scale count 1 -a ogarniacz` after first deploy — verification §4.3 catches this.
@@ -549,7 +558,7 @@ Run all of these after Phase H succeeds. They form the "first deploy is real" ac
 |---|---|---|---|---|
 | 4.1 | App health | `curl -i https://ogarniacz.fly.dev/actuator/health` | `HTTP/2 200` + `{"status":"UP"}` | Rollback per §5 |
 | 4.2 | Feed URL (placeholder until feed feature ships) | `curl -i https://ogarniacz.fly.dev/<feed-path>` | 401 or 404 expected at this stage — feed not implemented yet, and the Phase E `SecurityFilterChain` returns 401 before route resolution for any non-`/actuator/health` path. 401 means "endpoint absent + auth-guarded" (the MVP-correct state); 404 would only appear if Spring resolves a public route. Both confirm the app is reachable. | If 5xx, app instability — investigate logs |
-| 4.3 | Machine state | `fly status -a ogarniacz` | 1 Machine, region `fra`, state `started` | If `stopped`, `auto_stop_machines` wasn't disabled — re-edit `fly.toml` and redeploy. If **2 Machines** appear: Fly auto-created an HA peer despite `min_machines_running = 1` (default behavior on first launch). For MVP, run `flyctl scale count 1 -a ogarniacz` to remove the peer. |
+| 4.3 | Machine state | `fly status -a ogarniacz` | 1 Machine, region `fra`. State depends on cost-mode (see [`cost-modes.md`](../deployment/cost-modes.md)): `warm` → expect `started`; `stop`/`suspend` → expect `stopped` (or `suspended`) shortly after deploy when no traffic. Right after a fresh deploy all modes show `started`. | If `started` is expected (warm mode) but state is `stopped`, `auto_stop_machines` was misconfigured — sync against `cost-modes.md`. If **2 Machines** appear: Fly auto-created an HA peer (default behavior on first launch). For MVP, run `flyctl scale count 1 -a ogarniacz` to remove the peer. |
 | 4.4 | No JVM OOM | `fly logs --since 5m -a ogarniacz \| grep -i 'OutOfMemoryError'` | Empty | Memory tuning failed — escalate per §5 |
 | 4.5 | No Hibernate pgbouncer collision | `fly logs --since 5m -a ogarniacz \| grep -i 'prepared statement.*already exists'` | Empty | `?prepareThreshold=0&preparedStatementCacheQueries=0` not actually appended in F.1 — re-run F.1 |
 | 4.6 | Neon DB reached | Open Neon Console → project `ogarniacz` → Monitoring tab | Non-zero compute hours in the last 30 min | App may be running but not hitting DB — confirm `SPRING_DATASOURCE_URL` is the pooled host |
@@ -591,7 +600,7 @@ Each row from `context/foundation/infrastructure.md` § "Risk Register" mapped t
 |---|---|---|
 | JVM OOM on Spring Boot 4 + Spring AI under image-extraction load | Phase B.3 JVM flags (`MaxRAMPercentage=75`, `ExitOnOutOfMemoryError`); Phase D 1 GB Machine; verification 4.4 | OOM-as-fail-fast (not silent). Heap-dump-on-OOM intentionally NOT enabled — Fly Machine `/tmp` is ephemeral and `[mounts]` is out of scope for MVP, so dumps would be lost on restart. Post-mortem stays log-based via `fly logs`. Load test under 50 extractions is **deferred** until extraction endpoint exists. |
 | Silent iCalendar feed failure masked by client-side caching | Phase I keyword monitor; verification 4.7 | Keyword check on `BEGIN:VCALENDAR` is the key — plain HTTP monitor would miss the failure mode. Currently watching `/actuator/health`; switch to feed URL when feature ships. |
-| JVM cold start consumes PRD's 60s extraction ceiling | Phase D `auto_stop_machines = false`, `min_machines_running = 1`; verification 4.3 | $6.80/mo cost accepted as the cost of warm JVM. |
+| JVM cold start consumes PRD's 60s extraction ceiling | Mitigation = `warm` cost-mode in [`cost-modes.md`](../deployment/cost-modes.md) (`auto_stop_machines = false` + `min_machines_running = 1`); verification 4.3. **Currently NOT mitigated** — production is in `stop` mode because the extraction endpoint doesn't exist yet. Switch to `warm` before the endpoint ships AND before any monitor polls it. | $6.80/mo cost accepted as the cost of warm JVM **once warm mode is re-enabled**. Until then: cold-start risk is theoretical (no endpoint to hit). |
 | Neon free-tier ceiling hit mid-month | Phase 2.2 — Neon free tier sends automatic ~75-80% and 100% emails (no custom threshold configurable); mitigation is "Neon account email = daily-read inbox". Phase B.2 also disables `DataSourceHealthIndicator` so the UptimeRobot 5-min health poll does NOT keep Neon's compute awake — without this knob the free tier would be exhausted in ~6-8 days from monitor traffic alone. | Upgrade path to $19/mo Neon Launch documented in infrastructure.md as the post-MVP step. Not mitigated by this deploy — **monitor-only**. When the iCalendar feed ships and replaces `/actuator/health` as the canary, feed queries will touch DB on every poll — that's the moment to either lengthen monitor interval to ≥10 min or upgrade Neon plan. |
 | Fly trial expires before billing card added; unbounded bill | Phase 2.1 card on file + verified Fly email (daily-read inbox) + bank-side per-transaction alert + `fly.toml` resource ceiling as de facto cap (1 GB Machine × 1 = ~$7/mc max) + weekly manual dashboard review | **Partially closed.** Fly does NOT offer in-platform hard caps or billing alerts (verified against fly.io/docs/about/cost-management 2026-05-21). The composite mitigation is what's available given the platform — no automated mechanism prevents charges exceeding a threshold, only resource ceilings + bank alerts + vigilance. |
 | `fly mcp server` experimental status | This plan uses `flyctl` via bash only — no MCP dependency | Fully closed. |
