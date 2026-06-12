@@ -1,9 +1,10 @@
 ---
 change_id: llm-extraction-regression-harness
 title: LLM extraction regression harness (test-plan §3 Phase 1, risks #1 + #2)
-status: impl_reviewed
+status: archived
 created: 2026-06-10
 updated: 2026-06-12
+archived_at: 2026-06-12T11:13:49Z
 ---
 
 ## Notes
