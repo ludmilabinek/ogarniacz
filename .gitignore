@@ -46,12 +46,9 @@ heapdump.hprof
 .DS_Store
 **/.DS_Store
 
-# Claude Code user-local
-.claude/settings.local.json
-
-# 10x-cli artifacts — installed per-user via `10x-cli get`, not shipped with repo
-.claude/.10x-cli-manifest.json
-.claude/skills/10x-*/
+# Claude Code workspace — user-local config, 10x-cli artifacts installed per-user
+# via `10x-cli get`, course-derived prompts/commands. Not shipped with repo.
+.claude/
 
 # Environment variables — never commit secrets; .env.example is allowed as a template
 .env
