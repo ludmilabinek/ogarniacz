@@ -60,6 +60,16 @@ final class LlmTestFixtures {
 		return listFixtures().isEmpty();
 	}
 
+	static List<Path> listRecordedFixtures() {
+		return listFixtures().stream()
+				.filter(dir -> Files.exists(dir.resolve("recorded-response.json")))
+				.toList();
+	}
+
+	static boolean recordedFixturesAreEmpty() {
+		return listRecordedFixtures().isEmpty();
+	}
+
 	static Path sourceFixtureDir(Path classpathFixtureDir) {
 		return Paths.get("src/test/resources/llm/fixtures")
 				.resolve(classpathFixtureDir.getFileName().toString());

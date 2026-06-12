@@ -108,11 +108,11 @@ class LlmExtractionRecordedRegressionTest {
 	}
 
 	static Stream<Path> fixtures() {
-		return LlmTestFixtures.listFixtures().stream();
+		return LlmTestFixtures.listRecordedFixtures().stream();
 	}
 
 	static boolean fixturesAreEmpty() {
-		return LlmTestFixtures.fixturesAreEmpty();
+		return LlmTestFixtures.recordedFixturesAreEmpty();
 	}
 
 	private record KnownDivergence(String title, String field, String reason) {}
