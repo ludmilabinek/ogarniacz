@@ -54,6 +54,13 @@
   - Spring's context cache reuses the same context across classes with identical config — splitting is ~free. The cache fragments when you introduce `@MockBean`, `@TestPropertySource`, or different active profiles; only diverge config when the test actually needs it.
 - **Applies to**: `/10x-plan`, `/10x-implement`, `/10x-impl-review` on any change that adds a controller or controller tests.
 
+## When lifting a test helper, sweep sibling `@BeforeEach` / setup blocks for duplication too
+
+- **Context**: extracting a shared test-side helper into `LlmTestFixtures` (or any test-only fixture class) — and similar refactors across `*Test` classes that share infrastructure.
+- **Problem**: Phase 1 of `llm-extraction-regression-harness` lifted `chatResponseOf` out of `LlmVisionClientTest` into `LlmTestFixtures` so the new `LlmExtractionRecordedRegressionTest` could reuse it. But the same two classes also carried an identical 4-line `@BeforeEach void stubDefaultOptions()` (`when(chatModel.getDefaultOptions()).thenReturn(ChatOptions.builder().build())`) — exactly the same shape, exactly the same Mockito stub, exactly the same dependency need. It was not lifted, because the lift was triggered by reuse-of-one-call, not by an audit of the wider surface. The duplication only surfaced in impl-review (F3), one step too late for the cheap fix.
+- **Rule**: When you lift the first shared helper out of a test class, scan **all** of that class's `@BeforeEach` / `@BeforeAll` / `private` helper methods against the new sibling test that just appeared. If anything else is byte-for-byte duplicated (or a one-symbol rename away), lift it in the same change. A second `*Test` file is a strong signal — the pair forms a *family*; treat the family's fixture surface as a single thing. Without this discipline, every additional sibling adds another N-way duplication round.
+- **Applies to**: `/10x-plan` (when a plan introduces a sibling test class alongside an existing one), `/10x-implement`, `/10x-impl-review` (verify the fixture-class scan happened).
+
 ## Fly.io creates an HA peer on the first `fly launch`/`deploy` despite `min_machines_running = 1`
 
 - **Context**: deploy-plan execution on Fly.io, the phase right after the first `fly deploy` (or `fly launch`) — stack-agnostic. Applies to any app whose `fly.toml` declares `min_machines_running = 1` and the operator assumes that literally means "one machine".

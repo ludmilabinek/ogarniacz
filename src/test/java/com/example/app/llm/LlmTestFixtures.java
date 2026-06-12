@@ -1,5 +1,7 @@
 package com.example.app.llm;
 
+import static org.mockito.Mockito.when;
+
 import com.example.app.llm.LlmExtractionResult.ProposedEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -15,8 +17,10 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import tools.jackson.databind.ObjectMapper;
 
 final class LlmTestFixtures {
@@ -25,6 +29,10 @@ final class LlmTestFixtures {
 
 	static ChatResponse chatResponseOf(String content) {
 		return new ChatResponse(List.of(new Generation(new AssistantMessage(content))));
+	}
+
+	static void stubDefaultChatOptions(ChatModel chatModel) {
+		when(chatModel.getDefaultOptions()).thenReturn(ChatOptions.builder().build());
 	}
 
 	static List<Path> listFixtures() {

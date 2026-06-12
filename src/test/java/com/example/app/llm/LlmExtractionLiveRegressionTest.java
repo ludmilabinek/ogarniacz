@@ -97,17 +97,21 @@ class LlmExtractionLiveRegressionTest {
 		Path recordedInSource = sourceFixtureDir.resolve("recorded-response.json");
 
 		if (Files.exists(recordedInSource)) {
+			if (!Files.exists(sourceFixtureDir.resolve("recorded-meta.json"))) {
+				fail("fixture %s has response but missing meta — half-written recording, delete and rerun"
+						.formatted(fixtureDir.getFileName()));
+			}
 			gradeAgainstExpected(fixtureDir, result);
 			return;
 		}
 
 		if ("true".equals(System.getenv("OGARNIACZ_RECORD_FIXTURES"))) {
-			writeRecordingAtomically(sourceFixtureDir, result, configuredModel);
 			assertThat(result.rawResponse())
 					.as("fixture %s recording-mode payload must look JSON-array-shaped",
 							fixtureDir.getFileName())
 					.isNotBlank()
 					.contains("[");
+			writeRecordingAtomically(sourceFixtureDir, result, configuredModel);
 			return;
 		}
 
@@ -160,16 +164,24 @@ class LlmExtractionLiveRegressionTest {
 		Files.createDirectories(sourceFixtureDir);
 
 		Path responseTmp = Files.createTempFile(sourceFixtureDir, "recording-", ".json.tmp");
-		Files.writeString(responseTmp, result.rawResponse(), StandardCharsets.UTF_8);
-		Files.move(responseTmp, sourceFixtureDir.resolve("recorded-response.json"),
-				StandardCopyOption.ATOMIC_MOVE);
+		try {
+			Files.writeString(responseTmp, result.rawResponse(), StandardCharsets.UTF_8);
+			Files.move(responseTmp, sourceFixtureDir.resolve("recorded-response.json"),
+					StandardCopyOption.ATOMIC_MOVE);
+		} finally {
+			Files.deleteIfExists(responseTmp);
+		}
 
 		String metaJson = objectMapper.writeValueAsString(
 				new LlmTestFixtures.FixtureMeta(model, Instant.now().toString()));
 		Path metaTmp = Files.createTempFile(sourceFixtureDir, "meta-", ".json.tmp");
-		Files.writeString(metaTmp, metaJson, StandardCharsets.UTF_8);
-		Files.move(metaTmp, sourceFixtureDir.resolve("recorded-meta.json"),
-				StandardCopyOption.ATOMIC_MOVE);
+		try {
+			Files.writeString(metaTmp, metaJson, StandardCharsets.UTF_8);
+			Files.move(metaTmp, sourceFixtureDir.resolve("recorded-meta.json"),
+					StandardCopyOption.ATOMIC_MOVE);
+		} finally {
+			Files.deleteIfExists(metaTmp);
+		}
 	}
 
 	static Stream<Path> fixtures() {

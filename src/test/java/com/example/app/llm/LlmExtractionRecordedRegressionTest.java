@@ -17,7 +17,6 @@ import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,7 +54,7 @@ class LlmExtractionRecordedRegressionTest {
 
 	@BeforeEach
 	void stubDefaultOptions() {
-		when(chatModel.getDefaultOptions()).thenReturn(ChatOptions.builder().build());
+		LlmTestFixtures.stubDefaultChatOptions(chatModel);
 	}
 
 	@ParameterizedTest(name = "fixture {0}")

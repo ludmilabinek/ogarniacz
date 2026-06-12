@@ -14,7 +14,6 @@ import java.net.SocketTimeoutException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +35,7 @@ class LlmVisionClientTest {
 
 	@BeforeEach
 	void stubDefaultOptions() {
-		when(chatModel.getDefaultOptions()).thenReturn(ChatOptions.builder().build());
+		LlmTestFixtures.stubDefaultChatOptions(chatModel);
 	}
 
 	@Test
