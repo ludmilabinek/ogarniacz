@@ -1,10 +1,10 @@
 ---
 change_id: llm-diff-title-tier
 title: Relax fixture diff to stop asserting on title format
-status: impl_reviewed
+status: archived
 created: 2026-06-13
 updated: 2026-06-13
-archived_at: null
+archived_at: 2026-06-13T20:35:48Z
 ---
 
 ## Notes
