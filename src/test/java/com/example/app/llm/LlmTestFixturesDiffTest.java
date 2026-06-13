@@ -164,7 +164,6 @@ class LlmTestFixturesDiffTest {
 		void lowercasesAsciiAndCollapsesCase() {
 			assertThat(LlmTestFixtures.norm("Wycieczka")).isEqualTo("wycieczka");
 			assertThat(LlmTestFixtures.norm("WYCIECZKA")).isEqualTo("wycieczka");
-			assertThat(LlmTestFixtures.norm("Wycieczka")).isEqualTo(LlmTestFixtures.norm("WYCIECZKA"));
 		}
 
 		@Test

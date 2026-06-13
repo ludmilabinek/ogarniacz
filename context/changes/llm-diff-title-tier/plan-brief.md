@@ -8,7 +8,7 @@ Stop asserting on `title` in `LlmTestFixtures.diff()` so the recorded LLM regres
 
 ## Starting Point
 
-`LlmTestFixtures.diff()` ([line 117](src/test/java/com/example/app/llm/LlmTestFixtures.java:117)) short-circuits through `date` → `time` → `title` → `requirements`. `KNOWN_DIVERGENCES` ([line 49](src/test/java/com/example/app/llm/LlmExtractionRecordedRegressionTest.java:49)) has zero `title` entries today — but 15 of 22 documented divergences are `date-mismatch` rows, on which the title check never runs because `diff()` returns on the first mismatch. Triage of the `llm-fixture-set-expansion` batch put the strict baseline at **1/9 ≈ 11.1%**.
+`LlmTestFixtures.diff()` ([line 117](src/test/java/com/example/app/llm/LlmTestFixtures.java:117)) short-circuits through `date` → `time` → `title` → `requirements`. `KNOWN_DIVERGENCES` ([line 49](src/test/java/com/example/app/llm/LlmExtractionRecordedRegressionTest.java:49)) has zero `title` entries today — but 16 of 22 documented divergences are `date-mismatch` rows, on which the title check never runs because `diff()` returns on the first mismatch. Triage of the `llm-fixture-set-expansion` batch put the strict baseline at **1/9 ≈ 11.1%**.
 
 ## Desired End State
 

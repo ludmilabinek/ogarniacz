@@ -36,7 +36,7 @@ PRD definition: "date, title, and requirements correct on first extraction in �
 
 PRD §Success Criteria primary target: **≥80%**. Current baseline: ~11–12%. **Below target.**
 
-Dominant cause: year-resolution failure (model picks an arbitrary past year — 2023/2024/2025 — when the poster does not state a year). This single bug accounts for **15 of 22** documented divergences (68%). The spawned [[task_199a06fd]] ("Add year-resolution rule to LLM extraction prompt") targets this.
+Dominant cause: year-resolution failure (model picks an arbitrary past year — 2023/2024/2025 — when the poster does not state a year). This single bug accounts for **16 of 22** documented divergences (~73%). The spawned [[task_199a06fd]] ("Add year-resolution rule to LLM extraction prompt") targets this.
 
 Estimated post-prompt-fix accuracy (back-of-envelope): if the year fix resolves all `date-mismatch` entries, the clean-match fixtures would be:
 - `02` still red (requirements-mismatch — unrelated to year)
@@ -87,6 +87,6 @@ The `llm-diff-title-tier` change (see [context/changes/llm-diff-title-tier/](../
 The new baseline is numerically identical to the one in the table above: **1/9 ≈ 11.1%** including `01-sample`, **1/8 ≈ 12.5%** for the new batch alone. Two independent reasons make this unchanged-by-construction:
 
 1. `KNOWN_DIVERGENCES` had **zero** rows with `field: "title"` before the change (verified empirically), so no fixture moved from "documented divergence" to "clean match" or vice versa.
-2. `diff()` short-circuits on the first mismatch. On the **15 fixtures-events with `date-mismatch`** (the year-resolution bug, 03/04/05/06), the title check **never ran** — so any title divergences on those fixtures were invisible to the metric from day one. Relaxing a check that never executed cannot move the score.
+2. `diff()` short-circuits on the first mismatch. On the **16 fixtures-events with `date-mismatch`** (the year-resolution bug, 03/04/05/06), the title check **never ran** — so any title divergences on those fixtures were invisible to the metric from day one. Relaxing a check that never executed cannot move the score.
 
-Landing this change **before** [[task_199a06fd]] (`llm-prompt-year-resolution`) is what keeps that second condition true. Once the year fix flips those 15 entries to a clean `date`, the title comparison would have started running on them for the first time — potentially exposing previously-masked title divergences and dirtying the year-fix attribution. Doing the title relaxation first means the next change is measured against an honest baseline: any lift after the year fix lands is the year fix's, not a side-effect of newly-visible title noise.
+Landing this change **before** [[task_199a06fd]] (`llm-prompt-year-resolution`) is what keeps that second condition true. Once the year fix flips those 16 entries to a clean `date`, the title comparison would have started running on them for the first time — potentially exposing previously-masked title divergences and dirtying the year-fix attribution. Doing the title relaxation first means the next change is measured against an honest baseline: any lift after the year fix lands is the year fix's, not a side-effect of newly-visible title noise.
