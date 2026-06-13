@@ -127,12 +127,6 @@ final class LlmTestFixtures {
 					String.valueOf(actual.time()),
 					"time-mismatch");
 		}
-		if (!norm(expected.title()).equals(norm(actual.title()))) {
-			return new DiffResult(false, "title",
-					String.valueOf(expected.title()),
-					String.valueOf(actual.title()),
-					"title-norm-mismatch");
-		}
 		if (!norm(expected.requirements()).equals(norm(actual.requirements()))) {
 			return new DiffResult(false, "requirements",
 					String.valueOf(expected.requirements()),

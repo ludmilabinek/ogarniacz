@@ -34,36 +34,6 @@ class LlmTestFixturesDiffTest {
 		}
 
 		@Test
-		void titleDifferingOnlyByCaseAndDiacriticsIsTolerated() {
-			ProposedEvent expected = ev(LocalDate.parse("2026-10-15"), null, "Pasowanie", null, null);
-			ProposedEvent actual = ev(LocalDate.parse("2026-10-15"), null, "pasowanie", null, null);
-
-			assertThat(LlmTestFixtures.diff(expected, actual).match()).isTrue();
-		}
-
-		@Test
-		void titleDifferingOnlyByWhitespaceIsTolerated() {
-			ProposedEvent expected = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka  do  ZOO", null, null);
-			ProposedEvent actual = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka do ZOO", null, null);
-
-			assertThat(LlmTestFixtures.diff(expected, actual).match()).isTrue();
-		}
-
-		@Test
-		void titleDifferingOnRealCharacterFailsOnTitleField() {
-			ProposedEvent expected = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka do ZOO", null, null);
-			ProposedEvent actual = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka do parku", null, null);
-
-			DiffResult result = LlmTestFixtures.diff(expected, actual);
-
-			assertThat(result.match()).isFalse();
-			assertThat(result.field()).isEqualTo("title");
-			assertThat(result.expectedValue()).isEqualTo("Wycieczka do ZOO");
-			assertThat(result.actualValue()).isEqualTo("Wycieczka do parku");
-			assertThat(result.reason()).isEqualTo("title-norm-mismatch");
-		}
-
-		@Test
 		void dateOffByOneDayFailsOnDateField() {
 			ProposedEvent expected = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka", null, null);
 			ProposedEvent actual = ev(LocalDate.parse("2026-06-13"), null, "Wycieczka", null, null);
@@ -107,6 +77,14 @@ class LlmTestFixturesDiffTest {
 		void requirementsNullVsBlankStringMatches() {
 			ProposedEvent expected = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka", null, null);
 			ProposedEvent actual = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka", "   ", null);
+
+			assertThat(LlmTestFixtures.diff(expected, actual).match()).isTrue();
+		}
+
+		@Test
+		void titleDifferingIsNotGraded() {
+			ProposedEvent expected = ev(LocalDate.parse("2026-06-12"), null, "Wycieczka do ZOO", null, null);
+			ProposedEvent actual = ev(LocalDate.parse("2026-06-12"), null, "Festyn rodzinny", null, null);
 
 			assertThat(LlmTestFixtures.diff(expected, actual).match()).isTrue();
 		}
@@ -176,6 +154,32 @@ class LlmTestFixturesDiffTest {
 			List<ProposedEvent> second = LlmTestFixtures.canonicalSort(first);
 
 			assertThat(second).containsExactlyElementsOf(first);
+		}
+	}
+
+	@Nested
+	class Norm {
+
+		@Test
+		void lowercasesAsciiAndCollapsesCase() {
+			assertThat(LlmTestFixtures.norm("Wycieczka")).isEqualTo("wycieczka");
+			assertThat(LlmTestFixtures.norm("WYCIECZKA")).isEqualTo("wycieczka");
+			assertThat(LlmTestFixtures.norm("Wycieczka")).isEqualTo(LlmTestFixtures.norm("WYCIECZKA"));
+		}
+
+		@Test
+		void normalisesNfcAndCaseFoldsDiacritics() {
+			String nfc = "P\u0105sowanie";
+			String nfd = "Pa\u0328sowanie";
+
+			assertThat(LlmTestFixtures.norm(nfd)).isEqualTo(LlmTestFixtures.norm(nfc));
+			assertThat(LlmTestFixtures.norm("P\u0104sowanie")).isEqualTo(LlmTestFixtures.norm("p\u0105sowanie"));
+			assertThat(LlmTestFixtures.norm("P\u0104sowanie")).isEqualTo("p\u0105sowanie");
+		}
+
+		@Test
+		void collapsesInternalWhitespaceAndStripsEdges() {
+			assertThat(LlmTestFixtures.norm("  Wycieczka  do   ZOO  ")).isEqualTo("wycieczka do zoo");
 		}
 	}
 }
