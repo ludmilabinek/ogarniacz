@@ -218,10 +218,10 @@ Update the fixture authoring docs and the prior-change triage so future contribu
 
 #### Automated
 
-- [x] 2.1 `./gradlew test` still passes after doc-only edits
+- [x] 2.1 `./gradlew test` still passes after doc-only edits — ec959f6
 
 #### Manual
 
-- [x] 2.2 `src/test/resources/llm/fixtures/README.md` — `title` documented as informational on same footing as `notes`; canonical-sort note distinguishes grading from ordering
-- [x] 2.3 `context/changes/llm-fixture-set-expansion/triage.md` addendum — names rule change, explains unchanged baseline via both empty-title-rows AND short-circuit reasoning, explains why landing before `llm-prompt-year-resolution` matters for attribution
-- [x] 2.4 `context/foundation/lessons.md` — new lesson generalises beyond title; applies to any short-circuiting per-field diff predicate
+- [x] 2.2 `src/test/resources/llm/fixtures/README.md` — `title` documented as informational on same footing as `notes`; canonical-sort note distinguishes grading from ordering — ec959f6
+- [x] 2.3 `context/changes/llm-fixture-set-expansion/triage.md` addendum — names rule change, explains unchanged baseline via both empty-title-rows AND short-circuit reasoning, explains why landing before `llm-prompt-year-resolution` matters for attribution — ec959f6
+- [x] 2.4 `context/foundation/lessons.md` — new lesson generalises beyond title; applies to any short-circuiting per-field diff predicate — ec959f6
