@@ -79,3 +79,14 @@ Estimated post-prompt-fix accuracy (back-of-envelope): if the year fix resolves 
   Anything we put in `notes` is informational only. Either add to the diff (catch
   notes drift as a regression signal) or remove the field from `ProposedEvent`
   (vestigial). Tracked as a soft follow-up, not blocking this change.
+
+## Addendum (2026-06-13): Baseline under relaxed title diff
+
+The `llm-diff-title-tier` change (see [context/changes/llm-diff-title-tier/](../llm-diff-title-tier/)) shipped a narrow rule change: `LlmTestFixtures.diff()` no longer grades `title`. The diff now compares `date` → `time` → `requirements` and treats any title difference as informational, matching how the harness has always treated `notes`. Title still lives in `expected.json`, in `KnownDivergence` rows for failure-message readability, and in `canonicalSort` as a tertiary tie-breaker for deterministic ordering — only the grading assertion is gone.
+
+The new baseline is numerically identical to the one in the table above: **1/9 ≈ 11.1%** including `01-sample`, **1/8 ≈ 12.5%** for the new batch alone. Two independent reasons make this unchanged-by-construction:
+
+1. `KNOWN_DIVERGENCES` had **zero** rows with `field: "title"` before the change (verified empirically), so no fixture moved from "documented divergence" to "clean match" or vice versa.
+2. `diff()` short-circuits on the first mismatch. On the **15 fixtures-events with `date-mismatch`** (the year-resolution bug, 03/04/05/06), the title check **never ran** — so any title divergences on those fixtures were invisible to the metric from day one. Relaxing a check that never executed cannot move the score.
+
+Landing this change **before** [[task_199a06fd]] (`llm-prompt-year-resolution`) is what keeps that second condition true. Once the year fix flips those 15 entries to a clean `date`, the title comparison would have started running on them for the first time — potentially exposing previously-masked title divergences and dirtying the year-fix attribution. Doing the title relaxation first means the next change is measured against an honest baseline: any lift after the year fix lands is the year fix's, not a side-effect of newly-visible title noise.

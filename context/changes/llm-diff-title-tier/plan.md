@@ -204,24 +204,24 @@ Update the fixture authoring docs and the prior-change triage so future contribu
 
 #### Automated
 
-- [x] 1.1 `./gradlew test --tests com.example.app.llm.LlmTestFixturesDiffTest` passes (8 tests in `Diff`, 5 tests in `CanonicalSort`, 3 tests in `Norm`)
-- [x] 1.2 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` passes — same `KNOWN_DIVERGENCES` set, no accept-list edits
-- [x] 1.3 `./gradlew build` passes (full suite + assemble)
+- [x] 1.1 `./gradlew test --tests com.example.app.llm.LlmTestFixturesDiffTest` passes (8 tests in `Diff`, 5 tests in `CanonicalSort`, 3 tests in `Norm`) — 3131077
+- [x] 1.2 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` passes — same `KNOWN_DIVERGENCES` set, no accept-list edits — 3131077
+- [x] 1.3 `./gradlew build` passes (full suite + assemble) — 3131077
 
 #### Manual
 
-- [x] 1.4 `LlmTestFixtures.diff()` body reviewed — no `title` reference remains; sequence is `date` → `time` → `requirements` → success
-- [x] 1.5 `LlmTestFixturesDiffTest.Diff` reviewed — `titleDifferingIsNotGraded` sits adjacent to `notesDifferingIsNotGraded` and uses materially different titles
-- [x] 1.6 `LlmTestFixturesDiffTest.Norm` reviewed — three tests cover case-folding, NFC + diacritics, and internal-whitespace/edge-strip, all calling `LlmTestFixtures.norm()` directly
+- [x] 1.4 `LlmTestFixtures.diff()` body reviewed — no `title` reference remains; sequence is `date` → `time` → `requirements` → success — 3131077
+- [x] 1.5 `LlmTestFixturesDiffTest.Diff` reviewed — `titleDifferingIsNotGraded` sits adjacent to `notesDifferingIsNotGraded` and uses materially different titles — 3131077
+- [x] 1.6 `LlmTestFixturesDiffTest.Norm` reviewed — three tests cover case-folding, NFC + diacritics, and internal-whitespace/edge-strip, all calling `LlmTestFixtures.norm()` directly — 3131077
 
 ### Phase 2: Document the new grading contract
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test` still passes after doc-only edits
+- [x] 2.1 `./gradlew test` still passes after doc-only edits
 
 #### Manual
 
-- [ ] 2.2 `src/test/resources/llm/fixtures/README.md` — `title` documented as informational on same footing as `notes`; canonical-sort note distinguishes grading from ordering
-- [ ] 2.3 `context/changes/llm-fixture-set-expansion/triage.md` addendum — names rule change, explains unchanged baseline via both empty-title-rows AND short-circuit reasoning, explains why landing before `llm-prompt-year-resolution` matters for attribution
-- [ ] 2.4 `context/foundation/lessons.md` — new lesson generalises beyond title; applies to any short-circuiting per-field diff predicate
+- [x] 2.2 `src/test/resources/llm/fixtures/README.md` — `title` documented as informational on same footing as `notes`; canonical-sort note distinguishes grading from ordering
+- [x] 2.3 `context/changes/llm-fixture-set-expansion/triage.md` addendum — names rule change, explains unchanged baseline via both empty-title-rows AND short-circuit reasoning, explains why landing before `llm-prompt-year-resolution` matters for attribution
+- [x] 2.4 `context/foundation/lessons.md` — new lesson generalises beyond title; applies to any short-circuiting per-field diff predicate

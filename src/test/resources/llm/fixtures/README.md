@@ -64,12 +64,22 @@ fixtures/
 ```
 
 - `notes` is **intentionally omitted** — the harness does not grade it.
+- `title` is **informational** — kept in `expected.json` and rendered
+  in failure messages (and in `KnownDivergence` rows) so a divergence
+  on another field still tells you *which event* is misbehaving, but
+  the diff predicate does not assert on title. Use whatever phrasing
+  reads most naturally from the image; the per-field diff compares
+  `date`, `time`, and `requirements` only.
 - **Array order is informational, not load-bearing.** The diff
   predicate sorts both sides by `(date ASC, time ASC with null first,
   title ASC under norm())` before pairwise comparison, so a live
   response that returns the same events in a different order is not
   flagged as a regression. Write events in whatever order reads most
-  naturally from the image.
+  naturally from the image. Title appears in the sort key as a
+  **deterministic tertiary tie-breaker** (so two events sharing
+  `date` + `time` still order stably), which is distinct from grading
+  — `canonicalSort` is the only place title still has any harness-side
+  semantics.
 
 ## Fixture categories
 
