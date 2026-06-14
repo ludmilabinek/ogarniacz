@@ -1,10 +1,10 @@
 ---
 change_id: llm-prompt-year-resolution
 title: Resolve year for dates without an explicit year in extraction prompt
-status: impl_reviewed
+status: archived
 created: 2026-06-12
 updated: 2026-06-14
-archived_at: null
+archived_at: 2026-06-14T13:27:57Z
 ---
 
 ## Notes
