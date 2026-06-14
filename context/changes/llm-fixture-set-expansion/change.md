@@ -1,9 +1,10 @@
 ---
-id: llm-fixture-set-expansion
-status: ready_to_archive
-opened: 2026-06-12
-closed: 2026-06-12
-owner: Ludmiła
+change_id: llm-fixture-set-expansion
+title: Fixture set expansion — seed batch (9 announcements)
+status: implemented
+created: 2026-06-12
+updated: 2026-06-13
+archived_at: null
 ---
 
 # Fixture set expansion — seed batch (9 announcements)
