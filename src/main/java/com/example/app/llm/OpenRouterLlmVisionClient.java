@@ -6,6 +6,8 @@ import com.openai.errors.OpenAIServiceException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -23,24 +25,46 @@ public class OpenRouterLlmVisionClient implements LlmVisionClient {
 
 	private static final Logger log = LoggerFactory.getLogger(OpenRouterLlmVisionClient.class);
 
-	private static final String SYSTEM_PROMPT = """
+	private static final String SYSTEM_TEMPLATE = """
 			You are extracting kindergarten-announcement events from an image.
-			Return ONLY a JSON array (no prose, no markdown fences). Each item:
-			  { "date": "YYYY-MM-DD", "time": "HH:MM" | null, "title": "string",
-			    "requirements": "string" | null, "notes": "string" | null }
-			Use null when a field is not present in the announcement.
+			Return ONLY a JSON array (no prose, no markdown fences). Each item is a
+			JSON object with these fields:
+			  - date: string formatted YYYY-MM-DD
+			  - time: string formatted HH:MM, or null when not in the announcement
+			  - title: string
+			  - requirements: string, or null when not in the announcement
+			  - notes: string, or null when not in the announcement
+
+			Today is {today}.
+
+			Year resolution: when the announcement gives a date without a year, choose the
+			year that places the event closest to today (within ±6 months from today). When
+			two candidate years are equidistant, prefer the future.
+
+			Multi-group slots: when the same date carries multiple per-group time slots
+			(e.g. one slot per kindergarten group), emit one entry per group. Do NOT also
+			emit a consolidating umbrella entry for the same date.
+
+			Language: return all string fields (title, requirements, notes) in {language}.
+			Do not translate from the source.
+
 			If no events are visible, return an empty array: [].
 			""";
 
+	private static final String USER_HINT = "Extract events from the attached image.";
+
 	private final ChatClient chatClient;
+	private final Clock clock;
 	private final ObjectMapper objectMapper;
 	private final String configuredModel;
 
 	public OpenRouterLlmVisionClient(
-			ChatClient.Builder chatClientBuilder,
+			ChatClient chatClient,
+			Clock clock,
 			ObjectMapper objectMapper,
 			@Value("${spring.ai.openai.chat.options.model}") String configuredModel) {
-		this.chatClient = chatClientBuilder.build();
+		this.chatClient = chatClient;
+		this.clock = clock;
 		this.objectMapper = objectMapper;
 		this.configuredModel = configuredModel;
 	}
@@ -56,8 +80,12 @@ public class OpenRouterLlmVisionClient implements LlmVisionClient {
 					return "upload";
 				}
 			};
+			String today = LocalDate.now(clock).toString();
 			String raw = chatClient.prompt()
-					.user(u -> u.text(SYSTEM_PROMPT).media(mimeType, resource))
+					.system(sp -> sp.text(SYSTEM_TEMPLATE)
+							.param("today", today)
+							.param("language", "Polish"))
+					.user(u -> u.text(USER_HINT).media(mimeType, resource))
 					.call()
 					.content();
 			String json = extractJsonArray(raw);

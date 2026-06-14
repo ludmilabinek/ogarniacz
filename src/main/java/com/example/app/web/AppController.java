@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.Clock;
 import java.time.LocalDate;
 
 @Controller
@@ -16,10 +17,12 @@ public class AppController {
 
     private final AppUserRepository appUserRepository;
     private final EventRepository eventRepository;
+    private final Clock clock;
 
-    public AppController(AppUserRepository appUserRepository, EventRepository eventRepository) {
+    public AppController(AppUserRepository appUserRepository, EventRepository eventRepository, Clock clock) {
         this.appUserRepository = appUserRepository;
         this.eventRepository = eventRepository;
+        this.clock = clock;
     }
 
     @GetMapping("/")
@@ -39,7 +42,7 @@ public class AppController {
     public String app(Authentication auth, Model model) {
         AppUser user = appUserRepository.findByEmail(auth.getName()).orElseThrow();
         model.addAttribute("userEmail", user.getEmail());
-        model.addAttribute("events", eventRepository.findUpcomingByUser(user, LocalDate.now()));
+        model.addAttribute("events", eventRepository.findUpcomingByUser(user, LocalDate.now(clock)));
         return "app";
     }
 }
