@@ -39,12 +39,24 @@ class LlmExtractionRecordedRegressionTest {
 	 * one means the documented behaviour drifted (likely a recording was regenerated). A fixture
 	 * absent from this map is asserted to produce zero divergences (the clean-match case).
 	 *
-	 * <p>The bulk of the entries below were laid down by the {@code llm-fixture-set-expansion}
-	 * batch (2026-06-12) and document the model's current limits with the unmodified extraction
-	 * prompt: most notably, every {@code date-mismatch} entry is the year-resolution failure
-	 * tracked by the spawned task {@code task_199a06fd} ("Add year-resolution rule to LLM
-	 * extraction prompt"). After that prompt change ships, the curator re-records the fixtures
-	 * and prunes the now-resolved {@code date-mismatch} rows from this map.
+	 * <p>This map was resynced by {@code llm-prompt-year-resolution} (2026-06-14) after the
+	 * extraction prompt was templated with today's date, the year-resolution rule, the
+	 * multi-group / no-umbrella rule, and the Polish language-passthrough directive. The bulk
+	 * of the prior {@code date-mismatch} rows healed (fixtures 04, 05, 10) and the multi-group
+	 * fixture (07) re-enabled. Two residuals the prompt change did not fully close:
+	 *
+	 * <ul>
+	 *   <li>Fixture 06 — year still resolves to 2027 instead of 2026 on a February-themed
+	 *       announcement (the model favours a "this is a future-facing schedule" reading over
+	 *       the explicit "closest to today (±6 months)" rule).
+	 *   <li>Fixtures 04 / 05 — re-recorded responses pick up new {@code requirements-norm-mismatch}
+	 *       rows: the Polish-passthrough directive surfaces small wording differences (trailing
+	 *       periods, condensed phrasing) that the previous date-mismatch short-circuit hid.
+	 * </ul>
+	 *
+	 * <p>Fixture 03 also still misses the year and additionally collapses two distinct Easter
+	 * events into one compound-title entry — that's an event-count divergence and rides in
+	 * {@link #DISABLED_FIXTURES} below, not here.
 	 */
 	private static final Map<String, List<KnownDivergence>> KNOWN_DIVERGENCES = Map.ofEntries(
 			Map.entry("01-sample", List.of(
@@ -53,30 +65,28 @@ class LlmExtractionRecordedRegressionTest {
 			Map.entry("02-wielkanoc-sniadanie", List.of(
 					new KnownDivergence("Uroczyste śniadanie wielkanocne", "requirements", "requirements-norm-mismatch"),
 					new KnownDivergence("Uroczyste śniadanie wielkanocne", "requirements", "requirements-norm-mismatch"))),
-			Map.entry("03-marzec-bez-godzin", List.of(
-					new KnownDivergence("Pożegnanie Zimy - korowód z Marzanną. Powitanie Wiosny gaikiem.", "date", "date-mismatch"),
-					new KnownDivergence("Spotkanie z wielkanocnym zajączkiem i jego przyjacielem", "date", "date-mismatch"),
-					new KnownDivergence("Warsztaty florystyczne \"Stroiki na świąteczne stoły\"", "date", "date-mismatch"),
-					new KnownDivergence("Uroczyste śniadanie wielkanocne", "date", "date-mismatch"),
-					new KnownDivergence("Uroczyste śniadanie wielkanocne", "date", "date-mismatch"))),
 			Map.entry("04-marzec-wazne-daty", List.of(
-					new KnownDivergence("Dzień zabawki", "date", "date-mismatch"),
-					new KnownDivergence("Spektakl Teatru Kulturka", "date", "date-mismatch"),
-					new KnownDivergence("ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"", "date", "date-mismatch"),
-					new KnownDivergence("Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców", "date", "date-mismatch"),
-					new KnownDivergence("ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"", "date", "date-mismatch"))),
+					new KnownDivergence("ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"", "requirements", "requirements-norm-mismatch"))),
 			Map.entry("05-zdjecia-dyplomowe", List.of(
-					new KnownDivergence("Pamiątkowe zdjęcia grupowe do dyplomów", "date", "date-mismatch"))),
+					new KnownDivergence("Pamiątkowe zdjęcia grupowe do dyplomów", "requirements", "requirements-norm-mismatch"))),
 			Map.entry("06-luty-wazne-daty", List.of(
 					new KnownDivergence("Dzień zabawki", "date", "date-mismatch"),
 					new KnownDivergence("St. Valentine's Day - WALENTYNKI", "date", "date-mismatch"),
 					new KnownDivergence("Podkoziołek - pożegnanie karnawału w rytmie disco", "date", "date-mismatch"),
 					new KnownDivergence("Warsztaty ekonomiczne o podatkach", "date", "date-mismatch"),
 					new KnownDivergence("Warsztaty muzealne", "date", "date-mismatch"))),
+			Map.entry("07-czerwiec-wazne-daty", List.of(
+					new KnownDivergence("Sportowe niespodzianki z okazji Dnia Dziecka", "date", "date-mismatch"),
+					new KnownDivergence("Wiosenne przygody - nocowanie", "date", "date-mismatch"),
+					new KnownDivergence("Uroczyste zakończenie roku przedszkolnego 2025/26", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Uroczyste zakończenie roku przedszkolnego 2025/26", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Pożegnanie przedszkolne", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Warsztaty muzealne \"Muzyczni detektywi\"", "time", "time-mismatch"),
+					new KnownDivergence("Powitanie lata - zabawa z balonem i piosenką", "requirements", "requirements-norm-mismatch"))),
 			Map.entry("08-grzybobranie", List.of(
-					new KnownDivergence("Grzybobranie", "requirements", "requirements-norm-mismatch"))),
-			Map.entry("10-warsztaty-www", List.of(
-					new KnownDivergence("Warsztaty muzealne", "time", "time-mismatch"))));
+					new KnownDivergence("Grzybobranie", "requirements", "requirements-norm-mismatch"))));
 
 	/**
 	 * Fixtures the harness skips entirely until a referenced fix change lands. Use this for
@@ -86,13 +96,14 @@ class LlmExtractionRecordedRegressionTest {
 	 * quietly invisible; those belong in {@link #KNOWN_DIVERGENCES}.
 	 */
 	private static final Set<String> DISABLED_FIXTURES = Set.of(
-			// 07: model emits 10 events (an umbrella entry for 19 VI plus the 3 per-group time
-			//     slots we wanted) vs the curator's 9. The harness fails at the event-count
-			//     assertion before any field-level diff. Pending the prompt-fix change spawned
-			//     as task_199a06fd — the same change that will resolve the year-resolution
-			//     date-mismatch entries above is the right place to also tighten the
-			//     don't-emit-umbrella behaviour.
-			"07-czerwiec-wazne-daty");
+			// 03: model collapses two distinct Easter events ("Spotkanie z wielkanocnym
+			//     zajączkiem" + "Warsztaty florystyczne") into one entry with a compound title
+			//     ("Wielkanocne niespodzianki: …"). The harness fails at the event-count
+			//     assertion (4 actual vs 5 expected) before any field-level diff. Fixture also
+			//     missed the year resolution (model picked 2027 instead of 2026). Pending a
+			//     follow-up prompt-fix change that tightens "do not collapse distinct events
+			//     into a compound title" alongside revisiting the year rule.
+			"03-marzec-bez-godzin");
 
 	@Autowired
 	LlmVisionClient llmVisionClient;

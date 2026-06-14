@@ -1,39 +1,39 @@
 ```json
 [
   {
-    "date": "2023-03-02",
+    "date": "2026-03-02",
     "time": null,
     "title": "Dzień zabawki",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2023-03-03",
+    "date": "2026-03-03",
     "time": null,
-    "title": "Spektakl Teatru Kulturka \"Maria, która dostała Nobla\"",
-    "requirements": "odświętny ubiór",
+    "title": "Spektakl Teatru Kulturka",
+    "requirements": "prosimy o odświętny ubiór",
+    "notes": "\"Maria, która dostała Nobla\""
+  },
+  {
+    "date": "2026-03-05",
+    "time": null,
+    "title": "ST.DAVID'S DAY - DZIEŃ WALII „W walijskiej zagrodzie”",
+    "requirements": "Prosimy o ubiór w kolorze żółtym.",
     "notes": null
   },
   {
-    "date": "2023-03-05",
+    "date": "2026-03-12",
     "time": null,
-    "title": "ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"",
-    "requirements": "ubiór w kolorze żółtym",
+    "title": "Sportowe igraszki dla naszej „O” w SP nr 13 im. Poznańskich Cytadelowców",
+    "requirements": "Prosimy o sportowy ubiór (dres i obuwie) dla Wrzosów",
     "notes": null
   },
   {
-    "date": "2023-03-12",
+    "date": "2026-03-19",
     "time": null,
-    "title": "Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców",
-    "requirements": "sportowy ubiór (dres i obuwie) dla Wrzosów",
-    "notes": null
-  },
-  {
-    "date": "2023-03-19",
-    "time": null,
-    "title": "ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"",
-    "requirements": "ubiór w kolorze zielonym",
-    "notes": null
+    "title": "ST.PATRICK'S DAY - DZIEŃ IRLANDII",
+    "requirements": "Prosimy o ubiór w kolorze zielonym.",
+    "notes": "\"Po drugiej stronie tęczy\""
   }
 ]
 ```

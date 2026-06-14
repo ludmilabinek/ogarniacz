@@ -1,73 +1,66 @@
 ```json
 [
   {
-    "date": "2025-06-01",
+    "date": "2026-06-01",
     "time": null,
     "title": "Dni zabawki",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2025-06-02",
+    "date": "2026-06-02",
     "time": null,
     "title": "Sportowa niespodzianka z okazji Dnia Dziecka",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2025-06-02",
+    "date": "2026-06-03",
     "time": null,
     "title": "„Wiosenna przygoda” - nocowanka dla Kl. „O”",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2025-06-16",
+    "date": "2026-06-16",
     "time": null,
-    "title": "Spektakl Teatru Kulturka \"Bajka Szachrajka\"",
-    "requirements": "odświętny ubiór",
+    "title": "Spektakl Teatru Kulturka „Bajka Szachrajka”",
+    "requirements": "Prosimy o odświętny ubiór",
     "notes": null
   },
   {
-    "date": "2025-06-19",
-    "time": null,
-    "title": "Uroczyste zakończenie roku przedszkolnego 2025/26",
-    "requirements": "odświętne stroje",
-    "notes": "Spektakl dyplomowy \"Brzydkie kaczątko\" (\"The Ugly Duckling\"). Wręczenie dyplomów ukończenia grupy. Pożegnanie dzieci odchodzących do 1 klasy SP."
-  },
-  {
-    "date": "2025-06-19",
+    "date": "2026-06-19",
     "time": "09:00",
-    "title": "Uroczystość zakończenia roku przedszkolnego",
-    "requirements": "odświętne stroje",
-    "notes": "Dla rodziców Eukaliptusów i Żonkili."
+    "title": "Uroczyste zakończenie roku przedszkolnego 2025/26 spektaklem dyplomowym „Brzydkie kaczątko” „The Ugly Duckling”",
+    "requirements": "Prosimy, by wszystkie dzieci przyszły w strojach odświętnych.",
+    "notes": "Dla grup Eukaliptusów i Żonkili. Po nim nastąpi: Wręczenie dyplomów ukończenia grupy. Pożegnanie dzieci odchodzących do 1 klasy SP"
   },
   {
-    "date": "2025-06-19",
+    "date": "2026-06-19",
     "time": "11:30",
-    "title": "Uroczystość zakończenia roku przedszkolnego",
-    "requirements": "odświętne stroje",
-    "notes": "Dla rodziców Wrzosów i Koniczynek."
+    "title": "Uroczyste zakończenie roku przedszkolnego 2025/26 spektaklem dyplomowym „Brzydkie kaczątko” „The Ugly Duckling”",
+    "requirements": "Prosimy, by wszystkie dzieci przyszły w strojach odświętnych.",
+    "notes": "Dla grup Wrzosów i Koniczynek. Po nim nastąpi: Wręczenie dyplomów ukończenia grupy. Pożegnanie dzieci odchodzących do 1 klasy SP"
   },
   {
-    "date": "2025-06-19",
+    "date": "2026-06-19",
     "time": "13:00",
     "title": "Pożegnanie przedszkola przez Wrzosy-kl. „O”",
-    "requirements": "odświętne stroje",
+    "requirements": "Prosimy, by wszystkie dzieci przyszły w strojach odświętnych.",
     "notes": null
   },
   {
-    "date": "2025-06-23",
+    "date": "2026-06-23",
     "time": "09:30",
-    "title": "Warsztaty muzealne „Muzyczni detektywi”",
+    "title": "Warsztaty muzealne „Muzyczni detektywi”. Wyprawa do Muzeum Instrumentów Muzycznych",
     "requirements": null,
-    "notes": "Dla Wrzosów, Eukaliptusów i Żonkili. Wyprawa do Muzeum Instrumentów Muzycznych. Powrót ok. 12:00."
+    "notes": "Dla Wrzosów, Eukaliptusów i Żonkili. Powrót ok. 12.00"
   },
   {
-    "date": "2025-06-26",
+    "date": "2026-06-26",
     "time": null,
     "title": "„Powitanie lata” - zabawa z tańcem i piosenką",
-    "requirements": "letnie/wakacyjne stroje",
+    "requirements": "Prosimy wszystkie dzieci o przyjście w strojach letnich/wakacyjnych",
     "notes": null
   }
 ]

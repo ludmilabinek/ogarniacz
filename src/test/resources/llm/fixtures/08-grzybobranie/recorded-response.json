@@ -1,9 +1,11 @@
+```json
 [
   {
     "date": "2025-09-27",
     "time": "10:00",
     "title": "Grzybobranie",
-    "requirements": "Koszyk na grzyby, ubiór dostosowany do warunków atmosferycznych, dobry humor, kocyk piknikowy, koszyk/plecak z naczyniami i sztućcami wielokrotnego użytku na nasz piknik.",
-    "notes": "Miejsce spotkania: wigwam przy Leśnictwie Łękno. Dbamy o naszą planetę, nie wytworzymy zbędnych odpadów - zgodnie z zasadą ZERO WASTE."
+    "requirements": "Koszyk na grzyby; Ubiór dostosowany do warunków atmosferycznych; Dobry humor; Kocyk piknikowy; Koszyk/plecak z naczyniami i sztućcami wielokrotnego użytku na nasz piknik.",
+    "notes": "Dbamy o naszą planetę, nie wytworzymy zbędnych odpadów - zgodnie z zasadą ZERO WASTE. Miejsce spotkania: wigwam przy Leśnictwie Łękno."
   }
 ]
+```

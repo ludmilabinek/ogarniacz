@@ -331,26 +331,26 @@ chmod 644 src/test/resources/llm/fixtures/*/recorded-*.json
 
 #### Automated
 
-- [x] 1.1 `./gradlew compileJava compileTestJava` succeeds (the constructor refactor and Clock injection compile cleanly)
-- [x] 1.2 `./gradlew test --tests com.example.app.llm.OpenRouterLlmVisionClientPromptTest` passes (all six anchor assertions green)
-- [x] 1.3 `./gradlew test --tests com.example.app.llm.LlmVisionClientTest` passes (existing client tests still work after constructor refactor)
-- [x] 1.4 `./gradlew test --tests com.example.app.AppApplicationTests` passes (context loads with the new Clock and ChatClient beans)
-- [x] 1.5 `./gradlew test --tests "com.example.app.event.*"` passes (AppController Clock migration didn't break controller/repository tests)
-- [x] 1.6 `./gradlew build` succeeds end-to-end (recorded harness stays green; the mock replays old responses regardless of the new prompt shape)
+- [x] 1.1 `./gradlew compileJava compileTestJava` succeeds (the constructor refactor and Clock injection compile cleanly) — 21ae62f
+- [x] 1.2 `./gradlew test --tests com.example.app.llm.OpenRouterLlmVisionClientPromptTest` passes (all six anchor assertions green) — 21ae62f
+- [x] 1.3 `./gradlew test --tests com.example.app.llm.LlmVisionClientTest` passes (existing client tests still work after constructor refactor) — 21ae62f
+- [x] 1.4 `./gradlew test --tests com.example.app.AppApplicationTests` passes (context loads with the new Clock and ChatClient beans) — 21ae62f
+- [x] 1.5 `./gradlew test --tests "com.example.app.event.*"` passes (AppController Clock migration didn't break controller/repository tests) — 21ae62f
+- [x] 1.6 `./gradlew build` succeeds end-to-end (recorded harness stays green; the mock replays old responses regardless of the new prompt shape) — 21ae62f
 
 #### Manual
 
-- [x] 1.7 Run `OGARNIACZ_LIVE_SMOKE=true OPENROUTER_API_KEY=... ./gradlew test --tests com.example.app.llm.LlmVisionSmokeTest` (adapted from the original /upload UI step — no upload endpoint exists yet); eyeball that returned event dates land in 2025 or 2026 (qualitative confirmation that the new prompt reaches the live model in production)
+- [x] 1.7 Run `OGARNIACZ_LIVE_SMOKE=true OPENROUTER_API_KEY=... ./gradlew test --tests com.example.app.llm.LlmVisionSmokeTest` (adapted from the original /upload UI step — no upload endpoint exists yet); eyeball that returned event dates land in 2025 or 2026 (qualitative confirmation that the new prompt reaches the live model in production) — 21ae62f
 
 ### Phase 2: Re-record fixtures + sync `KNOWN_DIVERGENCES` maps + remove from `DISABLED_FIXTURES`
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` passes (recorded harness green after `KNOWN_DIVERGENCES` updated to match actual surviving divergences)
-- [ ] 2.2 `./gradlew test` passes end-to-end (no regression in any other test suite)
-- [ ] 2.3 `git ls-files src/test/resources/llm/fixtures/ | xargs -I{} stat -f "%Lp {}" {} | grep recorded` shows mode 644 on every recorded file
-- [ ] 2.4 `git grep -n "07-czerwiec-wazne-daty" src/test/java/com/example/app/llm/LlmExtractionRecordedRegressionTest.java` returns no `DISABLED_FIXTURES` hit
-- [ ] 2.5 Diff between the two `KNOWN_DIVERGENCES` map bodies (recorded vs live) shows no row-level differences
+- [x] 2.1 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` passes (recorded harness green after `KNOWN_DIVERGENCES` updated to match actual surviving divergences)
+- [x] 2.2 `./gradlew test` passes end-to-end (no regression in any other test suite)
+- [x] 2.3 `git ls-files src/test/resources/llm/fixtures/ | xargs -I{} stat -f "%Lp {}" {} | grep recorded` shows mode 644 on every recorded file
+- [x] 2.4 `git grep -n "07-czerwiec-wazne-daty" src/test/java/com/example/app/llm/LlmExtractionRecordedRegressionTest.java` returns no `DISABLED_FIXTURES` hit
+- [x] 2.5 Diff between the two `KNOWN_DIVERGENCES` map bodies (recorded vs live) shows no row-level differences
 
 #### Manual
 

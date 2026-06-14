@@ -1,35 +1,35 @@
 ```json
 [
   {
-    "date": "2023-02-02",
+    "date": "2027-02-02",
     "time": null,
     "title": "Dzień zabawki",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2023-02-13",
+    "date": "2027-02-13",
     "time": null,
     "title": "St. Valentine's Day - WALENTYNKI",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2023-02-17",
+    "date": "2027-02-17",
     "time": null,
     "title": "Podkoziołek - pożegnanie karnawału w rytmie disco (lata 80. XX wieku)",
     "requirements": "Prosimy o kostiumy z epoki",
     "notes": null
   },
   {
-    "date": "2023-02-17",
+    "date": "2027-02-17",
     "time": null,
-    "title": "Warsztaty o podatkach dla Żonkili, Eukaliptusów i Wrzosów. „Jak się bawić, by wszystkich pieniędzy się nie pozbawić?” Warsztaty ekonomiczne poprowadzi dla Smyków",
+    "title": "Warsztaty o podatkach dla Żonkili, Eukaliptusów i Wrzosów. „Jak się bawić, by wszystkich pieniędzy się nie pozbawić?”",
     "requirements": null,
-    "notes": null
+    "notes": "Warsztaty ekonomiczne poprowadzi dla Smyków"
   },
   {
-    "date": "2023-02-24",
+    "date": "2027-02-24",
     "time": null,
     "title": "Warsztaty muzealne dla Żonkili, Eukaliptusów i Wrzosów",
     "requirements": null,

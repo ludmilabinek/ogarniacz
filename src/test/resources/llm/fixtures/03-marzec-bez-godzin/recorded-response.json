@@ -1,35 +1,28 @@
 ```json
 [
   {
-    "date": "2024-03-20",
+    "date": "2027-03-20",
     "time": null,
     "title": "Pożegnanie Zimy - korowód z Marzanną. Powitanie Wiosny gaikiem.",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2024-03-31",
+    "date": "2027-03-31",
     "time": null,
-    "title": "Wielkanocne niespodzianki: „Spotkanie z wielkanocnym zajączkiem i jego przyjacielem\"",
+    "title": "Wielkanocne niespodzianki: „Spotkanie z wielkanocnym zajączkiem i jego przyjacielem\", Warsztaty florystyczne „Stroiki na świąteczne stoły\"",
     "requirements": null,
     "notes": null
   },
   {
-    "date": "2024-03-31",
-    "time": null,
-    "title": "Wielkanocne niespodzianki: Warsztaty florystyczne „Stroiki na świąteczne stoły\"",
-    "requirements": null,
-    "notes": null
-  },
-  {
-    "date": "2024-04-01",
+    "date": "2027-04-01",
     "time": "08:30",
     "title": "Przedszkolna Wielkanoc - Uroczyste śniadanie wielkanocne",
     "requirements": "Dla Wrzosów i Eukaliptusów",
     "notes": "Prosimy o odświętny ubiór"
   },
   {
-    "date": "2024-04-01",
+    "date": "2027-04-01",
     "time": "09:00",
     "title": "Przedszkolna Wielkanoc - Uroczyste śniadanie wielkanocne",
     "requirements": "Dla Żonkili i Koniczynek",

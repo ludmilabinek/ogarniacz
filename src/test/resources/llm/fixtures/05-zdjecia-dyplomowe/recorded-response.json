@@ -1,9 +1,11 @@
+```json
 [
   {
-    "date": "2025-05-26",
+    "date": "2026-05-26",
     "time": null,
-    "title": "Group photos for diplomas and end of preschool year 2025/26",
-    "requirements": "Festive attire. Girls should bring dresses, and boys should be equipped with long, elegant trousers and a white collared shirt (polo type is also acceptable).",
-    "notes": "The festive attire will be useful for all children, as on this day the 'Smyki' will watch a play by Teatr Kulturka. Our '0' class will also have photos taken in gowns and mortarboards."
+    "title": "Pamiątkowe zdjęcia grupowe do dyplomów na koniec roku przedszkolnego 2025/26",
+    "requirements": "Odświętny strój. Dziewczynki: sukienki. Chłopcy: długie, eleganckie spodnie i biała koszulka z kołnierzykiem (może być typu polo).",
+    "notes": "W tym dniu Smyki obejrzą spektakl Teatru Kulturka. Klasa \"0\" będzie miała wykonane także zdjęcia w togach i biretach."
   }
 ]
+```

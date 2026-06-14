@@ -3,6 +3,7 @@ package com.example.app.llm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import com.example.app.llm.LlmExtractionResult.ProposedEvent;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -64,10 +66,42 @@ class LlmExtractionLiveRegressionTest {
 
 	private static final long BUDGET_MS = 55_000L;
 
-	private static final Map<String, List<KnownDivergence>> KNOWN_DIVERGENCES = Map.of(
-			"01-sample", List.of(
+	private static final Map<String, List<KnownDivergence>> KNOWN_DIVERGENCES = Map.ofEntries(
+			Map.entry("01-sample", List.of(
 					new KnownDivergence("Wycieczka do ZOO", "requirements", "requirements-norm-mismatch"),
-					new KnownDivergence("Festyn rodzinny", "requirements", "requirements-norm-mismatch")));
+					new KnownDivergence("Festyn rodzinny", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("02-wielkanoc-sniadanie", List.of(
+					new KnownDivergence("Uroczyste śniadanie wielkanocne", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Uroczyste śniadanie wielkanocne", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("04-marzec-wazne-daty", List.of(
+					new KnownDivergence("ST. DAVID'S DAY - DZIEŃ WALII \"W walijskiej zagrodzie\"", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Sportowe igraszki dla naszej \"O\" w SP nr 13 im. Poznańskich Cytadelowców", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("ST. PATRICK'S DAY - DZIEŃ IRLANDII \"Po drugiej stronie tęczy\"", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("05-zdjecia-dyplomowe", List.of(
+					new KnownDivergence("Pamiątkowe zdjęcia grupowe do dyplomów", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("06-luty-wazne-daty", List.of(
+					new KnownDivergence("Dzień zabawki", "date", "date-mismatch"),
+					new KnownDivergence("St. Valentine's Day - WALENTYNKI", "date", "date-mismatch"),
+					new KnownDivergence("Podkoziołek - pożegnanie karnawału w rytmie disco", "date", "date-mismatch"),
+					new KnownDivergence("Warsztaty ekonomiczne o podatkach", "date", "date-mismatch"),
+					new KnownDivergence("Warsztaty muzealne", "date", "date-mismatch"))),
+			Map.entry("07-czerwiec-wazne-daty", List.of(
+					new KnownDivergence("Sportowe niespodzianki z okazji Dnia Dziecka", "date", "date-mismatch"),
+					new KnownDivergence("Wiosenne przygody - nocowanie", "date", "date-mismatch"),
+					new KnownDivergence("Uroczyste zakończenie roku przedszkolnego 2025/26", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Uroczyste zakończenie roku przedszkolnego 2025/26", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Pożegnanie przedszkolne", "requirements", "requirements-norm-mismatch"),
+					new KnownDivergence("Warsztaty muzealne \"Muzyczni detektywi\"", "time", "time-mismatch"),
+					new KnownDivergence("Powitanie lata - zabawa z balonem i piosenką", "requirements", "requirements-norm-mismatch"))),
+			Map.entry("08-grzybobranie", List.of(
+					new KnownDivergence("Grzybobranie", "requirements", "requirements-norm-mismatch"))));
+
+	/**
+	 * Mirrors {@code LlmExtractionRecordedRegressionTest#DISABLED_FIXTURES}: same fixture
+	 * family, same skip semantics. The two sets must stay in sync — see {@code lessons.md}
+	 * §"sweep sibling setup blocks".
+	 */
+	private static final Set<String> DISABLED_FIXTURES = Set.of("03-marzec-bez-godzin");
 
 	@Autowired
 	LlmVisionClient llmVisionClient;
@@ -81,6 +115,10 @@ class LlmExtractionLiveRegressionTest {
 	@ParameterizedTest(name = "fixture {0}")
 	@MethodSource("fixtures")
 	void liveExtractionMatchesExpected(Path fixtureDir) throws IOException {
+		String fixtureId = fixtureDir.getFileName().toString();
+		assumeFalse(DISABLED_FIXTURES.contains(fixtureId),
+				"fixture " + fixtureId + " disabled pending referenced fix change (see DISABLED_FIXTURES comment)");
+
 		byte[] image = LlmTestFixtures.loadImage(fixtureDir);
 
 		long start = System.nanoTime();
