@@ -601,35 +601,35 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [x] 2b.1 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (all 10 methods)
-- [x] 2b.2 `./gradlew test` full suite passes — no regression in existing controller / security tests
-- [x] 2b.3 Clock-bean regression: autowired `Clock` reports `Europe/Warsaw` zone
-- [x] 2b.4 `./gradlew build` passes
-- [x] 2b.5 Existing routes (`/`, `/login`, `/signup`, `/events`, `/app`) retain pre-phase behavior
+- [x] 2b.1 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (all 10 methods) — b4ad875
+- [x] 2b.2 `./gradlew test` full suite passes — no regression in existing controller / security tests — b4ad875
+- [x] 2b.3 Clock-bean regression: autowired `Clock` reports `Europe/Warsaw` zone — b4ad875
+- [x] 2b.4 `./gradlew build` passes — b4ad875
+- [x] 2b.5 Existing routes (`/`, `/login`, `/signup`, `/events`, `/app`) retain pre-phase behavior — b4ad875
 
 #### Manual
 
-- [x] 2b.6 `bootRun`, seed an event + token, `curl -i /calendar/<token>.ics` returns the feed
-- [x] 2b.7 Pasting the URL into Apple Calendar shows events with the morning reminder at 08:00 Warsaw
-- [x] 2b.8 `curl -i /calendar/<random-non-existent>.ics` returns 404
-- [x] 2b.9 Seed today + yesterday events; `curl` feed shows only today's UID (past-event scope confirmed)
+- [x] 2b.6 `bootRun`, seed an event + token, `curl -i /calendar/<token>.ics` returns the feed — b4ad875
+- [x] 2b.7 Pasting the URL into Apple Calendar shows events with the morning reminder at 08:00 Warsaw — b4ad875
+- [x] 2b.8 `curl -i /calendar/<random-non-existent>.ics` returns 404 — b4ad875
+- [x] 2b.9 Seed today + yesterday events; `curl` feed shows only today's UID (past-event scope confirmed) — b4ad875
 
 ### Phase 3: Settings page + topbar link
 
 #### Automated
 
-- [ ] 3.1 `./gradlew test --tests com.example.app.user.SettingsControllerTest` passes (all 6 methods)
-- [ ] 3.2 `./gradlew test` full suite passes
-- [ ] 3.3 `./gradlew build` passes
+- [x] 3.1 `./gradlew test --tests com.example.app.user.SettingsControllerTest` passes (all 6 methods)
+- [x] 3.2 `./gradlew test` full suite passes
+- [x] 3.3 `./gradlew build` passes
 
 #### Manual
 
-- [ ] 3.4 `bootRun`, log in, click Settings link, page renders correctly
-- [ ] 3.5 Copy button populates the clipboard (verified by paste)
-- [ ] 3.6 Visiting the URL in a browser renders as text (not a download)
-- [ ] 3.7 Second `/settings` visit shows the same token (lazy-mint idempotency)
-- [ ] 3.8 Anonymous `/settings` redirects to `/login`
-- [ ] 3.9 End-to-end smoke: Settings → copy → paste into Apple Calendar/Thunderbird → events appear with reminder
+- [x] 3.4 `bootRun`, log in, click Settings link, page renders correctly
+- [x] 3.5 Copy button populates the clipboard (verified by paste)
+- [x] 3.6 Visiting the URL in a browser renders as text (not a download)
+- [x] 3.7 Second `/settings` visit shows the same token (lazy-mint idempotency)
+- [x] 3.8 Anonymous `/settings` redirects to `/login`
+- [x] 3.9 End-to-end smoke: Settings → copy → paste into Apple Calendar/Thunderbird → events appear with reminder
 
 ### Phase 4: test-plan §6.5 cookbook backfill
 

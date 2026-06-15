@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Settings')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="settings-page">
+    <h1>Calendar subscription</h1>
+
+    <section class="feed-url">
+        <label for="feedUrl">Your unique iCalendar URL</label>
+        <div class="feed-url-row">
+            <input id="feedUrl" type="text" readonly th:value="${feedUrl}"/>
+            <button type="button"
+                    onclick="navigator.clipboard.writeText(document.getElementById('feedUrl').value)">Copy</button>
+        </div>
+        <p class="hint">Anyone with this URL can read your accepted events. Share with your spouse or co-parent only.</p>
+    </section>
+
+    <section class="subscribe-instructions">
+        <h2>How to subscribe</h2>
+        <p><strong>Google Calendar:</strong> Settings → Add calendar → From URL — paste the URL above.</p>
+        <p><strong>Apple Calendar:</strong> File → New Calendar Subscription — paste the URL above.</p>
+        <p><strong>Outlook:</strong> Add calendar → Subscribe from web — paste the URL above.</p>
+        <p><strong>Thunderbird:</strong> File → New → Calendar → On the Network — paste the URL above.</p>
+    </section>
+
+    <aside class="form-notice">
+        <strong>Google Calendar limitations.</strong>
+        Google polls subscribed calendars every 12–24 hours (sometimes up to 48), with no way to speed this up from the client side.
+        Google also does not show reminders embedded in subscribed calendars — to receive the morning-of-day-before reminder,
+        set a per-calendar default reminder in Google Calendar's own settings.
+        Apple Calendar, Outlook, and Thunderbird honor both the polling cadence hints and the embedded reminder fully.
+    </aside>
+</main>
+</body>
+</html>
