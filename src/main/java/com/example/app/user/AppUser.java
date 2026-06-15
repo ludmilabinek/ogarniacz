@@ -26,6 +26,9 @@ public class AppUser {
     @Column(name = "password_hash", nullable = false, length = 60)
     private String passwordHash;
 
+    @Column(name = "ical_token", unique = true, length = 32)
+    private String icalToken;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -58,5 +61,13 @@ public class AppUser {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getIcalToken() {
+        return icalToken;
+    }
+
+    void setIcalToken(String icalToken) {
+        this.icalToken = icalToken;
     }
 }

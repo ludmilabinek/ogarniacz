@@ -561,9 +561,9 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [x] 0.1 `grep -c "^## Known Limitations" context/foundation/prd.md` returns 1
-- [x] 0.2 The section appears between `## Persistence` and `## Non-Goals`
-- [x] 0.3 `./gradlew build` still passes
+- [x] 0.1 `grep -c "^## Known Limitations" context/foundation/prd.md` returns 1 — 5c0a619
+- [x] 0.2 The section appears between `## Persistence` and `## Non-Goals` — 5c0a619
+- [x] 0.3 `./gradlew build` still passes — 5c0a619
 
 #### Manual
 
@@ -574,15 +574,15 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [ ] 1.1 `./gradlew build` compiles after the dependency add
-- [ ] 1.2 `./gradlew test --tests com.example.app.user.IcalTokenGeneratorTest` passes
-- [ ] 1.3 `./gradlew test` full suite passes — no regressions
-- [ ] 1.4 DB schema update observable at startup (Hibernate logs `alter table app_user add column ical_token`)
+- [x] 1.1 `./gradlew build` compiles after the dependency add
+- [x] 1.2 `./gradlew test --tests com.example.app.user.IcalTokenGeneratorTest` passes
+- [x] 1.3 `./gradlew test` full suite passes — no regressions
+- [x] 1.4 DB schema update observable at startup (Hibernate logs `alter table app_user add column ical_token`)
 
 #### Manual
 
-- [ ] 1.5 `./gradlew bootRun` against a freshly-migrated DB starts cleanly
-- [ ] 1.6 `IcalTokenGenerator.next()` output is 32-char `[A-Za-z0-9_-]` (one-off check)
+- [x] 1.5 `./gradlew bootRun` against a freshly-migrated DB starts cleanly
+- [x] 1.6 `IcalTokenGenerator.next()` output is 32-char `[A-Za-z0-9_-]` (one-off check)
 
 ### Phase 2a: IcalFeedWriter — RFC 5545 serialization
 
