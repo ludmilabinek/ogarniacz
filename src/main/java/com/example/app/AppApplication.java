@@ -18,8 +18,8 @@ public class AppApplication {
 	}
 
 	@Bean
-	public Clock clock() {
-		return Clock.systemDefaultZone();
+	public Clock clock(AppEventProperties properties) {
+		return Clock.system(properties.timezone());
 	}
 
 	@Bean

@@ -18,7 +18,9 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -55,8 +57,19 @@ class AppApplicationTests {
 	@Autowired
 	DataSource dataSource;
 
+	@Autowired
+	Clock clock;
+
 	@Test
 	void contextLoads() {
+	}
+
+	@Test
+	void clockBeanReportsEuropeWarsawZone() {
+		// Regression: the Clock bean must use app.timezone (Europe/Warsaw), not
+		// systemDefaultZone (UTC on Fly). Consumers compute "today" against this
+		// clock and must see Warsaw midnight, not UTC midnight.
+		assertThat(clock.getZone()).isEqualTo(ZoneId.of("Europe/Warsaw"));
 	}
 
 	@Test

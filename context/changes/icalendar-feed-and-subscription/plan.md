@@ -588,31 +588,31 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [x] 2a.1 `./gradlew test --tests com.example.app.event.IcalFeedWriterTest` passes (all 12 methods)
-- [x] 2a.2 `./gradlew test` full suite passes
-- [x] 2a.3 Writer output parses cleanly via ical4j `CalendarBuilder` in every test
+- [x] 2a.1 `./gradlew test --tests com.example.app.event.IcalFeedWriterTest` passes (all 12 methods) — 92d09e3
+- [x] 2a.2 `./gradlew test` full suite passes — 92d09e3
+- [x] 2a.3 Writer output parses cleanly via ical4j `CalendarBuilder` in every test — 92d09e3
 
 #### Manual
 
-- [x] 2a.4 Rendered feed validates on iCalendar Validator (one-off external check)
-- [x] 2a.5 Polish diacritics survive end-to-end in a sample render
+- [x] 2a.4 Rendered feed validates on iCalendar Validator (one-off external check) — 92d09e3
+- [x] 2a.5 Polish diacritics survive end-to-end in a sample render — 92d09e3
 
 ### Phase 2b: CalendarController + security carve-out
 
 #### Automated
 
-- [ ] 2b.1 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (all 10 methods)
-- [ ] 2b.2 `./gradlew test` full suite passes — no regression in existing controller / security tests
-- [ ] 2b.3 Clock-bean regression: autowired `Clock` reports `Europe/Warsaw` zone
-- [ ] 2b.4 `./gradlew build` passes
-- [ ] 2b.5 Existing routes (`/`, `/login`, `/signup`, `/events`, `/app`) retain pre-phase behavior
+- [x] 2b.1 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (all 10 methods)
+- [x] 2b.2 `./gradlew test` full suite passes — no regression in existing controller / security tests
+- [x] 2b.3 Clock-bean regression: autowired `Clock` reports `Europe/Warsaw` zone
+- [x] 2b.4 `./gradlew build` passes
+- [x] 2b.5 Existing routes (`/`, `/login`, `/signup`, `/events`, `/app`) retain pre-phase behavior
 
 #### Manual
 
-- [ ] 2b.6 `bootRun`, seed an event + token, `curl -i /calendar/<token>.ics` returns the feed
-- [ ] 2b.7 Pasting the URL into Apple Calendar shows events with the morning reminder at 08:00 Warsaw
-- [ ] 2b.8 `curl -i /calendar/<random-non-existent>.ics` returns 404
-- [ ] 2b.9 Seed today + yesterday events; `curl` feed shows only today's UID (past-event scope confirmed)
+- [x] 2b.6 `bootRun`, seed an event + token, `curl -i /calendar/<token>.ics` returns the feed
+- [x] 2b.7 Pasting the URL into Apple Calendar shows events with the morning reminder at 08:00 Warsaw
+- [x] 2b.8 `curl -i /calendar/<random-non-existent>.ics` returns 404
+- [x] 2b.9 Seed today + yesterday events; `curl` feed shows only today's UID (past-event scope confirmed)
 
 ### Phase 3: Settings page + topbar link
 

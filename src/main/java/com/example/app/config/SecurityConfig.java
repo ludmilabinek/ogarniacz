@@ -3,6 +3,7 @@ package com.example.app.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -69,6 +70,10 @@ public class SecurityConfig {
                                          SecurityContextRepository securityContextRepository) throws Exception {
     http
         .authorizeHttpRequests(auth -> auth
+            // Anonymous iCalendar feed — token entropy is the only access control.
+            // MUST precede anyRequest().authenticated() (first-match-wins; silently
+            // shadowed if ordered after — CalendarControllerTest pins this).
+            .requestMatchers(HttpMethod.GET, "/calendar/*.ics").permitAll()
             .requestMatchers("/", "/signup", "/login", "/actuator/health",
                 "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
             .anyRequest().authenticated()
