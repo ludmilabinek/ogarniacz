@@ -567,8 +567,8 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Manual
 
-- [ ] 0.4 The new section reads as PRD prose (not a changelog entry)
-- [ ] 0.5 The S-04 UI copy in Phase 3 is consistent with these bullets
+- [x] 0.4 The new section reads as PRD prose (not a changelog entry)
+- [x] 0.5 The S-04 UI copy in Phase 3 is consistent with these bullets
 
 ### Phase 1: Token + persistence foundation
 
@@ -618,29 +618,29 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [x] 3.1 `./gradlew test --tests com.example.app.user.SettingsControllerTest` passes (all 6 methods)
-- [x] 3.2 `./gradlew test` full suite passes
-- [x] 3.3 `./gradlew build` passes
+- [x] 3.1 `./gradlew test --tests com.example.app.user.SettingsControllerTest` passes (all 6 methods) — 295a7a8
+- [x] 3.2 `./gradlew test` full suite passes — 295a7a8
+- [x] 3.3 `./gradlew build` passes — 295a7a8
 
 #### Manual
 
-- [x] 3.4 `bootRun`, log in, click Settings link, page renders correctly
-- [x] 3.5 Copy button populates the clipboard (verified by paste)
-- [x] 3.6 Visiting the URL in a browser renders as text (not a download)
-- [x] 3.7 Second `/settings` visit shows the same token (lazy-mint idempotency)
-- [x] 3.8 Anonymous `/settings` redirects to `/login`
-- [x] 3.9 End-to-end smoke: Settings → copy → paste into Apple Calendar/Thunderbird → events appear with reminder
+- [x] 3.4 `bootRun`, log in, click Settings link, page renders correctly — 295a7a8
+- [x] 3.5 Copy button populates the clipboard (verified by paste) — 295a7a8
+- [x] 3.6 Visiting the URL in a browser renders as text (not a download) — 295a7a8
+- [x] 3.7 Second `/settings` visit shows the same token (lazy-mint idempotency) — 295a7a8
+- [x] 3.8 Anonymous `/settings` redirects to `/login` — 295a7a8
+- [x] 3.9 End-to-end smoke: Settings → copy → paste into Apple Calendar/Thunderbird → events appear with reminder — 295a7a8
 
 ### Phase 4: test-plan §6.5 cookbook backfill
 
 #### Automated
 
-- [ ] 4.1 `grep -A2 "^### 6.5" context/foundation/test-plan.md` no longer contains "TBD —"
-- [ ] 4.2 §3 Phase 2 and Phase 3 status columns read `complete`
-- [ ] 4.3 §5 rows for iCal feed gates reference `required`
-- [ ] 4.4 `./gradlew build` and `./gradlew test` still pass
+- [x] 4.1 `grep -A2 "^### 6.5" context/foundation/test-plan.md` no longer contains "TBD —"
+- [x] 4.2 §3 Phase 2 and Phase 3 status columns read `complete`
+- [x] 4.3 §5 rows for iCal feed gates reference `required`
+- [x] 4.4 `./gradlew build` and `./gradlew test` still pass
 
 #### Manual
 
-- [ ] 4.5 §6.5 shape matches §6.1 / §6.2 — a new contributor can follow it without reading impl source
-- [ ] 4.6 §3 phase statuses are coherent with rolled-out code
+- [x] 4.5 §6.5 shape matches §6.1 / §6.2 — a new contributor can follow it without reading impl source
+- [x] 4.6 §3 phase statuses are coherent with rolled-out code

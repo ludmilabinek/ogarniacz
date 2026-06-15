@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-12
+> Last updated: 2026-06-15
 
 ## 1. Strategy
 
@@ -72,8 +72,8 @@ orchestrator updates Status as artifacts appear on disk.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | LLM extraction regression harness | A curated fixture set of real announcements is the oracle; a prompt / model swap surfaces a per-fixture diff before merge; lean, no eval-platform investment. | #1, #2 | integration (real fixtures, env-gated live + recorded-mock CI variant), classic unit on parser invariants | in progress | `llm-extraction-regression-harness` |
-| 2 | iCal feed serialization + freshness | Accepted events appear in the feed within one poll; deleted events disappear; reminder VALARM is correct on a DST day. | #3, #6 | integration (MockMvc / WebTestClient against the feed endpoint) | not started | — |
-| 3 | iCal feed access control (abuse lens) | Cross-account isolation by token; non-issued tokens return 404; token entropy contract asserted at the generator. | #4 | integration (cross-user MockMvc) + classic unit on the generator | not started | — |
+| 2 | iCal feed serialization + freshness | Accepted events appear in the feed within one poll; deleted events disappear; reminder VALARM is correct on a DST day. | #3, #6 | integration (MockMvc / WebTestClient against the feed endpoint) | complete | `icalendar-feed-and-subscription` |
+| 3 | iCal feed access control (abuse lens) | Cross-account isolation by token; non-issued tokens return 404; token entropy contract asserted at the generator. | #4 | integration (cross-user MockMvc) + classic unit on the generator | complete | `icalendar-feed-and-subscription` |
 | 4 | Upload pipeline + lifecycle boundary | Edit / delete propagate to the feed; an LLM timeout surfaces the FR-005 user-visible error within 60s; "unreadable" maps to an actionable error, not an empty list. | #5, #7 | integration (MockMvc upload + edit + delete; `LlmVisionClient` mocked at the controller boundary) | not started | — |
 
 ## 4. Stack
@@ -89,7 +89,7 @@ future readers can see which lines need re-verification.
 | LLM mocking | `@MockitoBean ChatModel` (Spring Boot 4 mock-bean primitive) | bundled | reference: `LlmVisionClientTest` (6 mock-backed cases); mocks at `ChatModel`, intercepts the fluent `ChatClient` surface |
 | LLM live smoke | `@EnabledIfEnvironmentVariable(named = "OGARNIACZ_LIVE_SMOKE")` + `OPENROUTER_API_KEY` | n/a | reference: `LlmVisionSmokeTest`; operator-gated, CI runs it as skipped |
 | LLM extraction regression suite | `LlmExtraction{Recorded,Live}RegressionTest` + `LlmTestFixtures` helper | bundled with Boot 4.0.6 / JUnit 5 / AssertJ / Mockito | harness shipped in `context/changes/llm-extraction-regression-harness/`; fixture set expansion ongoing per `src/test/resources/llm/fixtures/README.md` sourcing policy; intentionally lean (no LangSmith / Promptfoo / hosted eval platform per §7) |
-| iCal feed contract tests | none yet — see §3 Phase 2 + Phase 3 | n/a | will reuse the existing `@SpringBootTest` + MockMvc stack against the new feed endpoint |
+| iCal feed contract tests | `IcalFeedWriterTest` (pure JUnit + ical4j `CalendarBuilder` round-trip) + `CalendarControllerTest` (`@SpringBootTest` + MockMvc) + `IcalTokenGeneratorTest` (pure JUnit) + `SettingsControllerTest` (`@SpringBootTest` + MockMvc) | bundled with Boot 4.0.6 + `org.mnode.ical4j:ical4j:4.2.5` | shipped in `context/changes/icalendar-feed-and-subscription/`; see §6.5 for the cookbook entry |
 | e2e browser | none — deliberately not adopted (see §7) | n/a | feed-contract integration tests substitute for the user-visible cross-surface check |
 | accessibility, visual diff, snapshot | none — deliberately not adopted (see §7) | n/a | Q5 negative-space rule |
 
@@ -111,8 +111,8 @@ phase lands; before that, the gate is `planned`.
 | compile + Bean Validation (Java typecheck via `./gradlew build`) | local + CI | required | syntactic / type drift; Spring Boot context-misconfiguration on boot |
 | unit + integration (`./gradlew test`) | local + CI | required | logic regressions across data, controller, security, domain, LLM-mock layers (current suite: ~50 test methods across 7 classes) |
 | LLM extraction regression suite | local + CI (recorded-mock variant); operator-gated for the live variant | required after §3 Phase 1 | prompt / model-swap silent regression (risk #2); confident-but-wrong extraction on a known fixture (risk #1) |
-| iCal feed contract tests | local + CI | required after §3 Phase 2 | feed freshness, deletion propagation, DST-day VALARM (risks #3, #6) |
-| iCal feed access-control tests | local + CI | required after §3 Phase 3 | cross-account leakage via token, unknown-token enumeration (risk #4) |
+| iCal feed contract tests | local + CI | required | feed freshness, deletion propagation, DST-day VALARM (risks #3, #6) |
+| iCal feed access-control tests | local + CI | required | cross-account leakage via token, unknown-token enumeration (risk #4) |
 | upload-pipeline + lifecycle boundary tests | local + CI | required after §3 Phase 4 | view ↔ feed drift after edit / delete (risk #5); LLM-call boundary failure UX (risk #7) |
 | pre-prod LLM smoke (`LlmVisionSmokeTest`) | operator-run between merge + prod | optional | environment-specific OpenRouter integration failures (auth, model availability, quota) |
 
@@ -182,11 +182,61 @@ The JSON-array extractor at `OpenRouterLlmVisionClient.java:96` is a greedy `\[.
 
 ### 6.5 Adding an iCal feed test (serialization, freshness, access control)
 
-- TBD — see §3 Phase 2 (feed contract: accepted appears, deleted disappears, DST-day VALARM) and §3 Phase 3 (token-based access control: cross-account isolation, unknown-token 404, generator entropy).
+The iCal surface lives in two layers — split tests along that seam.
+
+**Two-layer split:**
+
+- **Serializer assertions** (RFC 5545 shape — DST trigger times, VALARM presence, UID format, envelope properties, DTSTART value-type vs TZID, DTEND emission, Polish-diacritic round-trip): pure JUnit 5 against `IcalFeedWriter` directly. **No Spring context.** Parse the writer's output back via `new CalendarBuilder().build(new StringReader(ics))` and assert against the typed model (`vevent.getRequiredProperty(Property.DTSTART)`, `.getParameter(Parameter.TZID)`, etc.) — never string-fragment matching, never snapshot of the whole body.
+- **Endpoint assertions** (HTTP status, MIME + Cache-Control headers, anonymous-200, unknown-404, cross-user partition, deletion propagation E2E, redirects for non-`.ics` and multi-segment paths): `@SpringBootTest` + MockMvc against the live `/calendar/{token}.ics` route. **No mocking** of `IcalFeedWriter` or repositories — the contract is end-to-end against the controller plus security carve-out.
+
+**Reference tests:**
+
+- `src/test/java/com/example/app/event/IcalFeedWriterTest.java` — 12 pure-JUnit methods round-tripping output via ical4j `CalendarBuilder`.
+- `src/test/java/com/example/app/event/CalendarControllerTest.java` — 10 integration methods, `@SpringBootTest` + MockMvc.
+- `src/test/java/com/example/app/user/IcalTokenGeneratorTest.java` — pure JUnit, 1000-iteration charset + length + cardinality assertions on the token generator (Base64URL-no-pad, 32 chars, 192 bits of entropy).
+- `src/test/java/com/example/app/user/SettingsControllerTest.java` — 6 integration methods covering the settings page + lazy-mint idempotency at the UI layer.
+
+**Annotation stack:**
+
+- Unit (writer + generator): pure JUnit 5; instantiate `IcalFeedWriter` / `IcalTokenGenerator` directly with hand-built `EventReminder` + `AppEventProperties`.
+- Integration: `@SpringBootTest @AutoConfigureMockMvc @TestPropertySource(properties = "REMEMBER_ME_KEY=test-key-not-for-production")` per the project's per-controller test layout standard.
+
+**Seeding pattern (integration):**
+
+- Save a user via `appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")))`.
+- Mint a token via the production path: `String token = subscriptionService.getOrCreateToken(user)`. Re-read the user (`appUserRepository.findById(...).orElseThrow()`) so the in-memory entity reflects the persisted `icalToken`. Avoids reflection and exercises the same `@Transactional` row-locked mint the controller uses.
+- For unknown-token tests, generate a 32-char Base64URL token with the real `IcalTokenGenerator` — guarantees the test exercises the same charset/length as production without colliding with seeded rows.
+- Save events directly via `eventRepository.save(new Event(...))` — no service layer involved for tests that only care about the feed-render contract.
+
+**UID-stability fixture (pure-JUnit `IcalFeedWriterTest` only):**
+
+- `Event.id` is `@GeneratedValue` UUID set by JPA on save; in pure JUnit without a Spring context it stays null and the writer would emit `null@ogarniacz.fly.dev`. The test sets a stable UUID via reflection on the `id` field (private helper `setField(event, "id", UUID.randomUUID())`). This mirrors what JPA would set and is the smallest change that preserves the writer's contract.
+
+**DST fixture convention (Europe/Warsaw 2026):**
+
+- Spring-forward Sunday: **2026-03-29** at 02:00 → 03:00 (CET → CEST).
+- Fall-back Sunday: **2026-10-25** at 03:00 → 02:00 (CEST → CET).
+- For "day-after" tests pin to **2026-03-30** and **2026-10-26**. Expected VALARM trigger Instants (08:00 Warsaw local → UTC):
+  - Spring-forward day-after: `Instant.parse("2026-03-29T06:00:00Z")` (CEST/UTC+02:00).
+  - Fall-back day-after: `Instant.parse("2026-10-25T07:00:00Z")` (CET/UTC+01:00).
+  - Regular non-DST mid-summer day-before: `Instant.parse("2026-06-14T06:00:00Z")` (CEST/UTC+02:00). Hard-code the expected `Instant` — do NOT recompute via `EventReminder.reminderFor(event)` (that would be a mirror test of the writer's implementation; the oracle is the PRD rule "morning of day-before at `app.event.reminder.hour` Warsaw").
+
+**Partition assertion:** mirror `appShowsOwnEmailOnlyNotOtherUsersEmail` — seed alice + bob with two distinct tokens, GET alice's feed, assert presence of alice's event UID AND absence of bob's UID in the same test (the `not(containsString(...))` arm is what catches a wiring mistake that returns "all events").
+
+**Path-traversal sanity:** `/calendar/*.ics` is a single-segment Spring matcher; non-`.ics` extensions and multi-segment paths under `/calendar/` fall outside the `.permitAll()` carve-out and the form-login filter redirects them to `/login`. Two tests pin both branches (`tokenWithWrongFileExtensionRedirectsToLogin`, `tokenInPathOnlyAcceptsTokenCharsetRedirectsToLogin`). Assertion is `redirectedUrlPattern("/login*")` — mirrors `EventControllerTest.anonymousGetEventsNewRedirectsToLogin`.
+
+**Run locally:**
+
+```
+./gradlew test --tests com.example.app.event.IcalFeedWriterTest        # unit, milliseconds
+./gradlew test --tests com.example.app.event.CalendarControllerTest   # integration, seconds
+./gradlew test --tests com.example.app.user.IcalTokenGeneratorTest    # unit, milliseconds
+./gradlew test --tests com.example.app.user.SettingsControllerTest    # integration, seconds
+```
 
 ### 6.6 Per-rollout-phase notes
 
-(Empty. After each phase lands, `/10x-implement` appends a 2–3 line note here capturing anything surprising the rollout phase taught — e.g. a fixture-storage convention, a property-test seed convention, or a feed-contract assertion that read more cleanly than expected.)
+**Phase 2 + 3 — iCal feed (icalendar-feed-and-subscription, 2026-06-15).** The redirect-pattern matcher Spring uses for `redirectedUrlPattern` is ant-style; `/login` (the literal target Spring Security emits) matches `/login*` but NOT `**/login*` — the leading-segment-wildcard form looks safer but quietly fails. When pinning a redirect to `/login`, use `redirectedUrlPattern("/login*")` exactly. The pure-JUnit writer test pins `Event.id` via reflection on the private `id` field because JPA never runs in that test layer; this mirrors what `@GeneratedValue` would set and is preferable to threading a test-only constructor through the entity. VALARM-trigger DST tests should hard-code the expected `Instant`, not derive it via `EventReminder.reminderFor(event)` — the oracle is the PRD rule, not the implementation.
 
 ## 7. What We Deliberately Don't Test
 
@@ -201,8 +251,8 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-09
-- Stack versions last verified: 2026-06-09
+- Strategy (§1–§5) last reviewed: 2026-06-15
+- Stack versions last verified: 2026-06-15
 - AI-native tool references last verified: 2026-06-09
 
 Refresh (`/10x-test-plan --refresh`) when:
