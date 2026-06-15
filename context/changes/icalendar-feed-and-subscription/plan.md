@@ -567,8 +567,8 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Manual
 
-- [x] 0.4 The new section reads as PRD prose (not a changelog entry)
-- [x] 0.5 The S-04 UI copy in Phase 3 is consistent with these bullets
+- [x] 0.4 The new section reads as PRD prose (not a changelog entry) — 6edb0eb
+- [x] 0.5 The S-04 UI copy in Phase 3 is consistent with these bullets — 6edb0eb
 
 ### Phase 1: Token + persistence foundation
 
@@ -635,12 +635,12 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [x] 4.1 `grep -A2 "^### 6.5" context/foundation/test-plan.md` no longer contains "TBD —"
-- [x] 4.2 §3 Phase 2 and Phase 3 status columns read `complete`
-- [x] 4.3 §5 rows for iCal feed gates reference `required`
-- [x] 4.4 `./gradlew build` and `./gradlew test` still pass
+- [x] 4.1 `grep -A2 "^### 6.5" context/foundation/test-plan.md` no longer contains "TBD —" — 6edb0eb
+- [x] 4.2 §3 Phase 2 and Phase 3 status columns read `complete` — 6edb0eb
+- [x] 4.3 §5 rows for iCal feed gates reference `required` — 6edb0eb
+- [x] 4.4 `./gradlew build` and `./gradlew test` still pass — 6edb0eb
 
 #### Manual
 
-- [x] 4.5 §6.5 shape matches §6.1 / §6.2 — a new contributor can follow it without reading impl source
-- [x] 4.6 §3 phase statuses are coherent with rolled-out code
+- [x] 4.5 §6.5 shape matches §6.1 / §6.2 — a new contributor can follow it without reading impl source — 6edb0eb
+- [x] 4.6 §3 phase statuses are coherent with rolled-out code — 6edb0eb
