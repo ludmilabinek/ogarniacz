@@ -178,6 +178,13 @@ The rule's failure modes are explicitly handled: if the image cannot be read at 
 
 All parent-scoped data — accounts and credentials, uploaded source images (until purge), extracted-event proposals, accepted events, the per-user iCalendar token — is stored in a **server-side database**. File-based, in-memory, or client-side persistence is explicitly out of scope: each of the load-bearing behaviours (cross-account partitioning, post-acceptance edit/delete with iCalendar-feed consistency, token-keyed feed lookup, surviving restarts and redeploys) requires durable transactional storage. The specific database engine is chosen during stack selection; the requirement at the PRD level is "a database, not a file."
 
+## Known Limitations
+
+Two client-side constraints affect parents who subscribe to the Ogarniacz iCalendar feed in Google Calendar specifically. Both are properties of Google Calendar's subscribed-feed implementation, not defects in Ogarniacz; the feed itself remains a standards-compliant iCalendar resource. Apple Calendar, Outlook, and Thunderbird honor the feed contract in full.
+
+- **Google Calendar polling cadence.** Google Calendar refreshes subscribed calendars roughly every 12–24 hours, with observed outliers up to 48 hours. The cadence is not configurable from the client side, and Google ignores polling hints embedded in the feed (such as `REFRESH-INTERVAL` and `X-PUBLISHED-TTL`). Parents using Google Calendar may therefore see a new or deleted event reflected later than the "at most one day" ceiling implied by FR-013, and Ogarniacz has no server-side mechanism to shorten this window. Parents who need tighter sync should subscribe via Apple Calendar, Outlook, or Thunderbird, all of which respect the contract.
+- **Google Calendar silently drops reminders on subscribed feeds.** The morning-of-day-before reminder shipped with each event (FR-008) renders correctly in Apple Calendar, Outlook, and Thunderbird but is not surfaced by Google Calendar for subscribed calendars. Parents using Google Calendar must compensate by setting a per-calendar default reminder in Google Calendar's own UI (Settings → Settings for that calendar → Event notifications). The feed continues to carry the reminder; only Google's rendering layer omits it.
+
 ## Non-Goals
 
 - **No native mobile app** — Ogarniacz is web-only, served via the mobile browser. The seed makes this explicit: the website works on a phone (camera-via-browser for photos, normal upload for screenshots). Pinned to prevent a mid-build pivot to a native iOS / Android port.
