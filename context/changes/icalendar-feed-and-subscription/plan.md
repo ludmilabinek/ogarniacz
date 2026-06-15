@@ -574,28 +574,28 @@ Rollback path: drop the new column manually (`ALTER TABLE app_user DROP COLUMN i
 
 #### Automated
 
-- [x] 1.1 `./gradlew build` compiles after the dependency add
-- [x] 1.2 `./gradlew test --tests com.example.app.user.IcalTokenGeneratorTest` passes
-- [x] 1.3 `./gradlew test` full suite passes — no regressions
-- [x] 1.4 DB schema update observable at startup (Hibernate logs `alter table app_user add column ical_token`)
+- [x] 1.1 `./gradlew build` compiles after the dependency add — b29f202
+- [x] 1.2 `./gradlew test --tests com.example.app.user.IcalTokenGeneratorTest` passes — b29f202
+- [x] 1.3 `./gradlew test` full suite passes — no regressions — b29f202
+- [x] 1.4 DB schema update observable at startup (Hibernate logs `alter table app_user add column ical_token`) — b29f202
 
 #### Manual
 
-- [x] 1.5 `./gradlew bootRun` against a freshly-migrated DB starts cleanly
-- [x] 1.6 `IcalTokenGenerator.next()` output is 32-char `[A-Za-z0-9_-]` (one-off check)
+- [x] 1.5 `./gradlew bootRun` against a freshly-migrated DB starts cleanly — b29f202
+- [x] 1.6 `IcalTokenGenerator.next()` output is 32-char `[A-Za-z0-9_-]` (one-off check) — b29f202
 
 ### Phase 2a: IcalFeedWriter — RFC 5545 serialization
 
 #### Automated
 
-- [ ] 2a.1 `./gradlew test --tests com.example.app.event.IcalFeedWriterTest` passes (all 12 methods)
-- [ ] 2a.2 `./gradlew test` full suite passes
-- [ ] 2a.3 Writer output parses cleanly via ical4j `CalendarBuilder` in every test
+- [x] 2a.1 `./gradlew test --tests com.example.app.event.IcalFeedWriterTest` passes (all 12 methods)
+- [x] 2a.2 `./gradlew test` full suite passes
+- [x] 2a.3 Writer output parses cleanly via ical4j `CalendarBuilder` in every test
 
 #### Manual
 
-- [ ] 2a.4 Rendered feed validates on iCalendar Validator (one-off external check)
-- [ ] 2a.5 Polish diacritics survive end-to-end in a sample render
+- [x] 2a.4 Rendered feed validates on iCalendar Validator (one-off external check)
+- [x] 2a.5 Polish diacritics survive end-to-end in a sample render
 
 ### Phase 2b: CalendarController + security carve-out
 
