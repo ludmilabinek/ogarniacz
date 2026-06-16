@@ -4,13 +4,11 @@ import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -40,12 +38,15 @@ public class CalendarController {
 
     @GetMapping("/calendar/{token}.ics")
     public ResponseEntity<String> feed(@PathVariable("token") String token) {
-        // 404 (not 401) when no user matches: hides whether the token namespace
-        // endpoint exists. Same response shape as Spring's default 404 for an
-        // unmatched route.
-        AppUser user = appUserRepository.findByIcalToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // Empty-body 404 on unknown token so the response is byte-identical to
+        // the 404 for an unmatched route, hiding whether the token namespace
+        // endpoint exists.
+        return appUserRepository.findByIcalToken(token)
+                .map(this::renderFeed)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
+    private ResponseEntity<String> renderFeed(AppUser user) {
         List<Event> events = eventRepository.findUpcomingByUser(user, LocalDate.now(clock));
         String body = icalFeedWriter.write(user, events);
 

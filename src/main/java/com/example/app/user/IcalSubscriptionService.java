@@ -24,7 +24,6 @@ public class IcalSubscriptionService {
         }
         String fresh = tokenGenerator.next();
         locked.setIcalToken(fresh);
-        appUserRepository.save(locked);
         return fresh;
     }
 }

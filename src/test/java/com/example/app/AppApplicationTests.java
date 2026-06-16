@@ -2,6 +2,7 @@ package com.example.app;
 
 import com.example.app.event.Event;
 import com.example.app.event.EventRepository;
+import com.example.app.testsupport.UserTestFixtures;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
 import jakarta.servlet.http.Cookie;
@@ -124,7 +125,7 @@ class AppApplicationTests {
 	@Test
 	void signupDuplicateEmailRendersFieldError() throws Exception {
 		String email = "dup@example.com";
-		appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+		UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
 		mvc.perform(post("/signup")
 						.param("email", email)
@@ -196,7 +197,7 @@ class AppApplicationTests {
 	@Test
 	void loginBadPasswordShowsGenericError() throws Exception {
 		String email = "badpass@example.com";
-		appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+		UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
 		mvc.perform(formLogin("/login").user(email).password("wrongpassword"))
 				.andExpect(unauthenticated())
@@ -206,7 +207,7 @@ class AppApplicationTests {
 	@Test
 	void getAppAuthenticatedShowsEmail() throws Exception {
 		String email = "showmail@example.com";
-		appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+		UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
 		mvc.perform(get("/app").with(user(email)))
 				.andExpect(status().isOk())
@@ -240,8 +241,8 @@ class AppApplicationTests {
 	void appShowsOwnEmailOnlyNotOtherUsersEmail() throws Exception {
 		String alice = "alice-partition@example.com";
 		String bob = "bob-partition@example.com";
-		appUserRepository.save(new AppUser(alice, passwordEncoder.encode("verylongpassword12")));
-		appUserRepository.save(new AppUser(bob, passwordEncoder.encode("verylongpassword12")));
+		UserTestFixtures.saveUser(appUserRepository, passwordEncoder, alice);
+		UserTestFixtures.saveUser(appUserRepository, passwordEncoder, bob);
 
 		mvc.perform(get("/app").with(user(alice)))
 				.andExpect(status().isOk())
@@ -253,8 +254,8 @@ class AppApplicationTests {
 	void appShowsUpcomingEventsForCurrentUserOnly() throws Exception {
 		String aliceEmail = "alice-event-partition@example.com";
 		String bobEmail = "bob-event-partition@example.com";
-		AppUser alice = appUserRepository.save(new AppUser(aliceEmail, passwordEncoder.encode("verylongpassword12")));
-		AppUser bob = appUserRepository.save(new AppUser(bobEmail, passwordEncoder.encode("verylongpassword12")));
+		AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, aliceEmail);
+		AppUser bob = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, bobEmail);
 
 		eventRepository.save(new Event(alice, LocalDate.now().plusDays(3), null, "alice-only-event-title", null, null));
 		eventRepository.save(new Event(bob, LocalDate.now().plusDays(4), null, "bob-only-event-title", null, null));

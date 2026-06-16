@@ -1,5 +1,6 @@
 package com.example.app.event;
 
+import com.example.app.testsupport.UserTestFixtures;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
 import org.junit.jupiter.api.Test;
@@ -60,7 +61,7 @@ class EventControllerTest {
     @Test
     void postEventHappyPathRedirectsToApp() throws Exception {
         String email = "alice-happy@example.com";
-        AppUser alice = appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
         String uniqueTitle = "happy-path-event-" + System.nanoTime();
         LocalDate future = LocalDate.now().plusDays(5);
@@ -123,7 +124,7 @@ class EventControllerTest {
     @Test
     void postEventPastDateIsAccepted() throws Exception {
         String email = "alice-past@example.com";
-        appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+        UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
         mvc.perform(post("/events")
                         .with(user(email))
@@ -146,7 +147,7 @@ class EventControllerTest {
     @Test
     void appHidesPastEventsForCurrentUser() throws Exception {
         String email = "alice-pasthide@example.com";
-        AppUser alice = appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
         eventRepository.save(new Event(alice, LocalDate.now().minusDays(2), null, "past-event-title-pasthide", null, null));
         eventRepository.save(new Event(alice, LocalDate.now().plusDays(2), null, "future-event-title-pasthide", null, null));

@@ -147,7 +147,9 @@ class IcalFeedWriterTest {
     @Test
     void summaryAndDescriptionHandlePolishDiacriticsAndNewlines() throws Exception {
         String title = "Pasowanie — przynieś czapkę";
-        String requirements = "ą,ć,ę;ł\\ś";
+        // RFC 5545 §3.3.11 reserves `\n` in TEXT values for line breaks; ical4j
+        // must escape the embedded newline on the wire and decode it back on read.
+        String requirements = "ą,ć,ę;\nł\\ś";
         Event event = newEvent(LocalDate.of(2026, 6, 20), null, title, requirements, null);
 
         VEvent vevent = singleEvent(writer.write(USER, List.of(event)));

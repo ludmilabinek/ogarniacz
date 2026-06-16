@@ -1,5 +1,6 @@
 package com.example.app.user;
 
+import com.example.app.testsupport.UserTestFixtures;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -113,9 +114,7 @@ class SettingsControllerTest {
                 .andExpect(content().string(containsString("subscribed")));
     }
 
-    // --- helpers ----------------------------------------------------------
-
     private AppUser saveUser(String email) {
-        return appUserRepository.save(new AppUser(email, passwordEncoder.encode("verylongpassword12")));
+        return UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
     }
 }

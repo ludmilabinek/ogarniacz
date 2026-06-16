@@ -42,6 +42,8 @@ public class IcalFeedWriter {
 
     private final EventReminder eventReminder;
     private final AppEventProperties properties;
+    private final TimeZoneRegistry timeZoneRegistry =
+            TimeZoneRegistryFactory.getInstance().createRegistry();
 
     public IcalFeedWriter(EventReminder eventReminder, AppEventProperties properties) {
         this.eventReminder = eventReminder;
@@ -62,8 +64,7 @@ public class IcalFeedWriter {
         // by a VTIMEZONE in the same calendar. Emit only when needed so the
         // empty-feed and date-only-feed cases stay minimal.
         if (events.stream().anyMatch(e -> e.getEventTime() != null)) {
-            TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
-            calendar.add(registry.getTimeZone(properties.timezone().getId()).getVTimeZone());
+            calendar.add(timeZoneRegistry.getTimeZone(properties.timezone().getId()).getVTimeZone());
         }
 
         for (Event event : events) {
