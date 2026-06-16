@@ -3,7 +3,7 @@ project: Ogarniacz
 version: 1
 status: draft
 created: 2026-05-25
-updated: 2026-06-09
+updated: 2026-06-16
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -32,7 +32,7 @@ The **product wedge** — the one trait that, if removed, makes the product indi
 | F-01  | [#1](https://github.com/ludmilabinek/ogarniacz/issues/1) | openrouter-llm-client-wired                  | (foundation) OpenRouter vision-LLM client is callable from the app and returns a structured response on a smoke test            | —                | FR-004, FR-005, NFR (extraction latency)       | done     |
 | S-01  | [#2](https://github.com/ludmilabinek/ogarniacz/issues/2) | minimal-auth-and-empty-personal-view         | sign up, log in, log out, and land on an empty personal view scoped to their account                                            | —                | FR-001, FR-009 (partial), US-01 (login), §Access Control, NFR (zero cross-account leakage) | done     |
 | S-02  | [#3](https://github.com/ludmilabinek/ogarniacz/issues/3) | manual-event-entry                           | manually create an event with date/time/title/requirements/notes; it appears in their personal view with the default reminder    | S-01             | FR-003, FR-008, FR-009, US-02                  | done     |
-| S-04  | [#4](https://github.com/ludmilabinek/ogarniacz/issues/4) | icalendar-feed-and-subscription              | view + copy their unique iCalendar URL from settings; events from the personal view appear in their subscribed calendar         | S-02             | FR-012, FR-013, US-03, NFR (token entropy, feed freshness) | proposed |
+| S-04  | [#4](https://github.com/ludmilabinek/ogarniacz/issues/4) | icalendar-feed-and-subscription              | view + copy their unique iCalendar URL from settings; events from the personal view appear in their subscribed calendar         | S-02             | FR-012, FR-013, US-03, NFR (token entropy, feed freshness) | done     |
 | S-05  | [#5](https://github.com/ludmilabinek/ogarniacz/issues/5) | image-extraction-and-review-acceptance       | upload an image, see AI-proposed events with editable fields, accept or reject each individually, see accepted ones in calendar | F-01, S-02       | FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, US-01 (full) | proposed |
 | S-03  | [#6](https://github.com/ludmilabinek/ogarniacz/issues/6) | edit-delete-accepted-events                  | edit or delete accepted events from the personal view; the change propagates to the iCalendar feed                              | S-02             | FR-010, FR-011, US-01 (lifecycle)              | proposed |
 | S-06  | [#7](https://github.com/ludmilabinek/ogarniacz/issues/7) | source-image-auto-purge                      | (background) source images are auto-removed once every proposed event from them has been accepted or rejected                   | S-05             | NFR (image retention)                          | proposed |
@@ -115,7 +115,7 @@ What's already in place in the codebase as of 2026-05-25 (auto-researched + user
   - iCalendar library choice (ical4j vs. hand-rolled VCALENDAR generation)? Owner: dev (decide in `/10x-plan`). Block: no.
   - UptimeRobot keyword-check target switches from `/actuator/health` to the feed URL at the end of this slice (per `deploy-plan.md` Phase I). Owner: dev. Block: no.
 - **Risk:** Sequenced **before** S-05 even though their code dependencies don't force this order. The rationale is north-star realization: when S-05 ships, the parent's calendar must surface the AI-extracted event on the next poll — that only happens if the feed is already live. Inverting the order means S-05 lands and the parent sees the extracted event only in the in-app personal view, not in their calendar, which downgrades the hypothesis test from "the bridge works" to "the AI works in our UI".
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Image extraction + review acceptance — NORTH STAR
 
@@ -197,3 +197,4 @@ _Empty on first generation. `/10x-archive` appends here (and flips the matching 
 - **F-01: (foundation) OpenRouter vision-LLM client is callable from the app and returns a structured response on a smoke test** — Archived 2026-06-07 → `context/archive/2026-06-01-openrouter-llm-client-wired/`. Lesson: —.
 - **S-02: parent can manually create an event with date, optional time, title, requirements, and notes; on save it appears in the personal view, attributed to their account, with the default morning-of-day-before reminder attached.** — Archived 2026-06-09 → `context/archive/2026-06-07-manual-event-entry/`. Lesson: —.
 - **S-01: parent can sign up with email and password, log in, log out, stay logged in across browser sessions, and land on an empty personal view scoped to their own account.** — Archived 2026-06-09 → `context/archive/2026-05-26-minimal-auth-and-empty-personal-view/`. Lesson: —.
+- **S-04: parent can view and copy their unique unguessable iCalendar URL from a settings screen; accepted events from the personal view are served at that URL as a standard iCalendar feed with the morning-of-day-before reminder; events deleted from the personal view no longer appear on the next poll.** — Archived 2026-06-16 → `context/archive/2026-06-15-icalendar-feed-and-subscription/`. Lesson: —.
