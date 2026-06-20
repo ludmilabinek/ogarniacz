@@ -71,6 +71,25 @@ class EventRepositoryTest {
     }
 
     @Test
+    void findUpcomingByUserExcludesPendingProposedEvents() {
+        AppUser alice = appUserRepository.save(new AppUser("alice-pending@example.com", "$2a$10$placeholderHashForTestPurpose."));
+
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalDate dayAfter = LocalDate.now().plusDays(2);
+
+        // Accepted event must surface…
+        entityManager.persist(new Event(alice, tomorrow, null, "alice-accepted", null, null));
+        // …but the still-PENDING proposal must not, even though it belongs to the same user.
+        SourceImage image = entityManager.persistAndFlush(new SourceImage(alice, new byte[]{1, 2, 3}, "image/jpeg"));
+        entityManager.persistAndFlush(new ProposedEvent(image, dayAfter, null, "alice-proposed", null, null));
+
+        List<Event> aliceUpcoming = eventRepository.findUpcomingByUser(alice, LocalDate.now());
+
+        assertThat(aliceUpcoming).extracting(Event::getTitle).containsExactly("alice-accepted");
+        assertThat(aliceUpcoming).extracting(Event::getTitle).doesNotContain("alice-proposed");
+    }
+
+    @Test
     void findUpcomingByUserOrdersByDateAscThenTimeAscNullsLast() {
         AppUser alice = appUserRepository.save(new AppUser("alice-order@example.com", "$2a$10$placeholderHashForTestPurpose."));
 

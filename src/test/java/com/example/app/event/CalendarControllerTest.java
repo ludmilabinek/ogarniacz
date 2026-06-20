@@ -40,6 +40,12 @@ class CalendarControllerTest {
     EventRepository eventRepository;
 
     @Autowired
+    SourceImageRepository sourceImageRepository;
+
+    @Autowired
+    ProposedEventRepository proposedEventRepository;
+
+    @Autowired
     IcalSubscriptionService subscriptionService;
 
     @Autowired
@@ -163,6 +169,25 @@ class CalendarControllerTest {
                 .andExpect(content().string(containsString("BEGIN:VCALENDAR")))
                 .andExpect(content().string(containsString("END:VCALENDAR")))
                 .andExpect(content().string(not(containsString("BEGIN:VEVENT"))));
+    }
+
+    @Test
+    void icsFeedExcludesPendingProposedEvents() throws Exception {
+        SeededUser seed = seedUserWithToken("pending-proposals@example.com");
+
+        SourceImage image = sourceImageRepository.save(new SourceImage(seed.user(), new byte[]{4, 2}, "image/jpeg"));
+        proposedEventRepository.save(new ProposedEvent(
+                image, LocalDate.now().plusDays(2), null, "pending-proposal-one", null, null));
+        proposedEventRepository.save(new ProposedEvent(
+                image, LocalDate.now().plusDays(3), null, "pending-proposal-two", null, null));
+
+        mvc.perform(get("/calendar/{token}.ics", seed.token()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", containsString("text/calendar")))
+                .andExpect(content().string(containsString("BEGIN:VCALENDAR")))
+                .andExpect(content().string(containsString("END:VCALENDAR")))
+                .andExpect(content().string(not(containsString("BEGIN:VEVENT"))))
+                .andExpect(content().string(not(containsString("pending-proposal"))));
     }
 
     @Test
