@@ -73,10 +73,11 @@ public class EventReviewService {
 
         // Guard preserves the first-decision timestamp on replay so S-06's purge
         // clock anchors on the original resolution, not the latest re-submit.
+        // No explicit save() — image is managed inside @Transactional; dirty-checking
+        // flushes on commit (see lessons.md "Inside @Transactional ... explicit save() is redundant").
         if (image.getResolvedAt() == null) {
             image.setResolvedAt(now);
         }
-        sourceImageRepository.save(image);
 
         return acceptedCount;
     }

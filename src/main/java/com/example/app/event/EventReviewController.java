@@ -55,6 +55,22 @@ public class EventReviewController {
         this.validator = validator;
     }
 
+    /**
+     * Renders the review page for a previously uploaded image.
+     *
+     * <p>404 contract — two cases collapse to the same response on purpose:
+     * <ul>
+     *   <li>image belongs to a different user (do not leak existence — return 404, not 403);</li>
+     *   <li>image row is gone (deleted, or {@link ExtractionService} ran for an unpersisted id).
+     *       The hosted localized error template ({@code events/review-error}) is only reachable
+     *       when the row exists with a {@code lastErrorKind}; an orphaned poll falls through to
+     *       the generic 404 page. This is acceptable at the current MVP scale (no concurrent
+     *       delete path); revisit when S-06 purge or any other flow can delete {@link SourceImage}
+     *       rows while extraction is in flight — at that point surface a synthetic
+     *       {@code errorKind=IMAGE_GONE} via the status response so the polling client lands
+     *       on {@code review-error} instead of a 404.</li>
+     * </ul>
+     */
     @GetMapping("/events/from-image/{imageId}/review")
     public String review(@PathVariable UUID imageId,
                          Authentication auth,
