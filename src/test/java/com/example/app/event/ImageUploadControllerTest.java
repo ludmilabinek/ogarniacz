@@ -1,8 +1,11 @@
 package com.example.app.event;
 
+import com.example.app.llm.LlmExtractionResult;
+import com.example.app.llm.LlmVisionClient;
 import com.example.app.testsupport.UserTestFixtures;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,8 +14,12 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -45,6 +52,18 @@ class ImageUploadControllerTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    LlmVisionClient llmVisionClient;
+
+    @BeforeEach
+    void stubLlmReturnsEmpty() {
+        // Default: a successful no-op extraction so the async pipeline doesn't try
+        // to hit OpenRouter from the test classpath. Individual tests can override
+        // by re-stubbing if they assert on extraction behaviour.
+        when(llmVisionClient.extract(any(), any()))
+                .thenReturn(new LlmExtractionResult(java.util.List.of(), "[]", 0L));
+    }
 
     @Test
     void anonymousGetUploadFormRedirectsToLogin() throws Exception {
@@ -79,6 +98,8 @@ class ImageUploadControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.jobId").exists())
+                .andExpect(jsonPath("$.statusUrl").exists())
                 .andExpect(jsonPath("$.reviewUrl").exists())
                 .andReturn();
 
@@ -86,7 +107,8 @@ class ImageUploadControllerTest {
         assertThat(after).isEqualTo(before + 1);
 
         String body = result.getResponse().getContentAsString();
-        assertThat(body).matches("\\{\"reviewUrl\":\"/events/from-image/[0-9a-f-]+/review\"\\}");
+        assertThat(body).contains("\"reviewUrl\":\"/events/from-image/");
+        assertThat(body).contains("\"statusUrl\":\"/events/from-image/status/");
 
         // Verify the persisted row carries Alice's bytes + mime.
         List<SourceImage> all = sourceImageRepository.findAll();

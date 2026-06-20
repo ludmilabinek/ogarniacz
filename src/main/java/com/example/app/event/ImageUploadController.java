@@ -10,12 +10,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 @Controller
 public class ImageUploadController {
@@ -29,11 +31,17 @@ public class ImageUploadController {
 
     private final SourceImageRepository sourceImageRepository;
     private final AppUserRepository appUserRepository;
+    private final ExtractionJobRegistry jobRegistry;
+    private final ExtractionService extractionService;
 
     public ImageUploadController(SourceImageRepository sourceImageRepository,
-                                 AppUserRepository appUserRepository) {
+                                 AppUserRepository appUserRepository,
+                                 ExtractionJobRegistry jobRegistry,
+                                 ExtractionService extractionService) {
         this.sourceImageRepository = sourceImageRepository;
         this.appUserRepository = appUserRepository;
+        this.jobRegistry = jobRegistry;
+        this.extractionService = extractionService;
     }
 
     @GetMapping("/events/from-image")
@@ -42,6 +50,7 @@ public class ImageUploadController {
     }
 
     @PostMapping("/events/from-image")
+    @ResponseBody
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file,
                                     Authentication auth) throws IOException {
         if (file.isEmpty()) {
@@ -61,8 +70,12 @@ public class ImageUploadController {
         SourceImage saved = sourceImageRepository.save(
                 new SourceImage(user, file.getBytes(), mimeType));
 
+        UUID jobId = jobRegistry.register(saved.getId());
+        extractionService.runExtraction(jobId, saved.getId());
+
+        String statusUrl = "/events/from-image/status/" + jobId;
         String reviewUrl = "/events/from-image/" + saved.getId() + "/review";
-        return ResponseEntity.ok(new UploadResponse(reviewUrl));
+        return ResponseEntity.ok(new UploadResponse(jobId, statusUrl, reviewUrl));
     }
 
     private static String resolveMimeType(MultipartFile file) {

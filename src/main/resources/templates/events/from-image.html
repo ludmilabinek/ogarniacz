@@ -32,6 +32,7 @@
         const MAX_BYTES = 15 * 1024 * 1024;
         const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
         const ALLOWED_EXT  = ['.jpg', '.jpeg', '.png', '.webp'];
+        const POLL_MS = 1500;
         const ERROR_COPY = {
             'file.empty':     'Wybierz plik zdjęcia.',
             'file.wrongType': 'Niedozwolony format. Wybierz JPG, PNG lub WEBP.',
@@ -43,8 +44,13 @@
         const fileInput   = document.getElementById('file-input');
         const errorBox    = document.getElementById('upload-error');
         const progressBox = document.getElementById('upload-progress');
+        const uploadBar   = document.getElementById('upload-bar');
         const uploadPct   = document.getElementById('upload-pct');
         const progressEl  = document.getElementById('upload-progress-el');
+        const extractBar  = document.getElementById('extract-bar');
+        const extractSec  = document.getElementById('extract-sec');
+
+        let pollTimer = null;
 
         function showError(message) {
             errorBox.textContent = message;
@@ -55,14 +61,53 @@
             errorBox.hidden = true;
         }
         function resetProgress() {
+            stopPolling();
             progressBox.hidden = true;
+            uploadBar.hidden = false;
             uploadPct.textContent = '0';
             progressEl.value = 0;
+            extractBar.hidden = true;
+            extractSec.textContent = '0';
+        }
+        function stopPolling() {
+            if (pollTimer !== null) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
         }
         function extensionAllowed(name) {
             if (!name) return false;
             const lower = name.toLowerCase();
             return ALLOWED_EXT.some(function (ext) { return lower.endsWith(ext); });
+        }
+
+        function startPolling(statusUrl, reviewUrl) {
+            const t0 = Date.now();
+            uploadBar.hidden = true;
+            extractBar.hidden = false;
+            extractSec.textContent = '0';
+            pollTimer = setInterval(function () {
+                extractSec.textContent = String(Math.floor((Date.now() - t0) / 1000));
+                fetch(statusUrl, { credentials: 'same-origin' })
+                    .then(function (resp) {
+                        if (resp.status === 404) {
+                            stopPolling();
+                            resetProgress();
+                            showError('Sesja wygasła. Wyślij zdjęcie ponownie.');
+                            return null;
+                        }
+                        if (!resp.ok) return null;
+                        return resp.json();
+                    })
+                    .then(function (data) {
+                        if (!data) return;
+                        if (data.state === 'DONE' || data.state === 'FAILED') {
+                            stopPolling();
+                            window.location = data.reviewUrl || reviewUrl;
+                        }
+                    })
+                    .catch(function () { /* transient network blip; next tick will retry */ });
+            }, POLL_MS);
         }
 
         form.addEventListener('submit', function (event) {
@@ -98,8 +143,8 @@
             xhr.addEventListener('load', function () {
                 let body = null;
                 try { body = JSON.parse(xhr.responseText); } catch (_) {}
-                if (xhr.status === 200 && body && body.reviewUrl) {
-                    window.location = body.reviewUrl;
+                if (xhr.status === 200 && body && body.statusUrl) {
+                    startPolling(body.statusUrl, body.reviewUrl);
                     return;
                 }
                 resetProgress();

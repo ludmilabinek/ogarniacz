@@ -1,4 +1,6 @@
 package com.example.app.event;
 
-public record UploadResponse(String reviewUrl) {
+import java.util.UUID;
+
+public record UploadResponse(UUID jobId, String statusUrl, String reviewUrl) {
 }

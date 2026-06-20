@@ -674,33 +674,33 @@ If the slice ever needs to be rolled back, the rollback path is: revert the code
 
 #### Automated
 
-- [x] 2.1 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` passes
-- [x] 2.2 `./gradlew build` succeeds; `MaxUploadSizeExceededHandler` boot-scans cleanly
-- [x] 2.3 No regression in `EventControllerTest` (the multipart filter must not interfere with existing `application/x-www-form-urlencoded` POSTs)
+- [x] 2.1 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` passes — c989d85
+- [x] 2.2 `./gradlew build` succeeds; `MaxUploadSizeExceededHandler` boot-scans cleanly — c989d85
+- [x] 2.3 No regression in `EventControllerTest` (the multipart filter must not interfere with existing `application/x-www-form-urlencoded` POSTs) — c989d85
 
 #### Manual
 
-- [ ] 2.4 Local app: `GET /events/from-image` shows the form; uploading a 3 MB JPEG redirects to the stub review page that displays the source-image UUID
-- [ ] 2.5 Local app: selecting a 16 MB image shows the Polish "za duże" error inline before submit (JS pre-flight) and as a flash on the form after submit (server-side fallback)
-- [ ] 2.6 Mobile Safari / Chrome iOS: the file picker filters to camera + photos correctly with the `accept` attribute (no native crash on the empty `file.type` fallback)
-- [ ] 2.7 DB: `select id, mime_type, length(data) from source_image` after a few uploads shows the right byte counts
+- [x] 2.4 Local app: `GET /events/from-image` shows the form; uploading a 3 MB JPEG redirects to the stub review page that displays the source-image UUID — c989d85
+- [x] 2.5 Local app: selecting a 16 MB image shows the Polish "za duże" error inline before submit (JS pre-flight) and as a flash on the form after submit (server-side fallback) — c989d85
+- [x] 2.6 Mobile Safari / Chrome iOS: the file picker filters to camera + photos correctly with the `accept` attribute (no native crash on the empty `file.type` fallback) — c989d85
+- [x] 2.7 DB: `select id, mime_type, length(data) from source_image` after a few uploads shows the right byte counts — c989d85
 
 ### Phase 3: Async extraction pipeline + status polling
 
 #### Automated
 
-- [ ] 3.1 `./gradlew test --tests com.example.app.event.ExtractionServiceTest` passes including all 4 scenarios
-- [ ] 3.2 `./gradlew test --tests com.example.app.event.ExtractionStatusControllerTest` passes including cross-user partition
-- [ ] 3.3 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` continues to pass after POST switches to JSON response
-- [ ] 3.4 `./gradlew build` succeeds — no regression in `LlmExtractionRecordedRegressionTest`
+- [x] 3.1 `./gradlew test --tests com.example.app.event.ExtractionServiceTest` passes including all 4 scenarios
+- [x] 3.2 `./gradlew test --tests com.example.app.event.ExtractionStatusControllerTest` passes including cross-user partition
+- [x] 3.3 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` continues to pass after POST switches to JSON response
+- [x] 3.4 `./gradlew build` succeeds — no regression in `LlmExtractionRecordedRegressionTest`
 
 #### Manual
 
-- [ ] 3.5 Local app: upload a real photo of a Polish kindergarten announcement; the upload progress bar fills, then the extraction copy reads *"Wyciągam wydarzenia ze zdjęcia… 5 s"*, ticking; on DONE the browser lands on the stub review page (still placeholder in this phase) with the right `imageId` in the URL
-- [ ] 3.6 DB: `select * from proposed_event where source_image_id = ?` shows the extracted rows with `status='PENDING'`
-- [ ] 3.7 Force a timeout by lowering `spring.ai.openai.timeout=5s` locally; trigger an upload; status endpoint shows `FAILED`, `errorKind=TIMEOUT`, `correlationId` present; restore the property to `55s` after
-- [ ] 3.8 `fly logs` (or local `bootRun`) shows the structured `extraction_failed` line on the forced timeout
-- [ ] 3.9 Wait 6 minutes after a successful extraction, hit the status URL — receives `404` (TTL sweep works)
+- [x] 3.5 Local app: upload a real photo of a Polish kindergarten announcement; the upload progress bar fills, then the extraction copy reads *"Wyciągam wydarzenia ze zdjęcia… 5 s"*, ticking; on DONE the browser lands on the stub review page (still placeholder in this phase) with the right `imageId` in the URL
+- [x] 3.6 DB: `select * from proposed_event where source_image_id = ?` shows the extracted rows with `status='PENDING'`
+- [x] 3.7 Force a timeout by lowering `spring.ai.openai.timeout=5s` locally; trigger an upload; status endpoint shows `FAILED`, `errorKind=TIMEOUT`, `correlationId` present; restore the property to `55s` after
+- [x] 3.8 `fly logs` (or local `bootRun`) shows the structured `extraction_failed` line on the forced timeout
+- [x] 3.9 Wait 6 minutes after a successful extraction, hit the status URL — receives `404` (TTL sweep works)
 
 ### Phase 4a: Review happy path — proposals present, decisions POST, transactional promotion
 
