@@ -4,7 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
+import org.apache.tomcat.util.http.fileupload.impl.SizeException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -86,8 +86,7 @@ public class MaxUploadSizeExceededHandler extends OncePerRequestFilter {
 
     static boolean hasSizeLimitCause(Throwable t) {
         for (Throwable c = t; c != null; c = c.getCause()) {
-            if (c instanceof MaxUploadSizeExceededException
-                    || c instanceof FileSizeLimitExceededException) {
+            if (c instanceof MaxUploadSizeExceededException || c instanceof SizeException) {
                 return true;
             }
         }

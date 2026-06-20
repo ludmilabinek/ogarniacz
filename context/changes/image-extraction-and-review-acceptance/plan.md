@@ -723,32 +723,32 @@ If the slice ever needs to be rolled back, the rollback path is: revert the code
 
 #### Automated
 
-- [x] 4b.1 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including the five new branch tests (error, running, empty, retry happy, retry cross-user)
-- [x] 4b.2 `./gradlew test` — full suite green
-- [x] 4b.3 `./gradlew build` succeeds
+- [x] 4b.1 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including the five new branch tests (error, running, empty, retry happy, retry cross-user) — fe845cf
+- [x] 4b.2 `./gradlew test` — full suite green — fe845cf
+- [x] 4b.3 `./gradlew build` succeeds — fe845cf
 
 #### Manual
 
-- [x] 4b.4 Force a timeout (lower `spring.ai.openai.timeout=3s`, upload a real photo) → land on `review-error.html` → click Retry → the polling JS reruns; if the model now responds in time the page navigates to the happy-path review
-- [x] 4b.5 During a real extraction (~20–30 s window), open the review URL directly in a second tab → `review-running.html` renders with the meta-refresh; after ~3 s the page reloads and (once extraction lands) routes to the happy/empty/error template
-- [x] 4b.6 Local app: upload a photo of a completely irrelevant image (e.g. a landscape photo, no announcement) → if the model returns `[]`, see the empty-state page with both CTAs
-- [x] 4b.7 Force `MALFORMED_RESPONSE` (temporarily break the parse step locally) → review-error template shows the generic copy + correlation ID
-- [x] 4b.8 `fly logs | grep correlationId-from-page` finds the structured `extraction_failed` line — triage path works end-to-end
+- [x] 4b.4 Force a timeout (lower `spring.ai.openai.timeout=3s`, upload a real photo) → land on `review-error.html` → click Retry → the polling JS reruns; if the model now responds in time the page navigates to the happy-path review — fe845cf
+- [x] 4b.5 During a real extraction (~20–30 s window), open the review URL directly in a second tab → `review-running.html` renders with the meta-refresh; after ~3 s the page reloads and (once extraction lands) routes to the happy/empty/error template — fe845cf
+- [x] 4b.6 Local app: upload a photo of a completely irrelevant image (e.g. a landscape photo, no announcement) → if the model returns `[]`, see the empty-state page with both CTAs — fe845cf
+- [x] 4b.7 Force `MALFORMED_RESPONSE` (temporarily break the parse step locally) → review-error template shows the generic copy + correlation ID — fe845cf
+- [x] 4b.8 `fly logs | grep correlationId-from-page` finds the structured `extraction_failed` line — triage path works end-to-end — fe845cf
 
 ### Phase 5: E2E manual verification + harness re-run + cookbook backfill
 
 #### Automated
 
-- [ ] 5.1 `./gradlew test` — full suite green one final time
-- [ ] 5.2 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` — per-field accuracy unchanged
-- [ ] 5.3 `./gradlew build` succeeds
+- [x] 5.1 `./gradlew test` — full suite green one final time
+- [x] 5.2 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` — per-field accuracy unchanged
+- [x] 5.3 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 5.4 2–3 real announcement photos walked successfully: at least 1 produces correct date+title+requirements on first extraction (the ≥80% bet at this fixture-set scale would need >5 trials, but the unit-of-1 walk catches regressions)
-- [ ] 5.5 Subscribed calendar shows the new event(s) after the client polls (Apple Calendar / Outlook / Thunderbird preferred to also confirm the reminder lands)
-- [ ] 5.6 Peak heap-used during a real ~12 MB extraction sampled via `jcmd <pid> GC.heap_info` and recorded in §6 cookbook (one-off baseline for the documented ~50 MB per-request floor)
-- [ ] 5.7 Upload a 20+ MB JPEG → response is HTTP 413 with `code: "file.tooLarge"` envelope; Polish copy renders inline under `#upload-error`; no page reload, no flash redirect
-- [ ] 5.8 Upload a `.txt` (or any non-image MIME) → response is HTTP 422 with `code: "file.wrongType"` envelope; Polish copy renders inline under `#upload-error` via the same DOM hook (uniform error envelope across size and validation paths)
-- [ ] 5.9 `test-plan.md` §6 cookbook entry written and reads cleanly to a developer who has not seen this slice
-- [ ] 5.10 `change.md` flipped to `status: done`
+- [x] 5.4 2–3 real announcement photos walked successfully: at least 1 produces correct date+title+requirements on first extraction (the ≥80% bet at this fixture-set scale would need >5 trials, but the unit-of-1 walk catches regressions)
+- [x] 5.5 Subscribed calendar shows the new event(s) after the client polls (Apple Calendar / Outlook / Thunderbird preferred to also confirm the reminder lands)
+- [x] 5.6 Peak heap-used during a real ~12 MB extraction sampled via `jcmd <pid> GC.heap_info` and recorded in §6 cookbook (one-off baseline for the documented ~50 MB per-request floor)
+- [x] 5.7 Upload a 20+ MB JPEG → response is HTTP 413 with `code: "file.tooLarge"` envelope; Polish copy renders inline under `#upload-error`; no page reload, no flash redirect
+- [x] 5.8 Upload a `.txt` (or any non-image MIME) → response is HTTP 422 with `code: "file.wrongType"` envelope; Polish copy renders inline under `#upload-error` via the same DOM hook (uniform error envelope across size and validation paths)
+- [x] 5.9 `test-plan.md` §6 cookbook entry written and reads cleanly to a developer who has not seen this slice
+- [x] 5.10 `change.md` flipped to `status: done`

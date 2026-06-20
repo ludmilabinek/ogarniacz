@@ -234,9 +234,63 @@ The iCal surface lives in two layers — split tests along that seam.
 ./gradlew test --tests com.example.app.user.SettingsControllerTest    # integration, seconds
 ```
 
-### 6.6 Per-rollout-phase notes
+### 6.6 Adding a test for the image-extraction + review flow (S-05)
+
+The S-05 slice (upload → async extraction → review → promote) crosses four controllers, one async service, an in-memory job registry, and a transactional promotion seam. Tests split along those boundaries — one class per controller, hermetic service tests at the extraction seam, and a dual-layer guardrail that pins the load-bearing "PENDING proposals never reach the iCal feed" property at both the repository and HTTP layers.
+
+**Reference tests:**
+
+- `src/test/java/com/example/app/event/ImageUploadControllerTest.java` — multipart upload contract (valid JPEG, wrong MIME, oversize → `MaxUploadSizeExceededHandler`, CSRF gate, JSON error envelope shape).
+- `src/test/java/com/example/app/event/ExtractionServiceTest.java` — hermetic per-branch coverage of the four outcome paths (success-with-N, success-empty, `TIMEOUT`, `PROVIDER_ERROR`, `MALFORMED_RESPONSE`) via `@MockitoBean LlmVisionClient`; asserts `correlationId` emission and `sourceImage.lastErrorKind` flips.
+- `src/test/java/com/example/app/event/ExtractionStatusControllerTest.java` — RUNNING / DONE / FAILED branches plus the cross-user partition (jobId belonging to user B polled as user A returns 404, not 403).
+- `src/test/java/com/example/app/event/EventReviewServiceTest.java` — transactional promotion (mixed accept/reject, idempotent re-submit preserves the original `sourceImage.resolvedAt`, cross-user 404, field-copy fidelity).
+- `src/test/java/com/example/app/event/EventReviewControllerTest.java` — GET routing across four render branches (happy / error / running / empty), POST decisions with mixed validity, retry endpoint kicks fresh extraction.
+- `src/test/java/com/example/app/event/EventRepositoryTest.java#findUpcomingByUserExcludesPendingProposedEvents` — calendar-feed guardrail at the repository level.
+- `src/test/java/com/example/app/event/CalendarControllerTest.java#icsFeedExcludesPendingProposedEvents` — same guardrail at the HTTP / ical-serialization level.
+
+**Annotation stack:**
+
+- Controller tests: `@SpringBootTest @AutoConfigureMockMvc @TestPropertySource(properties = "REMEMBER_ME_KEY=test-key-not-for-production")`, per the per-controller test layout standard.
+- `ExtractionServiceTest`: `@SpringBootTest` with `@MockitoBean LlmVisionClient` — mocks at the external edge (the LLM provider), never at the controller boundary; the rest of the persistence path and registry stay real so a wiring regression surfaces.
+- `EventReviewServiceTest`: full `@SpringBootTest` — the test exercises the real JPA + transaction boundary; promotion is the load-bearing seam and must not be mocked.
+
+**Dual-layer calendar-feed guardrail:**
+
+The property "an accepted `Event` flows to the iCal feed; a `PENDING ProposedEvent` never does" is asserted twice — once at the repository (`EventRepository.findUpcomingByUser` filters at the SQL level by table, not just by status; the proposal lives in a different table entirely) and once at the HTTP layer (`/calendar/{token}.ics` body has zero `VEVENT` blocks when the user's only events are pending proposals). Both tests survive future refactors that might collapse `Event` and `ProposedEvent` into a single status-discriminated table — the repo test asserts the query, the HTTP test asserts the user-visible contract.
+
+**Manual-validation pattern for the decisions form (`@Valid` cannot conditionally skip rows):**
+
+Bean Validation `@Valid` validates the whole `@ModelAttribute` graph; it cannot skip rows where `action == REJECT`. `EventReviewController` takes the form **without** `@Valid`, iterates `form.decisions()`, skips REJECT rows entirely, and only runs `Validator.validate(decision, …)` on ACCEPT rows — aggregating `ConstraintViolation`s into `BindingResult` before deciding to re-render. The load-bearing test is `EventReviewControllerTest#postWithInvalidDateOnRejectRowIsAccepted` — a row with `action=REJECT` and `eventDate=null` must succeed; only accept rows feed the validator. The mirror-image test `postWithInvalidTitleOnAcceptRowReRendersWithError` pins the validation arm.
+
+**In-memory `ExtractionJobRegistry` testing pattern:**
+
+`ExtractionJobRegistry` is a `ConcurrentHashMap<UUID, JobStatusEntry>` with a `@Scheduled(fixedDelay = 60_000)` TTL sweep (5-min retention). The registry exposes `findRunningByImageId(UUID)` for the review-page "extraction in flight" branch — without it, a direct-URL hit during extraction would render the misleading empty-state page. Test the registry with plain JUnit (no Spring context needed for the registry semantics in isolation); the TTL sweep can be exercised via a `@SpringBootTest` that drives the scheduled method directly. Cross-user partition for `/events/from-image/status/{jobId}` is asserted by polling user A's jobId while authenticated as user B — the controller must return **404** (not 403), identical to the unknown-jobId branch, to avoid jobId enumeration.
+
+**Multipart upload contract (`ImageUploadControllerTest`):**
+
+Use `MockMvc.perform(multipart("/events/from-image").file(...).with(user(...)).with(csrf()))`. The size-too-large branch fires from the multipart filter **before** the controller method runs, so it cannot be asserted via `BindingResult` — it lands on `MaxUploadSizeExceededHandler` (a `OncePerRequestFilter` at `Ordered.HIGHEST_PRECEDENCE`, **not** a `@ControllerAdvice`, because Spring Security's `CsrfFilter` triggers Tomcat's lazy multipart parse before the `DispatcherServlet` runs — the exception escapes the filter chain and no `@ExceptionHandler` resolver is ever consulted) and returns HTTP `413` with the same JSON envelope as the in-controller `422` validation paths. The shared error envelope (`{ "errors": [ { "field", "code", "message" } ] }`) is the testable contract; the inline JS i18n lookup is a frontend concern that lives outside the test layer.
+
+**Tomcat raises two distinct size-limit subclasses — match both.** `spring.servlet.multipart.max-file-size` raises `FileSizeLimitExceededException`; `spring.servlet.multipart.max-request-size` raises `SizeLimitExceededException`. Both extend the abstract `SizeException` base. The filter's cause-chain walk matches on the base, not the leaves — a request just above the per-request limit takes a different exception path than a single file just above the per-file limit, and a leaf-only check silently drops the request-size branch onto Spring's default English-language stacktrace JSON. The regression `ImageUploadOversizeIntegrationTest` covers both via two `@Test` methods (16 MB and 22 MB payloads) — MockMvc bypasses the real multipart parser, so this contract is only catchable end-to-end through a real `HttpClient` against `RANDOM_PORT`.
+
+**Shared JPEG fixture:** `src/test/resources/uploads/sample.jpg` (~10 KB, valid header) is reused across `ImageUploadControllerTest` cases. The byte content is irrelevant — the harness asserts on the multipart routing, not on what the bytes decode to.
+
+**Run locally:**
+
+```
+./gradlew test --tests com.example.app.event.ImageUploadControllerTest
+./gradlew test --tests com.example.app.event.ExtractionServiceTest
+./gradlew test --tests com.example.app.event.ExtractionStatusControllerTest
+./gradlew test --tests com.example.app.event.EventReviewServiceTest
+./gradlew test --tests com.example.app.event.EventReviewControllerTest
+./gradlew test --tests com.example.app.event.EventRepositoryTest
+./gradlew test --tests com.example.app.event.CalendarControllerTest
+```
+
+### 6.7 Per-rollout-phase notes
 
 **Phase 2 + 3 — iCal feed (icalendar-feed-and-subscription, 2026-06-15).** The redirect-pattern matcher Spring uses for `redirectedUrlPattern` is ant-style; `/login` (the literal target Spring Security emits) matches `/login*` but NOT `**/login*` — the leading-segment-wildcard form looks safer but quietly fails. When pinning a redirect to `/login`, use `redirectedUrlPattern("/login*")` exactly. The pure-JUnit writer test pins `Event.id` via reflection on the private `id` field because JPA never runs in that test layer; this mirrors what `@GeneratedValue` would set and is preferable to threading a test-only constructor through the entity. VALARM-trigger DST tests should hard-code the expected `Instant`, not derive it via `EventReminder.reminderFor(event)` — the oracle is the PRD rule, not the implementation.
+
+**Phase 4 — Image extraction + review (image-extraction-and-review-acceptance, 2026-06-21).** Async LLM calls live on a separate `@Service` bean (`ExtractionService`) because Spring's `@Async` proxy does not intercept self-calls — the controller calls the service, not itself. The `@Async("extractionExecutor")` method runs on a bounded `ThreadPoolTaskExecutor` (core=2, max=2, queue=10, `setWaitForTasksToCompleteOnShutdown(true)`); the bound is the runaway-loop floor, not a throughput target. **Heap floor (measured 2026-06-21, single 12 MB JPEG, jcmd `GC.heap_info` polled every 400 ms across the POST→DONE cycle): baseline 167 MB used / 287 MB committed; peak at t≈4.5 s = 517 MB used / 557 MB committed; delta ≈ 350 MB per single in-flight extraction.** The plan's ~50 MB estimate was 7× low — JPA `bytea` round-trip, Spring AI's base64-inlined request body (~4/3× of the 12 MB original), Jackson serialization buffer, and the HTTP client's request buffer all hold the bytes simultaneously, and G1 does not collect mid-extraction (allocation runs ~50 MB/s linear). With `max=2` concurrent extractions the worst-case in-flight churn is **~700 MB**, **not survivable** on a 1 GB Fly Machine (heap ≈ 512 MB default) at two simultaneous extractions. Mitigations to consider before scale-up: (a) drop `extractionExecutor` `max=1` until heap is profiled per code-path, (b) reduce Spring AI's buffering (stream the base64 instead of materializing it), or (c) bump the Fly Machine class — see `OpenRouterLlmVisionClient.java:77-90` for the buffering site. The empty-extraction branch (`[]` from the model on a readable-but-irrelevant image) is treated as success-with-zero-rows, not as an error — `LlmExtractionException` has no `EMPTY` Kind, the review page handles the empty state. The `sourceImage.resolvedAt` stamp on first decision is guarded (`if (resolvedAt == null) resolvedAt = Instant.now()`) so a replay (browser back + re-POST) preserves S-06's purge-clock anchor.
 
 ## 7. What We Deliberately Don't Test
 

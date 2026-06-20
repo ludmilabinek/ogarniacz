@@ -3,7 +3,7 @@ change_id: image-extraction-and-review-acceptance
 title: Image extraction and review acceptance
 status: implementing
 created: 2026-06-16
-updated: 2026-06-20
+updated: 2026-06-21
 archived_at: null
 ---
 

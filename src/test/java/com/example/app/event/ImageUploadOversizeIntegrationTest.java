@@ -16,11 +16,15 @@ import java.nio.charset.StandardCharsets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Pin the load-bearing regression: a real >15MB multipart POST goes through the full
+ * Pin the load-bearing regression: a real oversized multipart POST goes through the full
  * SecurityFilterChain (CsrfFilter triggers Tomcat's lazy multipart parse), and the
- * Tomcat-native InvalidParameterException (cause = FileSizeLimitExceededException) must
- * still surface as the same JSON 413 envelope the JS layer expects. MockMvc bypasses
- * the real multipart parser, so a unit-level test of the handler alone cannot catch this.
+ * Tomcat-native InvalidParameterException must still surface as the same JSON 413
+ * envelope the JS layer expects. Two variants cover the two distinct size limits Tomcat
+ * enforces: per-file ({@code spring.servlet.multipart.max-file-size}, raises
+ * {@code FileSizeLimitExceededException}) and per-request total
+ * ({@code spring.servlet.multipart.max-request-size}, raises
+ * {@code SizeLimitExceededException}). MockMvc bypasses the real multipart parser, so a
+ * unit-level test of the handler alone cannot catch either path.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "REMEMBER_ME_KEY=test-key-not-for-production")
@@ -31,7 +35,22 @@ class ImageUploadOversizeIntegrationTest {
 
     @Test
     void oversizedMultipartReturnsCustomJsonEnvelopeWithoutStacktrace() throws Exception {
-        byte[] payload = new byte[16 * 1024 * 1024]; // 16 MB — above the 15 MB ceiling
+        // 16 MB — above the 15 MB per-file ceiling but below the 20 MB per-request ceiling
+        // → Tomcat raises FileSizeLimitExceededException.
+        assertOversizeReturnsTooLargeEnvelope(16 * 1024 * 1024);
+    }
+
+    @Test
+    void oversizedRequestExceedingRequestLimitReturnsCustomJsonEnvelopeWithoutStacktrace() throws Exception {
+        // 22 MB — above the 20 MB per-request ceiling, so Tomcat raises
+        // SizeLimitExceededException (request-total limit) before the per-file check fires.
+        // This is the path the production filter missed in Phase 5 (sibling subclass of
+        // FileSizeLimitExceededException — both extend SizeException).
+        assertOversizeReturnsTooLargeEnvelope(22 * 1024 * 1024);
+    }
+
+    private void assertOversizeReturnsTooLargeEnvelope(int payloadBytes) throws Exception {
+        byte[] payload = new byte[payloadBytes];
         for (int i = 0; i < payload.length; i++) {
             payload[i] = (byte) (i & 0xFF);
         }
@@ -60,6 +79,7 @@ class ImageUploadOversizeIntegrationTest {
         assertThat(responseBody).doesNotContain("\"trace\"");
         assertThat(responseBody).doesNotContain("exceeds its maximum permitted size");
         assertThat(responseBody).doesNotContain("FileSizeLimitExceededException");
+        assertThat(responseBody).doesNotContain("SizeLimitExceededException");
         assertThat(responseBody).doesNotContain("InvalidParameterException");
     }
 

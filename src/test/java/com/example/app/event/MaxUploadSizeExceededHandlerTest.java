@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.tomcat.util.http.InvalidParameterException;
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
+import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -49,6 +50,21 @@ class MaxUploadSizeExceededHandlerTest {
         FilterChain chain = throwingChain(invalidParameterWithSizeCause());
 
         filter.doFilter(req, resp, chain);
+
+        assertThat(resp.getStatus()).isEqualTo(413);
+        assertThat(resp.getContentAsString()).contains("\"code\":\"file.tooLarge\"");
+    }
+
+    @Test
+    void writesJson413EnvelopeWhenRequestSizeExceedsLimitOnImagePath() throws Exception {
+        MockHttpServletRequest req = imageUploadRequest();
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        SizeLimitExceededException sizeEx =
+                new SizeLimitExceededException("request over limit", 23_000_000, 20_971_520);
+        InvalidParameterException wrapped =
+                new InvalidParameterException("multipart parameter parse failed", sizeEx);
+
+        filter.doFilter(req, resp, throwingChain(wrapped));
 
         assertThat(resp.getStatus()).isEqualTo(413);
         assertThat(resp.getContentAsString()).contains("\"code\":\"file.tooLarge\"");
