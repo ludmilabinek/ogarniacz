@@ -201,34 +201,6 @@ class ImageUploadControllerTest {
                 .andExpect(status().is3xxRedirection());
     }
 
-    @Test
-    void getReviewStubRendersImageId() throws Exception {
-        String email = "alice-review-stub@example.com";
-        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
-        SourceImage image = sourceImageRepository.save(
-                new SourceImage(alice, tinyJpegBytes(), "image/jpeg"));
-
-        mvc.perform(get("/events/from-image/" + image.getId() + "/review")
-                        .with(user(email)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(image.getId().toString())))
-                .andExpect(content().string(containsString("faza 3")));
-    }
-
-    @Test
-    void getReviewStubCrossUserIs404() throws Exception {
-        AppUser bob = UserTestFixtures.saveUser(appUserRepository, passwordEncoder,
-                "bob-review-cross@example.com");
-        UserTestFixtures.saveUser(appUserRepository, passwordEncoder,
-                "alice-review-cross@example.com");
-        SourceImage bobImage = sourceImageRepository.save(
-                new SourceImage(bob, tinyJpegBytes(), "image/jpeg"));
-
-        mvc.perform(get("/events/from-image/" + bobImage.getId() + "/review")
-                        .with(user("alice-review-cross@example.com")))
-                .andExpect(status().isNotFound());
-    }
-
     static byte[] tinyJpegBytes() {
         try {
             BufferedImage img = new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB);

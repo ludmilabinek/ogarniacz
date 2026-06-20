@@ -689,35 +689,35 @@ If the slice ever needs to be rolled back, the rollback path is: revert the code
 
 #### Automated
 
-- [x] 3.1 `./gradlew test --tests com.example.app.event.ExtractionServiceTest` passes including all 4 scenarios
-- [x] 3.2 `./gradlew test --tests com.example.app.event.ExtractionStatusControllerTest` passes including cross-user partition
-- [x] 3.3 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` continues to pass after POST switches to JSON response
-- [x] 3.4 `./gradlew build` succeeds — no regression in `LlmExtractionRecordedRegressionTest`
+- [x] 3.1 `./gradlew test --tests com.example.app.event.ExtractionServiceTest` passes including all 4 scenarios — 44b13ac
+- [x] 3.2 `./gradlew test --tests com.example.app.event.ExtractionStatusControllerTest` passes including cross-user partition — 44b13ac
+- [x] 3.3 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` continues to pass after POST switches to JSON response — 44b13ac
+- [x] 3.4 `./gradlew build` succeeds — no regression in `LlmExtractionRecordedRegressionTest` — 44b13ac
 
 #### Manual
 
-- [x] 3.5 Local app: upload a real photo of a Polish kindergarten announcement; the upload progress bar fills, then the extraction copy reads *"Wyciągam wydarzenia ze zdjęcia… 5 s"*, ticking; on DONE the browser lands on the stub review page (still placeholder in this phase) with the right `imageId` in the URL
-- [x] 3.6 DB: `select * from proposed_event where source_image_id = ?` shows the extracted rows with `status='PENDING'`
-- [x] 3.7 Force a timeout by lowering `spring.ai.openai.timeout=5s` locally; trigger an upload; status endpoint shows `FAILED`, `errorKind=TIMEOUT`, `correlationId` present; restore the property to `55s` after
-- [x] 3.8 `fly logs` (or local `bootRun`) shows the structured `extraction_failed` line on the forced timeout
-- [x] 3.9 Wait 6 minutes after a successful extraction, hit the status URL — receives `404` (TTL sweep works)
+- [x] 3.5 Local app: upload a real photo of a Polish kindergarten announcement; the upload progress bar fills, then the extraction copy reads *"Wyciągam wydarzenia ze zdjęcia… 5 s"*, ticking; on DONE the browser lands on the stub review page (still placeholder in this phase) with the right `imageId` in the URL — 44b13ac
+- [x] 3.6 DB: `select * from proposed_event where source_image_id = ?` shows the extracted rows with `status='PENDING'` — 44b13ac
+- [x] 3.7 Force a timeout by lowering `spring.ai.openai.timeout=5s` locally; trigger an upload; status endpoint shows `FAILED`, `errorKind=TIMEOUT`, `correlationId` present; restore the property to `55s` after — 44b13ac
+- [x] 3.8 `fly logs` (or local `bootRun`) shows the structured `extraction_failed` line on the forced timeout — 44b13ac
+- [x] 3.9 Wait 6 minutes after a successful extraction, hit the status URL — receives `404` (TTL sweep works) — 44b13ac
 
 ### Phase 4a: Review happy path — proposals present, decisions POST, transactional promotion
 
 #### Automated
 
-- [ ] 4a.1 `./gradlew test --tests com.example.app.event.EventReviewServiceTest` passes including idempotent re-submit
-- [ ] 4a.2 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including `postWithInvalidDateOnRejectRowIsAccepted` and `getAfterDecisionsRendersOnlyPendingRows`
-- [ ] 4a.3 `./gradlew test` — full suite green; `EventRepositoryTest` and `CalendarControllerTest` guardrail tests still pass
-- [ ] 4a.4 `./gradlew build` succeeds
+- [x] 4a.1 `./gradlew test --tests com.example.app.event.EventReviewServiceTest` passes including idempotent re-submit
+- [x] 4a.2 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including `postWithInvalidDateOnRejectRowIsAccepted` and `getAfterDecisionsRendersOnlyPendingRows`
+- [x] 4a.3 `./gradlew test` — full suite green; `EventRepositoryTest` and `CalendarControllerTest` guardrail tests still pass
+- [x] 4a.4 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 4a.5 Local app: upload a real announcement → review page renders one row per extracted event → edit a date → accept some, reject others → Submit → land on `/app` with the Polish flash → the accepted events show in the personal view list
-- [ ] 4a.6 `select * from app_event where user_id = ?` shows the promoted events with all fields intact
-- [ ] 4a.7 `select status, decided_at from proposed_event where source_image_id = ?` shows ACCEPTED + REJECTED rows; no PENDING left
-- [ ] 4a.8 `select resolved_at from source_image where id = ?` is non-null
-- [ ] 4a.9 `GET /calendar/{token}.ics` returns an `.ics` with the new accepted events; no PENDING/REJECTED proposals appear
+- [x] 4a.5 Local app: upload a real announcement → review page renders one row per extracted event → edit a date → accept some, reject others → Submit → land on `/app` with the Polish flash → the accepted events show in the personal view list
+- [x] 4a.6 `select * from app_event where user_id = ?` shows the promoted events with all fields intact
+- [x] 4a.7 `select status, decided_at from proposed_event where source_image_id = ?` shows ACCEPTED + REJECTED rows; no PENDING left
+- [x] 4a.8 `select resolved_at from source_image where id = ?` is non-null
+- [x] 4a.9 `GET /calendar/{token}.ics` returns an `.ics` with the new accepted events; no PENDING/REJECTED proposals appear
 
 ### Phase 4b: Error / empty / retry states
 

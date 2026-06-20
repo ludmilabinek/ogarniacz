@@ -4,6 +4,7 @@
 <body>
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="app-page">
+    <div class="flash-success" th:if="${successMessage != null}" th:text="${successMessage}"></div>
     <p>Signed in as <span th:text="${userEmail}">user@example.com</span>.</p>
     <p>
         <a th:href="@{/events/new}" class="primary-action">Add event</a>

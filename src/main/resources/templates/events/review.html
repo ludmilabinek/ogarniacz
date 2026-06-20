@@ -5,8 +5,89 @@
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="app-page">
     <h1>Sprawdź wydarzenia</h1>
-    <p>Zdjęcie zapisane. Ekstrakcja w przygotowaniu (faza 3).</p>
-    <p>ID zdjęcia: <code th:text="${sourceImageId}">…</code></p>
+    <p class="review-intro">Sprawdź wydarzenia wyciągnięte ze zdjęcia. Zaznacz, które dodać do kalendarza,
+        a które odrzucić. Możesz też poprawić każde pole przed zapisaniem.</p>
+
+    <div th:with="pendingDecisions=${reviewForm.decisions.?[status == 'PENDING']}">
+
+        <div class="review-empty-info" th:if="${#lists.isEmpty(pendingDecisions)}">
+            <p>Decyzje dla tego zdjęcia zostały już zapisane. Aby edytować zaakceptowane wydarzenia,
+                przejdź do listy wydarzeń.</p>
+            <p><a th:href="@{/app}" class="primary-action">Przejdź do listy</a></p>
+        </div>
+
+        <form th:if="${!#lists.isEmpty(pendingDecisions)}"
+              th:action="@{|/events/from-image/${sourceImage.id}/decisions|}"
+              method="post"
+              th:object="${reviewForm}"
+              class="review-form">
+            <ol class="review-list">
+                <li th:each="decision, iter : *{decisions}"
+                    th:if="${decision.status == 'PENDING'}"
+                    class="review-row">
+                    <input type="hidden" th:field="*{decisions[__${iter.index}__].proposedEventId}"/>
+                    <input type="hidden" th:field="*{decisions[__${iter.index}__].status}"/>
+
+                    <fieldset class="row-action">
+                        <legend>Co zrobić z tym wydarzeniem?</legend>
+                        <label>
+                            <input type="radio"
+                                   th:field="*{decisions[__${iter.index}__].action}"
+                                   value="ACCEPT"/>
+                            Dodaj do kalendarza
+                        </label>
+                        <label>
+                            <input type="radio"
+                                   th:field="*{decisions[__${iter.index}__].action}"
+                                   value="REJECT"/>
+                            Odrzuć
+                        </label>
+                    </fieldset>
+
+                    <div class="row-fields">
+                        <label>Data
+                            <input type="date"
+                                   th:field="*{decisions[__${iter.index}__].eventDate}"/>
+                            <span class="field-error"
+                                  th:if="${#fields.hasErrors('decisions[__${iter.index}__].eventDate')}"
+                                  th:errors="*{decisions[__${iter.index}__].eventDate}"></span>
+                        </label>
+                        <label>Godzina (opcjonalnie)
+                            <input type="time"
+                                   th:field="*{decisions[__${iter.index}__].eventTime}"/>
+                            <span class="field-error"
+                                  th:if="${#fields.hasErrors('decisions[__${iter.index}__].eventTime')}"
+                                  th:errors="*{decisions[__${iter.index}__].eventTime}"></span>
+                        </label>
+                        <label>Tytuł
+                            <input type="text"
+                                   th:field="*{decisions[__${iter.index}__].title}"
+                                   maxlength="200"/>
+                            <span class="field-error"
+                                  th:if="${#fields.hasErrors('decisions[__${iter.index}__].title')}"
+                                  th:errors="*{decisions[__${iter.index}__].title}"></span>
+                        </label>
+                        <label>Wymagania
+                            <textarea th:field="*{decisions[__${iter.index}__].requirements}"
+                                      maxlength="2000" rows="2"></textarea>
+                            <span class="field-error"
+                                  th:if="${#fields.hasErrors('decisions[__${iter.index}__].requirements')}"
+                                  th:errors="*{decisions[__${iter.index}__].requirements}"></span>
+                        </label>
+                        <label>Notatki
+                            <textarea th:field="*{decisions[__${iter.index}__].notes}"
+                                      maxlength="2000" rows="2"></textarea>
+                            <span class="field-error"
+                                  th:if="${#fields.hasErrors('decisions[__${iter.index}__].notes')}"
+                                  th:errors="*{decisions[__${iter.index}__].notes}"></span>
+                        </label>
+                    </div>
+                </li>
+            </ol>
+            <button type="submit" class="primary-action">Zapisz wybór</button>
+        </form>
+    </div>
+
     <p><a th:href="@{/app}">Wróć do listy</a></p>
 </main>
 </body>
