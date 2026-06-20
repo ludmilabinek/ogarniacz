@@ -661,22 +661,22 @@ If the slice ever needs to be rolled back, the rollback path is: revert the code
 
 #### Automated
 
-- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes including the new `findUpcomingByUserExcludesPendingProposedEvents`
-- [x] 1.2 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes including `icsFeedExcludesPendingProposedEvents`
-- [x] 1.3 `./gradlew build` succeeds with `ddl-auto=update` creating `source_image` + `proposed_event` tables on first run
+- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes including the new `findUpcomingByUserExcludesPendingProposedEvents` — 031be87
+- [x] 1.2 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes including `icsFeedExcludesPendingProposedEvents` — 031be87
+- [x] 1.3 `./gradlew build` succeeds with `ddl-auto=update` creating `source_image` + `proposed_event` tables on first run — 031be87
 
 #### Manual
 
-- [x] 1.4 After running the app once locally, `psql … -c '\d+ source_image \d+ proposed_event'` shows both tables with the expected columns + FK + index
-- [x] 1.5 No regression in `LlmExtractionRecordedRegressionTest` (this phase touches no LLM code, but re-run is the safety check)
+- [x] 1.4 After running the app once locally, `psql … -c '\d+ source_image \d+ proposed_event'` shows both tables with the expected columns + FK + index — 031be87
+- [x] 1.5 No regression in `LlmExtractionRecordedRegressionTest` (this phase touches no LLM code, but re-run is the safety check) — 031be87
 
 ### Phase 2: Multipart config + upload form + sync POST persisting source_image
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` passes
-- [ ] 2.2 `./gradlew build` succeeds; `MaxUploadSizeExceededHandler` boot-scans cleanly
-- [ ] 2.3 No regression in `EventControllerTest` (the multipart filter must not interfere with existing `application/x-www-form-urlencoded` POSTs)
+- [x] 2.1 `./gradlew test --tests com.example.app.event.ImageUploadControllerTest` passes
+- [x] 2.2 `./gradlew build` succeeds; `MaxUploadSizeExceededHandler` boot-scans cleanly
+- [x] 2.3 No regression in `EventControllerTest` (the multipart filter must not interfere with existing `application/x-www-form-urlencoded` POSTs)
 
 #### Manual
 

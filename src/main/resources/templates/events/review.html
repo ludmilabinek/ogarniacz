@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sprawdź wydarzenia')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="app-page">
+    <h1>Sprawdź wydarzenia</h1>
+    <p>Zdjęcie zapisane. Ekstrakcja w przygotowaniu (faza 3).</p>
+    <p>ID zdjęcia: <code th:text="${sourceImageId}">…</code></p>
+    <p><a th:href="@{/app}">Wróć do listy</a></p>
+</main>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dodaj z obrazka')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="auth-page">
+    <h1>Dodaj z obrazka</h1>
+    <p>Wybierz zdjęcie lub screenshot ogłoszenia z przedszkola. Wyciągniemy z niego wydarzenia do akceptacji.</p>
+
+    <form id="upload-form" th:action="@{/events/from-image}" method="post" enctype="multipart/form-data" class="stacked">
+        <label>Plik
+            <input type="file" id="file-input" name="file"
+                   accept="image/jpeg,image/png,image/webp" required/>
+        </label>
+        <div id="upload-progress" hidden>
+            <div id="upload-bar">
+                <span class="bar-label">Wysyłam zdjęcie… <span id="upload-pct">0</span>%</span>
+                <progress id="upload-progress-el" value="0" max="100"></progress>
+            </div>
+            <div id="extract-bar" hidden>
+                <span class="bar-label">Wyciągam wydarzenia ze zdjęcia… <span id="extract-sec">0</span> s</span>
+            </div>
+        </div>
+        <div id="upload-error" class="form-error" hidden></div>
+        <button type="submit">Wyślij</button>
+    </form>
+    <p><a th:href="@{/app}">Anuluj</a></p>
+</main>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    (function () {
+        const MAX_BYTES = 15 * 1024 * 1024;
+        const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+        const ALLOWED_EXT  = ['.jpg', '.jpeg', '.png', '.webp'];
+        const ERROR_COPY = {
+            'file.empty':     'Wybierz plik zdjęcia.',
+            'file.wrongType': 'Niedozwolony format. Wybierz JPG, PNG lub WEBP.',
+            'file.tooLarge':  'Zdjęcie jest za duże. Maksimum to 15 MB.',
+            'csrf.invalid':   'Sesja wygasła. Odśwież stronę i spróbuj ponownie.'
+        };
+
+        const form        = document.getElementById('upload-form');
+        const fileInput   = document.getElementById('file-input');
+        const errorBox    = document.getElementById('upload-error');
+        const progressBox = document.getElementById('upload-progress');
+        const uploadPct   = document.getElementById('upload-pct');
+        const progressEl  = document.getElementById('upload-progress-el');
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.hidden = false;
+        }
+        function clearError() {
+            errorBox.textContent = '';
+            errorBox.hidden = true;
+        }
+        function resetProgress() {
+            progressBox.hidden = true;
+            uploadPct.textContent = '0';
+            progressEl.value = 0;
+        }
+        function extensionAllowed(name) {
+            if (!name) return false;
+            const lower = name.toLowerCase();
+            return ALLOWED_EXT.some(function (ext) { return lower.endsWith(ext); });
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            clearError();
+            resetProgress();
+
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                showError(ERROR_COPY['file.empty']);
+                return;
+            }
+            if (file.size > MAX_BYTES) {
+                const mb = (file.size / (1024 * 1024)).toFixed(1);
+                showError('Zdjęcie ma ' + mb + ' MB — maksimum to 15 MB. Wybierz mniejsze zdjęcie.');
+                return;
+            }
+            const declaredOk = file.type && ALLOWED_MIME.indexOf(file.type) !== -1;
+            if (!declaredOk && !extensionAllowed(file.name)) {
+                showError(ERROR_COPY['file.wrongType']);
+                return;
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.getAttribute('action'), true);
+            progressBox.hidden = false;
+            xhr.upload.addEventListener('progress', function (e) {
+                if (!e.lengthComputable) return;
+                const pct = Math.round((e.loaded / e.total) * 100);
+                uploadPct.textContent = String(pct);
+                progressEl.value = pct;
+            });
+            xhr.addEventListener('load', function () {
+                let body = null;
+                try { body = JSON.parse(xhr.responseText); } catch (_) {}
+                if (xhr.status === 200 && body && body.reviewUrl) {
+                    window.location = body.reviewUrl;
+                    return;
+                }
+                resetProgress();
+                const first = body && body.errors && body.errors[0];
+                const code = first && first.code;
+                if (code && ERROR_COPY[code]) {
+                    showError(ERROR_COPY[code]);
+                } else if (first && first.message) {
+                    showError(first.message);
+                } else if (xhr.status === 403) {
+                    showError(ERROR_COPY['csrf.invalid']);
+                } else {
+                    showError('Nie udało się wysłać zdjęcia. Spróbuj ponownie.');
+                }
+            });
+            xhr.addEventListener('error', function () {
+                resetProgress();
+                showError('Połączenie zostało przerwane. Sprawdź internet i spróbuj ponownie.');
+            });
+            xhr.send(new FormData(form));
+        });
+    })();
+    /*]]>*/
+</script>
+</body>
+</html>

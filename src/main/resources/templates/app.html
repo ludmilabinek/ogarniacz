@@ -5,7 +5,10 @@
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="app-page">
     <p>Signed in as <span th:text="${userEmail}">user@example.com</span>.</p>
-    <p><a th:href="@{/events/new}" class="primary-action">Add event</a></p>
+    <p>
+        <a th:href="@{/events/new}" class="primary-action">Add event</a>
+        <a th:href="@{/events/from-image}" class="primary-action">Dodaj z obrazka</a>
+    </p>
     <ul class="event-list" th:if="${!#lists.isEmpty(events)}">
         <li th:each="e : ${events}">
             <span class="event-when">
