@@ -739,16 +739,16 @@ If the slice ever needs to be rolled back, the rollback path is: revert the code
 
 #### Automated
 
-- [x] 5.1 `./gradlew test` — full suite green one final time
-- [x] 5.2 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` — per-field accuracy unchanged
-- [x] 5.3 `./gradlew build` succeeds
+- [x] 5.1 `./gradlew test` — full suite green one final time — 9db819f
+- [x] 5.2 `./gradlew test --tests com.example.app.llm.LlmExtractionRecordedRegressionTest` — per-field accuracy unchanged — 9db819f
+- [x] 5.3 `./gradlew build` succeeds — 9db819f
 
 #### Manual
 
-- [x] 5.4 2–3 real announcement photos walked successfully: at least 1 produces correct date+title+requirements on first extraction (the ≥80% bet at this fixture-set scale would need >5 trials, but the unit-of-1 walk catches regressions)
-- [x] 5.5 Subscribed calendar shows the new event(s) after the client polls (Apple Calendar / Outlook / Thunderbird preferred to also confirm the reminder lands)
-- [x] 5.6 Peak heap-used during a real ~12 MB extraction sampled via `jcmd <pid> GC.heap_info` and recorded in §6 cookbook (one-off baseline for the documented ~50 MB per-request floor)
-- [x] 5.7 Upload a 20+ MB JPEG → response is HTTP 413 with `code: "file.tooLarge"` envelope; Polish copy renders inline under `#upload-error`; no page reload, no flash redirect
-- [x] 5.8 Upload a `.txt` (or any non-image MIME) → response is HTTP 422 with `code: "file.wrongType"` envelope; Polish copy renders inline under `#upload-error` via the same DOM hook (uniform error envelope across size and validation paths)
-- [x] 5.9 `test-plan.md` §6 cookbook entry written and reads cleanly to a developer who has not seen this slice
-- [x] 5.10 `change.md` flipped to `status: done`
+- [x] 5.4 2–3 real announcement photos walked successfully: at least 1 produces correct date+title+requirements on first extraction (the ≥80% bet at this fixture-set scale would need >5 trials, but the unit-of-1 walk catches regressions) — 9db819f
+- [x] 5.5 Subscribed calendar shows the new event(s) after the client polls (Apple Calendar / Outlook / Thunderbird preferred to also confirm the reminder lands) — 9db819f
+- [x] 5.6 Peak heap-used during a real ~12 MB extraction sampled via `jcmd <pid> GC.heap_info` and recorded in §6 cookbook (one-off baseline for the documented ~50 MB per-request floor) — 9db819f
+- [x] 5.7 Upload a 20+ MB JPEG → response is HTTP 413 with `code: "file.tooLarge"` envelope; Polish copy renders inline under `#upload-error`; no page reload, no flash redirect — 9db819f
+- [x] 5.8 Upload a `.txt` (or any non-image MIME) → response is HTTP 422 with `code: "file.wrongType"` envelope; Polish copy renders inline under `#upload-error` via the same DOM hook (uniform error envelope across size and validation paths) — 9db819f
+- [x] 5.9 `test-plan.md` §6 cookbook entry written and reads cleanly to a developer who has not seen this slice — 9db819f
+- [x] 5.10 `change.md` flipped to `status: done` — 9db819f
