@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Wyciągamy wydarzenia…')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="auth-page">
+    <h1>Wyciągamy wydarzenia…</h1>
+    <p>Wyciąganie wydarzeń trwa… odśwież stronę za chwilę albo poczekaj — zrobimy to za Ciebie.</p>
+</main>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    setTimeout(function () { window.location.reload(); }, 3000);
+    /*]]>*/
+</script>
+</body>
+</html>

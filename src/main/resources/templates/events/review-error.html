@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Coś poszło nie tak')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="auth-page">
+    <h1>Coś poszło nie tak</h1>
+
+    <p th:switch="${errorKind}" class="form-error">
+        <span th:case="'TIMEOUT'">Wyciąganie wydarzeń zajęło za długo. To może być chwilowa nieprawidłowość po stronie modelu — spróbuj ponownie.</span>
+        <span th:case="'PROVIDER_ERROR'">Serwis AI tymczasowo nie odpowiada. Spróbuj ponownie za chwilę albo dodaj wydarzenie ręcznie.</span>
+        <span th:case="*">Nie udało się przetworzyć tego zdjęcia. Spróbuj ponownie, dodaj inne zdjęcie, albo wpisz wydarzenie ręcznie.</span>
+    </p>
+
+    <form id="retry-form"
+          th:action="@{|/events/from-image/${sourceImage.id}/retry|}"
+          method="post"
+          class="stacked">
+        <button type="submit" class="primary-action">Spróbuj ponownie</button>
+    </form>
+
+    <div id="retry-progress" hidden>
+        <p class="bar-label">Wyciągam wydarzenia ze zdjęcia… <span id="retry-sec">0</span> s</p>
+    </div>
+    <div id="retry-error" class="form-error" hidden></div>
+
+    <p style="margin-top: 1.5rem;">
+        <a th:href="@{/events/new}">Wpisz ręcznie</a>
+        ·
+        <a th:href="@{/events/from-image}">Wyślij inne zdjęcie</a>
+    </p>
+
+    <p class="hint" style="margin-top: 2rem; font-family: ui-monospace, SFMono-Regular, monospace;">
+        Kod referencyjny: <span th:text="${correlationId}">--------</span>
+    </p>
+</main>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    (function () {
+        const POLL_MS = 1500;
+
+        const form        = document.getElementById('retry-form');
+        const errorBox    = document.getElementById('retry-error');
+        const progressBox = document.getElementById('retry-progress');
+        const retrySec    = document.getElementById('retry-sec');
+        let pollTimer = null;
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.hidden = false;
+        }
+        function clearError() {
+            errorBox.textContent = '';
+            errorBox.hidden = true;
+        }
+        function stopPolling() {
+            if (pollTimer !== null) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+        function startPolling(statusUrl, reviewUrl) {
+            const t0 = Date.now();
+            progressBox.hidden = false;
+            retrySec.textContent = '0';
+            pollTimer = setInterval(function () {
+                retrySec.textContent = String(Math.floor((Date.now() - t0) / 1000));
+                fetch(statusUrl, { credentials: 'same-origin' })
+                    .then(function (resp) {
+                        if (resp.status === 404) {
+                            stopPolling();
+                            progressBox.hidden = true;
+                            showError('Sesja wygasła. Odśwież stronę i spróbuj ponownie.');
+                            return null;
+                        }
+                        if (!resp.ok) return null;
+                        return resp.json();
+                    })
+                    .then(function (data) {
+                        if (!data) return;
+                        if (data.state === 'DONE' || data.state === 'FAILED') {
+                            stopPolling();
+                            window.location = data.reviewUrl || reviewUrl;
+                        }
+                    })
+                    .catch(function () { /* transient network blip; next tick will retry */ });
+            }, POLL_MS);
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            clearError();
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.getAttribute('action'), true);
+            xhr.addEventListener('load', function () {
+                let body = null;
+                try { body = JSON.parse(xhr.responseText); } catch (_) {}
+                if (xhr.status === 200 && body && body.statusUrl) {
+                    startPolling(body.statusUrl, body.reviewUrl);
+                    return;
+                }
+                progressBox.hidden = true;
+                if (xhr.status === 403) {
+                    showError('Sesja wygasła. Odśwież stronę i spróbuj ponownie.');
+                } else {
+                    showError('Nie udało się ponowić próby. Odśwież stronę i spróbuj ponownie.');
+                }
+            });
+            xhr.addEventListener('error', function () {
+                progressBox.hidden = true;
+                showError('Połączenie zostało przerwane. Sprawdź internet i spróbuj ponownie.');
+            });
+            xhr.send(new FormData(form));
+        });
+    })();
+    /*]]>*/
+</script>
+</body>
+</html>

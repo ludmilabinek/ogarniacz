@@ -706,34 +706,34 @@ If the slice ever needs to be rolled back, the rollback path is: revert the code
 
 #### Automated
 
-- [x] 4a.1 `./gradlew test --tests com.example.app.event.EventReviewServiceTest` passes including idempotent re-submit
-- [x] 4a.2 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including `postWithInvalidDateOnRejectRowIsAccepted` and `getAfterDecisionsRendersOnlyPendingRows`
-- [x] 4a.3 `./gradlew test` — full suite green; `EventRepositoryTest` and `CalendarControllerTest` guardrail tests still pass
-- [x] 4a.4 `./gradlew build` succeeds
+- [x] 4a.1 `./gradlew test --tests com.example.app.event.EventReviewServiceTest` passes including idempotent re-submit — baf23e3
+- [x] 4a.2 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including `postWithInvalidDateOnRejectRowIsAccepted` and `getAfterDecisionsRendersOnlyPendingRows` — baf23e3
+- [x] 4a.3 `./gradlew test` — full suite green; `EventRepositoryTest` and `CalendarControllerTest` guardrail tests still pass — baf23e3
+- [x] 4a.4 `./gradlew build` succeeds — baf23e3
 
 #### Manual
 
-- [x] 4a.5 Local app: upload a real announcement → review page renders one row per extracted event → edit a date → accept some, reject others → Submit → land on `/app` with the Polish flash → the accepted events show in the personal view list
-- [x] 4a.6 `select * from app_event where user_id = ?` shows the promoted events with all fields intact
-- [x] 4a.7 `select status, decided_at from proposed_event where source_image_id = ?` shows ACCEPTED + REJECTED rows; no PENDING left
-- [x] 4a.8 `select resolved_at from source_image where id = ?` is non-null
-- [x] 4a.9 `GET /calendar/{token}.ics` returns an `.ics` with the new accepted events; no PENDING/REJECTED proposals appear
+- [x] 4a.5 Local app: upload a real announcement → review page renders one row per extracted event → edit a date → accept some, reject others → Submit → land on `/app` with the Polish flash → the accepted events show in the personal view list — baf23e3
+- [x] 4a.6 `select * from app_event where user_id = ?` shows the promoted events with all fields intact — baf23e3
+- [x] 4a.7 `select status, decided_at from proposed_event where source_image_id = ?` shows ACCEPTED + REJECTED rows; no PENDING left — baf23e3
+- [x] 4a.8 `select resolved_at from source_image where id = ?` is non-null — baf23e3
+- [x] 4a.9 `GET /calendar/{token}.ics` returns an `.ics` with the new accepted events; no PENDING/REJECTED proposals appear — baf23e3
 
 ### Phase 4b: Error / empty / retry states
 
 #### Automated
 
-- [ ] 4b.1 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including the five new branch tests (error, running, empty, retry happy, retry cross-user)
-- [ ] 4b.2 `./gradlew test` — full suite green
-- [ ] 4b.3 `./gradlew build` succeeds
+- [x] 4b.1 `./gradlew test --tests com.example.app.event.EventReviewControllerTest` passes including the five new branch tests (error, running, empty, retry happy, retry cross-user)
+- [x] 4b.2 `./gradlew test` — full suite green
+- [x] 4b.3 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 4b.4 Force a timeout (lower `spring.ai.openai.timeout=3s`, upload a real photo) → land on `review-error.html` → click Retry → the polling JS reruns; if the model now responds in time the page navigates to the happy-path review
-- [ ] 4b.5 During a real extraction (~20–30 s window), open the review URL directly in a second tab → `review-running.html` renders with the meta-refresh; after ~3 s the page reloads and (once extraction lands) routes to the happy/empty/error template
-- [ ] 4b.6 Local app: upload a photo of a completely irrelevant image (e.g. a landscape photo, no announcement) → if the model returns `[]`, see the empty-state page with both CTAs
-- [ ] 4b.7 Force `MALFORMED_RESPONSE` (temporarily break the parse step locally) → review-error template shows the generic copy + correlation ID
-- [ ] 4b.8 `fly logs | grep correlationId-from-page` finds the structured `extraction_failed` line — triage path works end-to-end
+- [x] 4b.4 Force a timeout (lower `spring.ai.openai.timeout=3s`, upload a real photo) → land on `review-error.html` → click Retry → the polling JS reruns; if the model now responds in time the page navigates to the happy-path review
+- [x] 4b.5 During a real extraction (~20–30 s window), open the review URL directly in a second tab → `review-running.html` renders with the meta-refresh; after ~3 s the page reloads and (once extraction lands) routes to the happy/empty/error template
+- [x] 4b.6 Local app: upload a photo of a completely irrelevant image (e.g. a landscape photo, no announcement) → if the model returns `[]`, see the empty-state page with both CTAs
+- [x] 4b.7 Force `MALFORMED_RESPONSE` (temporarily break the parse step locally) → review-error template shows the generic copy + correlation ID
+- [x] 4b.8 `fly logs | grep correlationId-from-page` finds the structured `extraction_failed` line — triage path works end-to-end
 
 ### Phase 5: E2E manual verification + harness re-run + cookbook backfill
 

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Nie znaleziono wydarzeń')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="auth-page">
+    <h1>Nie znaleziono wydarzeń</h1>
+    <p>Nie znaleźliśmy wydarzeń na tym zdjęciu. Może to być zła jakość zdjęcia lub treść,
+        której model nie rozpoznał jako wydarzenia.</p>
+
+    <p style="margin-top: 1.5rem;">
+        <a th:href="@{/events/from-image}" class="primary-action">Spróbuj innego zdjęcia</a>
+        <a th:href="@{/events/new}" class="primary-action" style="margin-left: 0.5rem;">Wpisz ręcznie</a>
+    </p>
+</main>
+</body>
+</html>

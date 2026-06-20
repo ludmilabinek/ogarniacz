@@ -6,6 +6,7 @@ import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,17 +35,23 @@ public class EventReviewController {
     private final ProposedEventRepository proposedEventRepository;
     private final AppUserRepository appUserRepository;
     private final EventReviewService eventReviewService;
+    private final ExtractionJobRegistry jobRegistry;
+    private final ExtractionService extractionService;
     private final Validator validator;
 
     public EventReviewController(SourceImageRepository sourceImageRepository,
                                  ProposedEventRepository proposedEventRepository,
                                  AppUserRepository appUserRepository,
                                  EventReviewService eventReviewService,
+                                 ExtractionJobRegistry jobRegistry,
+                                 ExtractionService extractionService,
                                  Validator validator) {
         this.sourceImageRepository = sourceImageRepository;
         this.proposedEventRepository = proposedEventRepository;
         this.appUserRepository = appUserRepository;
         this.eventReviewService = eventReviewService;
+        this.jobRegistry = jobRegistry;
+        this.extractionService = extractionService;
         this.validator = validator;
     }
 
@@ -58,13 +66,53 @@ public class EventReviewController {
         List<ProposedEvent> proposals = proposedEventRepository
                 .findBySourceImageOrderByEventDateAscEventTimeAscNullsLast(image);
 
-        EventReviewForm form = buildForm(proposals);
-
         model.addAttribute("sourceImage", image);
+
+        // Branch ordering matters (see plan §4b "Critical Implementation Details"):
+        // error first → running before empty → empty → happy. A failed extraction
+        // without proposals must show the error page, not the empty page; a
+        // still-extracting image must show the wait page, not the empty page.
+        boolean hasError = image.getLastErrorKind() != null && image.getResolvedAt() == null;
+        if (hasError) {
+            model.addAttribute("errorKind", image.getLastErrorKind());
+            model.addAttribute("correlationId", image.getCorrelationId());
+            return "events/review-error";
+        }
+
+        boolean noProposals = proposals.isEmpty();
+        if (noProposals && image.getResolvedAt() == null
+                && jobRegistry.findRunningByImageId(imageId).isPresent()) {
+            return "events/review-running";
+        }
+
+        if (noProposals) {
+            return "events/review-empty";
+        }
+
         if (!model.containsAttribute("reviewForm")) {
-            model.addAttribute("reviewForm", form);
+            model.addAttribute("reviewForm", buildForm(proposals));
         }
         return "events/review";
+    }
+
+    @PostMapping("/events/from-image/{imageId}/retry")
+    @ResponseBody
+    public ResponseEntity<UploadResponse> retry(@PathVariable UUID imageId,
+                                                Authentication auth) {
+        AppUser user = appUserRepository.findByEmail(auth.getName()).orElseThrow();
+        SourceImage image = sourceImageRepository.findByIdAndUser(imageId, user)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND));
+
+        image.setLastErrorKind(null);
+        image.setCorrelationId(null);
+        sourceImageRepository.save(image);
+
+        UUID jobId = jobRegistry.register(imageId);
+        extractionService.runExtraction(jobId, imageId);
+
+        String statusUrl = "/events/from-image/status/" + jobId;
+        String reviewUrl = "/events/from-image/" + imageId + "/review";
+        return ResponseEntity.ok(new UploadResponse(jobId, statusUrl, reviewUrl));
     }
 
     @PostMapping("/events/from-image/{imageId}/decisions")

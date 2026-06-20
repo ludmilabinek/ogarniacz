@@ -5,11 +5,13 @@ import com.example.app.testsupport.UserTestFixtures;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -20,12 +22,14 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -52,6 +56,12 @@ class EventReviewControllerTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    ExtractionJobRegistry jobRegistry;
+
+    @MockitoBean
+    ExtractionService extractionService;
 
     @Test
     void getRendersFormWithProposals() throws Exception {
@@ -196,6 +206,99 @@ class EventReviewControllerTest {
         UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
 
         mvc.perform(get("/events/from-image/{id}/review", UUID.randomUUID()).with(user(email)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getRendersErrorTemplateWhenLastErrorKindSet() throws Exception {
+        String email = "review-error-branch@example.com";
+        AppUser user = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+        SourceImage image = new SourceImage(user, new byte[]{1}, "image/jpeg");
+        image.setLastErrorKind("TIMEOUT");
+        image.setCorrelationId("abc12345");
+        sourceImageRepository.save(image);
+
+        mvc.perform(get("/events/from-image/{id}/review", image.getId()).with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("events/review-error"))
+                .andExpect(content().string(containsString("Wyciąganie wydarzeń zajęło za długo")))
+                .andExpect(content().string(containsString("abc12345")));
+    }
+
+    @Test
+    void getRendersRunningTemplateWhenExtractionInFlight() throws Exception {
+        String email = "review-running-branch@example.com";
+        AppUser user = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+        SourceImage image = sourceImageRepository.save(
+                new SourceImage(user, new byte[]{1}, "image/jpeg"));
+        // No proposals, no error, no resolvedAt, plus a RUNNING job in the registry.
+        jobRegistry.register(image.getId());
+
+        mvc.perform(get("/events/from-image/{id}/review", image.getId()).with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("events/review-running"))
+                .andExpect(content().string(containsString("Wyciąganie wydarzeń trwa")));
+    }
+
+    @Test
+    void getRendersEmptyTemplateWhenNoProposalsAndNoError() throws Exception {
+        String email = "review-empty-branch@example.com";
+        AppUser user = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+        SourceImage image = sourceImageRepository.save(
+                new SourceImage(user, new byte[]{1}, "image/jpeg"));
+        // No proposals, no error, no in-flight job → empty branch.
+
+        mvc.perform(get("/events/from-image/{id}/review", image.getId()).with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("events/review-empty"))
+                .andExpect(content().string(containsString("Nie znaleźliśmy wydarzeń")));
+    }
+
+    @Test
+    void postRetryClearsErrorAndKicksExtraction() throws Exception {
+        String email = "review-retry-happy@example.com";
+        AppUser user = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+        SourceImage image = new SourceImage(user, new byte[]{1}, "image/jpeg");
+        image.setLastErrorKind("TIMEOUT");
+        image.setCorrelationId("abc12345");
+        sourceImageRepository.save(image);
+
+        MvcResult result = mvc.perform(post("/events/from-image/{id}/retry", image.getId())
+                        .with(user(email))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobId").isString())
+                .andExpect(jsonPath("$.statusUrl").isString())
+                .andExpect(jsonPath("$.reviewUrl").value(
+                        "/events/from-image/" + image.getId() + "/review"))
+                .andReturn();
+
+        SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
+        assertThat(reloaded.getLastErrorKind()).isNull();
+        assertThat(reloaded.getCorrelationId()).isNull();
+
+        ArgumentCaptor<UUID> jobIdCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<UUID> imageIdCap = ArgumentCaptor.forClass(UUID.class);
+        verify(extractionService).runExtraction(jobIdCap.capture(), imageIdCap.capture());
+        assertThat(imageIdCap.getValue()).isEqualTo(image.getId());
+        assertThat(jobRegistry.get(jobIdCap.getValue())).isPresent();
+        // Sanity: the registered jobId is the one returned in the JSON envelope.
+        assertThat(result.getResponse().getContentAsString())
+                .contains(jobIdCap.getValue().toString());
+    }
+
+    @Test
+    void postRetryCrossUserReturns404() throws Exception {
+        AppUser owner = UserTestFixtures.saveUser(appUserRepository, passwordEncoder,
+                "review-retry-owner@example.com");
+        String intruderEmail = "review-retry-intruder@example.com";
+        UserTestFixtures.saveUser(appUserRepository, passwordEncoder, intruderEmail);
+        SourceImage image = sourceImageRepository.save(
+                new SourceImage(owner, new byte[]{1}, "image/jpeg"));
+
+        mvc.perform(post("/events/from-image/{id}/retry", image.getId())
+                        .with(user(intruderEmail))
+                        .with(csrf()))
                 .andExpect(status().isNotFound());
     }
 
