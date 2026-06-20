@@ -3,7 +3,7 @@ project: Ogarniacz
 version: 1
 status: draft
 created: 2026-05-25
-updated: 2026-06-16
+updated: 2026-06-21
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -33,7 +33,7 @@ The **product wedge** — the one trait that, if removed, makes the product indi
 | S-01  | [#2](https://github.com/ludmilabinek/ogarniacz/issues/2) | minimal-auth-and-empty-personal-view         | sign up, log in, log out, and land on an empty personal view scoped to their account                                            | —                | FR-001, FR-009 (partial), US-01 (login), §Access Control, NFR (zero cross-account leakage) | done     |
 | S-02  | [#3](https://github.com/ludmilabinek/ogarniacz/issues/3) | manual-event-entry                           | manually create an event with date/time/title/requirements/notes; it appears in their personal view with the default reminder    | S-01             | FR-003, FR-008, FR-009, US-02                  | done     |
 | S-04  | [#4](https://github.com/ludmilabinek/ogarniacz/issues/4) | icalendar-feed-and-subscription              | view + copy their unique iCalendar URL from settings; events from the personal view appear in their subscribed calendar         | S-02             | FR-012, FR-013, US-03, NFR (token entropy, feed freshness) | done     |
-| S-05  | [#5](https://github.com/ludmilabinek/ogarniacz/issues/5) | image-extraction-and-review-acceptance       | upload an image, see AI-proposed events with editable fields, accept or reject each individually, see accepted ones in calendar | F-01, S-02       | FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, US-01 (full) | proposed |
+| S-05  | [#5](https://github.com/ludmilabinek/ogarniacz/issues/5) | image-extraction-and-review-acceptance       | upload an image, see AI-proposed events with editable fields, accept or reject each individually, see accepted ones in calendar | F-01, S-02       | FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, US-01 (full) | done     |
 | S-03  | [#6](https://github.com/ludmilabinek/ogarniacz/issues/6) | edit-delete-accepted-events                  | edit or delete accepted events from the personal view; the change propagates to the iCalendar feed                              | S-02             | FR-010, FR-011, US-01 (lifecycle)              | proposed |
 | S-06  | [#7](https://github.com/ludmilabinek/ogarniacz/issues/7) | source-image-auto-purge                      | (background) source images are auto-removed once every proposed event from them has been accepted or rejected                   | S-05             | NFR (image retention)                          | proposed |
 
@@ -130,7 +130,7 @@ What's already in place in the codebase as of 2026-05-25 (auto-researched + user
   - What's the right prompt? Owner: dev (iterative inside this slice). Block: no.
   - Frontend pattern for "continuous visible progress" during the 30–60 s wait (streamed response, polling, server-sent events)? Owner: dev (decide in `/10x-plan`). Block: no.
 - **Risk:** This is the validation milestone (the north star — see §North star above). The single largest empirical risk is the ≥ 80 % accuracy claim; F-01 having de-risked the integration plumbing means a low-accuracy result this slice produces is a model/prompt problem (resolvable by swapping model in F-01 and iterating), not a "is the bridge built right" problem. If accuracy stays below 80 % after exhausting OpenRouter's reasonable vision-model menu, that's a PRD-level finding to surface — not a slice that fails silently.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Edit + delete accepted events
 
@@ -198,3 +198,4 @@ _Empty on first generation. `/10x-archive` appends here (and flips the matching 
 - **S-02: parent can manually create an event with date, optional time, title, requirements, and notes; on save it appears in the personal view, attributed to their account, with the default morning-of-day-before reminder attached.** — Archived 2026-06-09 → `context/archive/2026-06-07-manual-event-entry/`. Lesson: —.
 - **S-01: parent can sign up with email and password, log in, log out, stay logged in across browser sessions, and land on an empty personal view scoped to their own account.** — Archived 2026-06-09 → `context/archive/2026-05-26-minimal-auth-and-empty-personal-view/`. Lesson: —.
 - **S-04: parent can view and copy their unique unguessable iCalendar URL from a settings screen; accepted events from the personal view are served at that URL as a standard iCalendar feed with the morning-of-day-before reminder; events deleted from the personal view no longer appear on the next poll.** — Archived 2026-06-16 → `context/archive/2026-06-15-icalendar-feed-and-subscription/`. Lesson: —.
+- **S-05: parent uploads an image (camera capture or screenshot) of a kindergarten announcement; within 60 seconds they see a list of one or more AI-proposed events with editable fields; they can accept or reject each individually; accepted events flow into the personal view (S-02's pipeline) and into the parent's subscribed calendar via the iCalendar feed (S-04's pipeline). Unreadable images surface an actionable error with a retry / manual-entry path.** — Archived 2026-06-21 → `context/archive/2026-06-16-image-extraction-and-review-acceptance/`. Lesson: —.
