@@ -177,10 +177,14 @@ class EventControllerTest {
         Event event = eventRepository.save(
                 new Event(alice, LocalDate.now().plusDays(2), null, "softwarn-event-" + System.nanoTime(), null, null));
 
+        String todayIso = LocalDate.now().toString();
+
         mvc.perform(get("/events/" + event.getId() + "/edit").with(user(email)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("onsubmit=\"return this.eventDate.value &gt;=")))
-                .andExpect(content().string(containsString("confirm('Data jest w przeszłości — kontynuować?')")));
+                .andExpect(content().string(containsString("data-today=\"" + todayIso + "\"")))
+                .andExpect(content().string(containsString("onsubmit=\"return this.eventDate.value &gt;= this.dataset.today")))
+                .andExpect(content().string(containsString("confirm('Data jest w przeszłości — kontynuować?')")))
+                .andExpect(content().string(not(containsString("new Date()"))));
     }
 
     @Test
@@ -437,10 +441,14 @@ class EventControllerTest {
 
     @Test
     void createFormCarriesPastDateSoftWarnOnsubmit() throws Exception {
+        String todayIso = LocalDate.now().toString();
+
         mvc.perform(get("/events/new").with(user("alice-create-softwarn@example.com")))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("onsubmit=\"return this.eventDate.value &gt;=")))
-                .andExpect(content().string(containsString("confirm('Data jest w przeszłości — kontynuować?')")));
+                .andExpect(content().string(containsString("data-today=\"" + todayIso + "\"")))
+                .andExpect(content().string(containsString("onsubmit=\"return this.eventDate.value &gt;= this.dataset.today")))
+                .andExpect(content().string(containsString("confirm('Data jest w przeszłości — kontynuować?')")))
+                .andExpect(content().string(not(containsString("new Date()"))));
     }
 
     @Test

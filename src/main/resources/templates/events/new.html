@@ -6,7 +6,8 @@
 <main class="auth-page">
     <h1>Add event</h1>
     <form th:action="@{/events}" method="post" th:object="${eventForm}" class="stacked"
-          onsubmit="return this.eventDate.value &gt;= new Date().toISOString().slice(0,10) || confirm('Data jest w przeszłości — kontynuować?');">
+          th:attr="data-today=${todayIso}"
+          onsubmit="return this.eventDate.value &gt;= this.dataset.today || confirm('Data jest w przeszłości — kontynuować?');">
         <label>Date
             <input type="date" th:field="*{eventDate}" th:attr="min=${minDate}" required/>
             <span class="field-error" th:if="${#fields.hasErrors('eventDate')}" th:errors="*{eventDate}"></span>

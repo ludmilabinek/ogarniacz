@@ -38,7 +38,9 @@ public class EventController {
         if (!model.containsAttribute("eventForm")) {
             model.addAttribute("eventForm", new EventForm());
         }
-        model.addAttribute("minDate", LocalDate.now(clock).minusYears(5).toString());
+        LocalDate today = LocalDate.now(clock);
+        model.addAttribute("minDate", today.minusYears(5).toString());
+        model.addAttribute("todayIso", today.toString());
         return "events/new";
     }
 
@@ -48,7 +50,9 @@ public class EventController {
                          Authentication auth,
                          Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("minDate", LocalDate.now(clock).minusYears(5).toString());
+            LocalDate today = LocalDate.now(clock);
+            model.addAttribute("minDate", today.minusYears(5).toString());
+            model.addAttribute("todayIso", today.toString());
             return "events/new";
         }
 
@@ -78,9 +82,11 @@ public class EventController {
         form.setRequirements(event.getRequirements());
         form.setNotes(event.getNotes());
 
+        LocalDate today = LocalDate.now(clock);
         model.addAttribute("eventForm", form);
         model.addAttribute("eventId", id);
-        model.addAttribute("minDate", LocalDate.now(clock).minusYears(5).toString());
+        model.addAttribute("minDate", today.minusYears(5).toString());
+        model.addAttribute("todayIso", today.toString());
         return "events/edit";
     }
 
@@ -93,8 +99,10 @@ public class EventController {
                          Model model,
                          RedirectAttributes ra) {
         if (result.hasErrors()) {
+            LocalDate today = LocalDate.now(clock);
             model.addAttribute("eventId", id);
-            model.addAttribute("minDate", LocalDate.now(clock).minusYears(5).toString());
+            model.addAttribute("minDate", today.minusYears(5).toString());
+            model.addAttribute("todayIso", today.toString());
             return "events/edit";
         }
 
