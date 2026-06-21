@@ -509,12 +509,12 @@ Four small items the plan-review surfaced. Each is a 5-second fix once spotted; 
 
 #### Automated
 
-- [x] 3.1 `./gradlew test` passes (no code changes; verifying closeout didn't break anything)
-- [x] 3.2 `./gradlew build` succeeds
+- [x] 3.1 `./gradlew test` passes (no code changes; verifying closeout didn't break anything) — 20f7548
+- [x] 3.2 `./gradlew build` succeeds — 20f7548
 
 #### Manual
 
-- [x] 3.3 `lessons.md` shows the new "Validation rules on a shared form DTO must stay symmetric…" section at the end
-- [x] 3.4 `test-plan.md` §6.X cookbook entry exists in numerical order
-- [x] 3.5 `roadmap.md` shows S-03 as `done` in §At a glance, §Slices, §Done (with completion date 2026-06-21)
-- [x] 3.6 `change.md` shows `status: done` and `updated: 2026-06-21`
+- [x] 3.3 `lessons.md` shows the new "Validation rules on a shared form DTO must stay symmetric…" section at the end — 20f7548
+- [x] 3.4 `test-plan.md` §6.X cookbook entry exists in numerical order — 20f7548
+- [x] 3.5 `roadmap.md` shows S-03 as `done` in §At a glance, §Slices, §Done (with completion date 2026-06-21) — 20f7548
+- [x] 3.6 `change.md` shows `status: done` and `updated: 2026-06-21` — 20f7548
