@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -22,6 +23,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -142,6 +144,205 @@ class EventControllerTest {
                         .param("eventDate", LocalDate.now().plusDays(1).toString())
                         .param("title", "no-csrf"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousGetEventEditRedirectsToLogin() throws Exception {
+        mvc.perform(get("/events/" + UUID.randomUUID() + "/edit"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/login*"));
+    }
+
+    @Test
+    void authenticatedGetEventEditRendersPrefilledForm() throws Exception {
+        String email = "alice-edit-render@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        String uniqueTitle = "edit-render-event-" + System.nanoTime();
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(3), null, uniqueTitle, "Yellow shirt", null));
+
+        mvc.perform(get("/events/" + event.getId() + "/edit").with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(uniqueTitle)))
+                .andExpect(content().string(containsString("action=\"/events/" + event.getId() + "\"")))
+                .andExpect(content().string(containsString("min=")));
+    }
+
+    @Test
+    void editFormCarriesPastDateSoftWarnOnsubmit() throws Exception {
+        String email = "alice-edit-softwarn@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(2), null, "softwarn-event-" + System.nanoTime(), null, null));
+
+        mvc.perform(get("/events/" + event.getId() + "/edit").with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("onsubmit=\"return this.eventDate.value &gt;=")))
+                .andExpect(content().string(containsString("confirm('Data jest w przeszłości — kontynuować?')")));
+    }
+
+    @Test
+    void getEventEditForForeignUserReturns404() throws Exception {
+        String bobEmail = "bob-edit-foreign@example.com";
+        String aliceEmail = "alice-edit-foreign@example.com";
+        AppUser bob = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, bobEmail);
+        UserTestFixtures.saveUser(appUserRepository, passwordEncoder, aliceEmail);
+
+        Event event = eventRepository.save(
+                new Event(bob, LocalDate.now().plusDays(2), null, "bob-only-edit-" + System.nanoTime(), null, null));
+
+        mvc.perform(get("/events/" + event.getId() + "/edit").with(user(aliceEmail)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getEventEditForPastEventReturns404() throws Exception {
+        String email = "alice-edit-past@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().minusDays(1), null, "past-edit-" + System.nanoTime(), null, null));
+
+        mvc.perform(get("/events/" + event.getId() + "/edit").with(user(email)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getEventEditForUnknownIdReturns404() throws Exception {
+        String email = "alice-edit-unknown@example.com";
+        UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        mvc.perform(get("/events/" + UUID.randomUUID() + "/edit").with(user(email)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void postEventUpdateHappyPathRedirectsToAppWithFlash() throws Exception {
+        String email = "alice-edit-happy@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        LocalDate future = LocalDate.now().plusDays(4);
+        Event event = eventRepository.save(
+                new Event(alice, future, null, "original-title-" + System.nanoTime(), null, null));
+
+        String newTitle = "updated-title-" + System.nanoTime();
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user(email))
+                        .with(csrf())
+                        .param("eventDate", future.toString())
+                        .param("title", newTitle)
+                        .param("requirements", "")
+                        .param("notes", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/app"))
+                .andExpect(flash().attribute(
+                        "successMessage",
+                        "Zapisano zmiany w wydarzeniu „" + newTitle + "”."));
+
+        Event reloaded = eventRepository.findById(event.getId()).orElseThrow();
+        assertThat(reloaded.getTitle()).isEqualTo(newTitle);
+        assertThat(reloaded.getEventDate()).isEqualTo(future);
+    }
+
+    @Test
+    void postEventUpdateBlankTitleRendersFieldError() throws Exception {
+        String email = "alice-edit-blank@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(2), null, "blank-edit-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user(email))
+                        .with(csrf())
+                        .param("eventDate", LocalDate.now().plusDays(2).toString())
+                        .param("title", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("field-error")))
+                .andExpect(content().string(containsString("action=\"/events/" + event.getId() + "\"")));
+    }
+
+    @Test
+    void postEventUpdateForForeignUserReturns404() throws Exception {
+        String bobEmail = "bob-edit-update-foreign@example.com";
+        String aliceEmail = "alice-edit-update-foreign@example.com";
+        AppUser bob = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, bobEmail);
+        UserTestFixtures.saveUser(appUserRepository, passwordEncoder, aliceEmail);
+
+        Event event = eventRepository.save(
+                new Event(bob, LocalDate.now().plusDays(2), null, "bob-update-foreign-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user(aliceEmail))
+                        .with(csrf())
+                        .param("eventDate", LocalDate.now().plusDays(3).toString())
+                        .param("title", "alice-hijack"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void postEventUpdateForPastEventReturns404() throws Exception {
+        String email = "alice-edit-update-past@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().minusDays(2), null, "past-update-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user(email))
+                        .with(csrf())
+                        .param("eventDate", LocalDate.now().plusDays(1).toString())
+                        .param("title", "trying-to-resurrect"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void postEventUpdateWithoutCsrfIs403() throws Exception {
+        String email = "alice-edit-update-csrf@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(2), null, "csrf-update-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user(email))
+                        .param("eventDate", LocalDate.now().plusDays(3).toString())
+                        .param("title", "no-csrf-update"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void postEventUpdateMovingDateToPastReturnsSuccessAndRowVanishesFromApp() throws Exception {
+        // Pinpoint contract test for Q6: EventForm stays symmetric across create + edit
+        // (no @FutureOrPresent on edit). Moving a date to the past succeeds at the server,
+        // but the row vanishes from /app via findUpcomingByUser and from re-edit via the
+        // URL-guess guard. Adding @FutureOrPresent to EventForm later turns this red,
+        // forcing the future reviewer to read the validation-symmetry lesson before changing
+        // the rule. The soft-warn confirm() on the form is the in-slice mitigation.
+        String email = "alice-edit-to-past@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        String uniqueTitle = "edit-to-past-" + System.nanoTime();
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(1), null, uniqueTitle, null, null));
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user(email))
+                        .with(csrf())
+                        .param("eventDate", LocalDate.now().minusDays(1).toString())
+                        .param("title", uniqueTitle))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/app"))
+                .andExpect(flash().attribute(
+                        "successMessage",
+                        "Zapisano zmiany w wydarzeniu „" + uniqueTitle + "”."));
+
+        mvc.perform(get("/app").with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString(uniqueTitle))));
     }
 
     @Test

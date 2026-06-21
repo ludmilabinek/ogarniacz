@@ -14,6 +14,8 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace.NONE;
@@ -87,6 +89,41 @@ class EventRepositoryTest {
 
         assertThat(aliceUpcoming).extracting(Event::getTitle).containsExactly("alice-accepted");
         assertThat(aliceUpcoming).extracting(Event::getTitle).doesNotContain("alice-proposed");
+    }
+
+    @Test
+    void findByIdAndUserReturnsEventForMatchingUser() {
+        AppUser alice = appUserRepository.save(new AppUser("alice-find-self@example.com", "$2a$10$placeholderHashForTestPurpose."));
+
+        Event event = entityManager.persistAndFlush(
+                new Event(alice, LocalDate.now().plusDays(1), null, "alice-self-event", null, null));
+
+        Optional<Event> found = eventRepository.findByIdAndUser(event.getId(), alice);
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getTitle()).isEqualTo("alice-self-event");
+    }
+
+    @Test
+    void findByIdAndUserReturnsEmptyForForeignUser() {
+        AppUser alice = appUserRepository.save(new AppUser("alice-find-foreign@example.com", "$2a$10$placeholderHashForTestPurpose."));
+        AppUser bob = appUserRepository.save(new AppUser("bob-find-foreign@example.com", "$2a$10$placeholderHashForTestPurpose."));
+
+        Event event = entityManager.persistAndFlush(
+                new Event(alice, LocalDate.now().plusDays(1), null, "alice-foreign-event", null, null));
+
+        Optional<Event> found = eventRepository.findByIdAndUser(event.getId(), bob);
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    void findByIdAndUserReturnsEmptyForUnknownId() {
+        AppUser alice = appUserRepository.save(new AppUser("alice-find-unknown@example.com", "$2a$10$placeholderHashForTestPurpose."));
+
+        Optional<Event> found = eventRepository.findByIdAndUser(UUID.randomUUID(), alice);
+
+        assertThat(found).isEmpty();
     }
 
     @Test

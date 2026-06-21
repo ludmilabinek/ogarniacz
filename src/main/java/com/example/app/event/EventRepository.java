@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface EventRepository extends JpaRepository<Event, UUID> {
@@ -20,4 +21,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             order by e.eventDate asc, e.eventTime asc nulls last
             """)
     List<Event> findUpcomingByUser(@Param("user") AppUser user, @Param("today") LocalDate today);
+
+    Optional<Event> findByIdAndUser(UUID id, AppUser user);
 }

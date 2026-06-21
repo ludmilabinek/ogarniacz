@@ -477,10 +477,10 @@ Four small items the plan-review surfaced. Each is a 5-second fix once spotted; 
 
 #### Automated
 
-- [ ] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes (existing + 3 new cases)
-- [ ] 1.2 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (existing 10 cases + 12 new cases for edit)
-- [ ] 1.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green
-- [ ] 1.4 `./gradlew build` succeeds
+- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes (existing + 3 new cases)
+- [x] 1.2 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (existing 10 cases + 12 new cases for edit)
+- [x] 1.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green
+- [x] 1.4 `./gradlew build` succeeds
 
 #### Manual
 

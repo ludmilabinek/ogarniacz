@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Edit event')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<main class="auth-page">
+    <h1>Edit event</h1>
+    <form th:action="@{/events/{id}(id=${eventId})}" method="post" th:object="${eventForm}" class="stacked"
+          onsubmit="return this.eventDate.value &gt;= new Date().toISOString().slice(0,10) || confirm('Data jest w przeszłości — kontynuować?');">
+        <label>Date
+            <input type="date" th:field="*{eventDate}" th:attr="min=${minDate}" required/>
+            <span class="field-error" th:if="${#fields.hasErrors('eventDate')}" th:errors="*{eventDate}"></span>
+        </label>
+        <label>Time (optional)
+            <input type="time" th:field="*{eventTime}"/>
+            <span class="field-error" th:if="${#fields.hasErrors('eventTime')}" th:errors="*{eventTime}"></span>
+        </label>
+        <label>Title
+            <input type="text" th:field="*{title}" required maxlength="200"/>
+            <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+        </label>
+        <label>Requirements
+            <textarea th:field="*{requirements}" maxlength="2000" rows="3"></textarea>
+            <span class="field-error" th:if="${#fields.hasErrors('requirements')}" th:errors="*{requirements}"></span>
+        </label>
+        <label>Notes
+            <textarea th:field="*{notes}" maxlength="2000" rows="3"></textarea>
+            <span class="field-error" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}"></span>
+        </label>
+        <button type="submit">Zapisz zmiany</button>
+    </form>
+    <p><a th:href="@{/app}" class="cancel-link">Anuluj</a></p>
+</main>
+</body>
+</html>

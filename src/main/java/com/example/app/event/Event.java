@@ -101,4 +101,24 @@ public class Event {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public void setEventDate(LocalDate eventDate) {
+        this.eventDate = Objects.requireNonNull(eventDate, "eventDate");
+    }
+
+    public void setEventTime(LocalTime eventTime) {
+        this.eventTime = eventTime;
+    }
+
+    public void setTitle(String title) {
+        this.title = Objects.requireNonNull(title, "title");
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 }
