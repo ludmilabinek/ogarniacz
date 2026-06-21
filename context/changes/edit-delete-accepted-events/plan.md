@@ -491,30 +491,30 @@ Four small items the plan-review surfaced. Each is a 5-second fix once spotted; 
 
 #### Automated
 
-- [x] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (Phase 1's cases + 6 new cases — 5 delete-related + 1 symmetric soft-warn assertion)
-- [x] 2.2 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (existing 12 cases + 2 new propagation tests)
-- [x] 2.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green
-- [x] 2.4 `./gradlew build` succeeds
+- [x] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (Phase 1's cases + 6 new cases — 5 delete-related + 1 symmetric soft-warn assertion) — 8d04691
+- [x] 2.2 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (existing 12 cases + 2 new propagation tests) — 8d04691
+- [x] 2.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green — 8d04691
+- [x] 2.4 `./gradlew build` succeeds — 8d04691
 
 #### Manual
 
-- [x] 2.5 On `/app`, each row shows **Edytuj** + **Usuń** with comfortable spacing and tap-friendly hit areas
-- [x] 2.6 **Edytuj** → prefilled form; **Anuluj** returns to `/app` without saving; submit saves and flashes
-- [x] 2.7 **Usuń** opens native `confirm()` with the literal Polish title; cancel does nothing; OK deletes and flashes
-- [x] 2.8 Delete the last event: empty-state and green flash coexist without visual overlap
-- [x] 2.9 Two-tab race: delete in tab B, submit edit for same event in tab A → 404 (URL-guess guard)
-- [x] 2.10 iCal feed: edit title propagates as VEVENT update (same UID, new summary) in a non-Google client; delete removes the VEVENT entirely on the next poll
+- [x] 2.5 On `/app`, each row shows **Edytuj** + **Usuń** with comfortable spacing and tap-friendly hit areas — 8d04691
+- [x] 2.6 **Edytuj** → prefilled form; **Anuluj** returns to `/app` without saving; submit saves and flashes — 8d04691
+- [x] 2.7 **Usuń** opens native `confirm()` with the literal Polish title; cancel does nothing; OK deletes and flashes — 8d04691
+- [x] 2.8 Delete the last event: empty-state and green flash coexist without visual overlap — 8d04691
+- [x] 2.9 Two-tab race: delete in tab B, submit edit for same event in tab A → 404 (URL-guess guard) — 8d04691
+- [x] 2.10 iCal feed: edit title propagates as VEVENT update (same UID, new summary) in a non-Google client; delete removes the VEVENT entirely on the next poll — 8d04691
 
 ### Phase 3: Closeout — `lessons.md`, test-plan cookbook backfill, roadmap sync, `change.md` flip
 
 #### Automated
 
-- [ ] 3.1 `./gradlew test` passes (no code changes; verifying closeout didn't break anything)
-- [ ] 3.2 `./gradlew build` succeeds
+- [x] 3.1 `./gradlew test` passes (no code changes; verifying closeout didn't break anything)
+- [x] 3.2 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 3.3 `lessons.md` shows the new "Validation rules on a shared form DTO must stay symmetric…" section at the end
-- [ ] 3.4 `test-plan.md` §6.X cookbook entry exists in numerical order
-- [ ] 3.5 `roadmap.md` shows S-03 as `done` in §At a glance, §Slices, §Done (with completion date 2026-06-21)
-- [ ] 3.6 `change.md` shows `status: done` and `updated: 2026-06-21`
+- [x] 3.3 `lessons.md` shows the new "Validation rules on a shared form DTO must stay symmetric…" section at the end
+- [x] 3.4 `test-plan.md` §6.X cookbook entry exists in numerical order
+- [x] 3.5 `roadmap.md` shows S-03 as `done` in §At a glance, §Slices, §Done (with completion date 2026-06-21)
+- [x] 3.6 `change.md` shows `status: done` and `updated: 2026-06-21`

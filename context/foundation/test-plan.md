@@ -286,7 +286,52 @@ Use `MockMvc.perform(multipart("/events/from-image").file(...).with(user(...)).w
 ./gradlew test --tests com.example.app.event.CalendarControllerTest
 ```
 
-### 6.7 Per-rollout-phase notes
+### 6.7 Adding a test for the accepted-event edit/delete lifecycle (S-03)
+
+The S-03 slice (edit + hard-delete of accepted events from `/app`, propagating to the iCal feed) extends one controller (`EventController`) and one repository (`EventRepository`) without a schema change. Tests split along the existing per-controller / per-repository boundaries — do NOT split `EventControllerTest` into a sibling edit/delete class; the per-controller test layout standard (see `lessons.md`) wins.
+
+**Reference tests:**
+
+- `src/test/java/com/example/app/event/EventRepositoryTest.java#findByIdAndUserReturnsEventForMatchingUser` / `#findByIdAndUserReturnsEmptyForForeignUser` / `#findByIdAndUserReturnsEmptyForUnknownId` — the user-scoped finder contract that gates every edit/delete handler.
+- `src/test/java/com/example/app/event/EventControllerTest.java` — extends with edit + delete cases (happy, 404-on-foreign / past / unknown id, 403-on-missing-CSRF, validation re-render).
+- `src/test/java/com/example/app/event/EventControllerTest.java#postEventUpdateMovingDateToPastReturnsSuccessAndRowVanishesFromApp` — the **edit-to-past pinpoint** test (see Validation-symmetry lesson in `lessons.md`); stays red the day someone adds `@FutureOrPresent` asymmetrically to the edit form.
+- `src/test/java/com/example/app/event/EventControllerTest.java#editFormCarriesPastDateSoftWarnOnsubmit` / `#createFormCarriesPastDateSoftWarnOnsubmit` — pinned symmetric soft-warn (Polish `"Data jest w przeszłości — kontynuować?"`); if either form drops the `onsubmit`, exactly one test goes red and pinpoints the asymmetry.
+- `src/test/java/com/example/app/event/CalendarControllerTest.java#editedTitlePropagatesToFeed` / `#editPreservesUidInFeed` — two separate tests for the iCal propagation contract (title propagation + UID stability), each with distinct assertion messages so a regression surfaces at the right failure mode.
+
+**Annotation stack:**
+
+- Controller tests: `@SpringBootTest @AutoConfigureMockMvc @TestPropertySource(properties = "REMEMBER_ME_KEY=test-key-not-for-production")` — same per-controller convention as §6.5 / §6.6. **Known fragility:** `@SpringBootTest` boots the full context, including `OpenRouterLlmVisionClient`; the in-flight `llm-chatclient-fail-fast` change tracks the null-`ChatClient` init coupling. If it blocks edit/delete tests in CI, the recommended migration is a separate slice that refactors to `@WebMvcTest(EventController.class)` with `@MockBean` — **NOT inside S-03**, because mixing slice annotations within one class is impossible and splitting violates the per-controller layout standard.
+- Repository tests: `@DataJpaTest` — same as the existing `EventRepositoryTest` cases.
+
+**404-vs-403 contract (foreign / past / unknown id; CSRF):**
+
+- All three "should not reach this event" surfaces — foreign user, past-dated event, unknown id — return **404**, never 403. Mirrors `EventReviewService.applyDecisions`'s `findByIdAndUser + orElseThrow(NOT_FOUND)` pattern; 403 would leak the existence of the row to anyone who can guess a UUID. Implementation funnels through one private `findOwnUpcomingEvent(UUID id, AppUser user): Event` helper; tests assert each surface returns 404 via a dedicated case rather than parameterising — readable failure messages matter more than test-count compactness.
+- CSRF gate is asserted with one test per POST endpoint (`postEventUpdateWithoutCsrfIs403`, `postEventDeleteWithoutCsrfIs403`) — same shape as the existing `postEventsCreateWithoutCsrfIs403`. Without `.with(csrf())`, Spring Security returns 403 before the controller runs.
+
+**Edit-to-past pinpoint pattern:**
+
+The pinpoint exists to make the validation-symmetry decision (`EventForm` reused for both create and edit, no `@FutureOrPresent` on either side) visible to a future reviewer. It seeds a tomorrow-dated event, POSTs with `eventDate = yesterday`, asserts 302 + happy-path flash, then GETs `/app` and asserts the row is absent (filter + URL-guess guard). The day someone proposes "let's add `@FutureOrPresent` to the edit form", this test goes red and forces them to read the lesson before merging. See `lessons.md` → "Validation rules on a shared form DTO must stay symmetric across create + edit" for the full rationale.
+
+**Two-test propagation pattern for iCal updates (one test per failure mode):**
+
+- `editedTitlePropagatesToFeed` asserts **both** legs of the chain: (a) controller→update — POST returns 302 with `Location: /app` and the Polish flash equals `"Zapisano zmiany w wydarzeniu „<new title>”."` (pinned by `MockMvcResultMatchers.flash().attribute(...)`); (b) persisted-state→feed — follow-up GET `/calendar/{token}.ics` body contains the new `SUMMARY:` and does NOT contain the old. Distinct assertion messages so a failure pinpoints which leg regressed.
+- `editPreservesUidInFeed` extracts the `UID:` line before and after the title edit (grep-style: `body.lines().filter(l -> l.startsWith("UID:")).findFirst()`), asserts equality. Splitting from Test A keeps "title didn't propagate" and "UID changed" as separate regression surfaces — calendar clients treat a changed UID as a new event and orphan reminders on the old one.
+
+**Per-scenario email fixture pattern (`@SpringBootTest` shared context):**
+
+`EventControllerTest` shares its application context across cases (`@SpringBootTest` cache reuse), so every test must use a per-scenario email (`alice-edit-happy@example.com`, `alice-edit-foreign@example.com`, …) to avoid colliding on the `app_user` email-uniqueness constraint. A shared `alice@example.com` would fail the second case to run. The `@DataJpaTest`-based `EventRepositoryTest` is rolled back per-case and can use a shorter name.
+
+**Do not split the test class.** Extend the existing per-controller `EventControllerTest` for all edit + delete cases. The per-controller test layout standard (`lessons.md`) is the convention; splitting introduces an `EventEditDeleteControllerTest` that pays the same `@SpringBootTest` context-boot cost without the matching benefit.
+
+**Run locally:**
+
+```
+./gradlew test --tests com.example.app.event.EventRepositoryTest
+./gradlew test --tests com.example.app.event.EventControllerTest
+./gradlew test --tests com.example.app.event.CalendarControllerTest
+```
+
+### 6.8 Per-rollout-phase notes
 
 **Phase 2 + 3 — iCal feed (icalendar-feed-and-subscription, 2026-06-15).** The redirect-pattern matcher Spring uses for `redirectedUrlPattern` is ant-style; `/login` (the literal target Spring Security emits) matches `/login*` but NOT `**/login*` — the leading-segment-wildcard form looks safer but quietly fails. When pinning a redirect to `/login`, use `redirectedUrlPattern("/login*")` exactly. The pure-JUnit writer test pins `Event.id` via reflection on the private `id` field because JPA never runs in that test layer; this mirrors what `@GeneratedValue` would set and is preferable to threading a test-only constructor through the entity. VALARM-trigger DST tests should hard-code the expected `Instant`, not derive it via `EventReminder.reminderFor(event)` — the oracle is the PRD rule, not the implementation.
 

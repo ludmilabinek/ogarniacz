@@ -1,7 +1,7 @@
 ---
 change_id: edit-delete-accepted-events
 title: Edit delete accepted events
-status: implementing
+status: implemented
 created: 2026-06-21
 updated: 2026-06-21
 archived_at: null

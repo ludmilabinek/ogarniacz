@@ -34,7 +34,7 @@ The **product wedge** — the one trait that, if removed, makes the product indi
 | S-02  | [#3](https://github.com/ludmilabinek/ogarniacz/issues/3) | manual-event-entry                           | manually create an event with date/time/title/requirements/notes; it appears in their personal view with the default reminder    | S-01             | FR-003, FR-008, FR-009, US-02                  | done     |
 | S-04  | [#4](https://github.com/ludmilabinek/ogarniacz/issues/4) | icalendar-feed-and-subscription              | view + copy their unique iCalendar URL from settings; events from the personal view appear in their subscribed calendar         | S-02             | FR-012, FR-013, US-03, NFR (token entropy, feed freshness) | done     |
 | S-05  | [#5](https://github.com/ludmilabinek/ogarniacz/issues/5) | image-extraction-and-review-acceptance       | upload an image, see AI-proposed events with editable fields, accept or reject each individually, see accepted ones in calendar | F-01, S-02       | FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, US-01 (full) | done     |
-| S-03  | [#6](https://github.com/ludmilabinek/ogarniacz/issues/6) | edit-delete-accepted-events                  | edit or delete accepted events from the personal view; the change propagates to the iCalendar feed                              | S-02             | FR-010, FR-011, US-01 (lifecycle)              | proposed |
+| S-03  | [#6](https://github.com/ludmilabinek/ogarniacz/issues/6) | edit-delete-accepted-events                  | edit or delete accepted events from the personal view; the change propagates to the iCalendar feed                              | S-02             | FR-010, FR-011, US-01 (lifecycle)              | done     |
 | S-06  | [#7](https://github.com/ludmilabinek/ogarniacz/issues/7) | source-image-auto-purge                      | (background) source images are auto-removed once every proposed event from them has been accepted or rejected                   | S-05             | NFR (image retention)                          | proposed |
 
 ## Streams
@@ -143,7 +143,7 @@ What's already in place in the codebase as of 2026-05-25 (auto-researched + user
 - **Unknowns:**
   - Should the iCalendar feed include a stable `UID` per event so external calendar clients update in place rather than duplicate on edit? Owner: dev (resolve when S-04 ships; reaffirm in S-03). Block: no.
 - **Risk:** Off the critical path to the north star — sequenced AFTER S-05 because lifecycle polish doesn't move the wedge hypothesis. If the deadline pinches, S-03 is the most defensible slice to compress (a single-user MVP with hard-delete only is acceptable for 2–3 weeks of usage before edits become essential).
-- **Status:** proposed
+- **Status:** done (2026-06-21)
 
 ### S-06: Source image auto-purge
 
@@ -199,3 +199,4 @@ _Empty on first generation. `/10x-archive` appends here (and flips the matching 
 - **S-01: parent can sign up with email and password, log in, log out, stay logged in across browser sessions, and land on an empty personal view scoped to their own account.** — Archived 2026-06-09 → `context/archive/2026-05-26-minimal-auth-and-empty-personal-view/`. Lesson: —.
 - **S-04: parent can view and copy their unique unguessable iCalendar URL from a settings screen; accepted events from the personal view are served at that URL as a standard iCalendar feed with the morning-of-day-before reminder; events deleted from the personal view no longer appear on the next poll.** — Archived 2026-06-16 → `context/archive/2026-06-15-icalendar-feed-and-subscription/`. Lesson: —.
 - **S-05: parent uploads an image (camera capture or screenshot) of a kindergarten announcement; within 60 seconds they see a list of one or more AI-proposed events with editable fields; they can accept or reject each individually; accepted events flow into the personal view (S-02's pipeline) and into the parent's subscribed calendar via the iCalendar feed (S-04's pipeline). Unreadable images surface an actionable error with a retry / manual-entry path.** — Archived 2026-06-21 → `context/archive/2026-06-16-image-extraction-and-review-acceptance/`. Lesson: —.
+- **S-03: Edit + delete of accepted events from `/app`; iCal propagation locked (UID stable across updates, deletions drop the VEVENT on the next poll).** — Completed 2026-06-21; pending archive → `context/changes/edit-delete-accepted-events/`. Lesson: validation rules on a shared form DTO must stay symmetric across create + edit (see `lessons.md`).
