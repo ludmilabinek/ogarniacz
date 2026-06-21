@@ -13,15 +13,22 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -209,6 +216,74 @@ class CalendarControllerTest {
         mvc.perform(get("/calendar/foo/bar.ics"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("/login*"));
+    }
+
+    @Test
+    void editedTitlePropagatesToFeed() throws Exception {
+        // Two-leg assertion in a single test: (a) the controller-update leg surfaces a
+        // 302 + Polish flash, (b) the persisted-state -> feed leg shows the new SUMMARY
+        // and not the old one. The repo-direct alternative would silently pass a refactor
+        // that bypasses controller-side setTitle, so the controller leg stays in.
+        SeededUser seed = seedUserWithToken("ical-edit-title-propagation@example.com");
+        Event event = eventRepository.save(new Event(
+                seed.user(), LocalDate.now().plusDays(3), null, "Wycieczka A", null, null));
+
+        mvc.perform(get("/calendar/{token}.ics", seed.token()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("SUMMARY:Wycieczka A")));
+
+        mvc.perform(post("/events/" + event.getId())
+                        .with(user("ical-edit-title-propagation@example.com"))
+                        .with(csrf())
+                        .param("eventDate", event.getEventDate().toString())
+                        .param("title", "Wycieczka B")
+                        .param("requirements", "")
+                        .param("notes", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/app"))
+                .andExpect(flash().attribute(
+                        "successMessage",
+                        "Zapisano zmiany w wydarzeniu „Wycieczka B”."));
+
+        mvc.perform(get("/calendar/{token}.ics", seed.token()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("SUMMARY:Wycieczka B")))
+                .andExpect(content().string(not(containsString("SUMMARY:Wycieczka A"))));
+    }
+
+    @Test
+    void editPreservesUidInFeed() throws Exception {
+        SeededUser seed = seedUserWithToken("ical-edit-uid-stability@example.com");
+        Event event = eventRepository.save(new Event(
+                seed.user(), LocalDate.now().plusDays(3), null, "uid-stable-X", null, null));
+
+        String uidBefore = extractUidLine(mvc.perform(get("/calendar/{token}.ics", seed.token()))
+                .andExpect(status().isOk())
+                .andReturn());
+
+        event.setTitle("uid-stable-Y");
+        eventRepository.save(event);
+
+        String uidAfter = extractUidLine(mvc.perform(get("/calendar/{token}.ics", seed.token()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("SUMMARY:uid-stable-Y")))
+                .andReturn());
+
+        assertThat(uidBefore)
+                .as("UID line missing from feed before edit")
+                .isNotNull()
+                .contains(event.getId().toString())
+                .contains("@ogarniacz.fly.dev");
+        assertThat(uidAfter)
+                .as("UID changed across edit — calendar clients would see this as a new VEVENT, not an UPDATE")
+                .isEqualTo(uidBefore);
+    }
+
+    private static String extractUidLine(MvcResult result) throws Exception {
+        return result.getResponse().getContentAsString().lines()
+                .filter(line -> line.startsWith("UID:"))
+                .findFirst()
+                .orElse(null);
     }
 
     private SeededUser seedUserWithToken(String email) {

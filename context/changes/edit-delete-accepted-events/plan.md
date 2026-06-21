@@ -477,33 +477,33 @@ Four small items the plan-review surfaced. Each is a 5-second fix once spotted; 
 
 #### Automated
 
-- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes (existing + 3 new cases)
-- [x] 1.2 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (existing 10 cases + 12 new cases for edit)
-- [x] 1.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green
-- [x] 1.4 `./gradlew build` succeeds
+- [x] 1.1 `./gradlew test --tests com.example.app.event.EventRepositoryTest` passes (existing + 3 new cases) — 882474f
+- [x] 1.2 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (existing 10 cases + 12 new cases for edit) — 882474f
+- [x] 1.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green — 882474f
+- [x] 1.4 `./gradlew build` succeeds — 882474f
 
 #### Manual
 
-- [ ] 1.5 `./gradlew bootRun`, log in, navigate directly to `/events/{id}/edit` for an existing event, see prefilled form, change title, submit, land on `/app` with green flash and updated row
-- [ ] 1.6 Navigating to `/events/{random-uuid}/edit` returns 404
+- [x] 1.5 `./gradlew bootRun`, log in, navigate directly to `/events/{id}/edit` for an existing event, see prefilled form, change title, submit, land on `/app` with green flash and updated row — 882474f
+- [x] 1.6 Navigating to `/events/{random-uuid}/edit` returns 404 — 882474f
 
 ### Phase 2: Delete endpoint + `/app` row affordances + symmetric browser-`min` + iCal propagation tests
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (Phase 1's cases + 6 new cases — 5 delete-related + 1 symmetric soft-warn assertion)
-- [ ] 2.2 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (existing 12 cases + 2 new propagation tests)
-- [ ] 2.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green
-- [ ] 2.4 `./gradlew build` succeeds
+- [x] 2.1 `./gradlew test --tests com.example.app.event.EventControllerTest` passes (Phase 1's cases + 6 new cases — 5 delete-related + 1 symmetric soft-warn assertion)
+- [x] 2.2 `./gradlew test --tests com.example.app.event.CalendarControllerTest` passes (existing 12 cases + 2 new propagation tests)
+- [x] 2.3 `./gradlew test` keeps all S-01 / S-02 / S-04 / S-05 tests green
+- [x] 2.4 `./gradlew build` succeeds
 
 #### Manual
 
-- [ ] 2.5 On `/app`, each row shows **Edytuj** + **Usuń** with comfortable spacing and tap-friendly hit areas
-- [ ] 2.6 **Edytuj** → prefilled form; **Anuluj** returns to `/app` without saving; submit saves and flashes
-- [ ] 2.7 **Usuń** opens native `confirm()` with the literal Polish title; cancel does nothing; OK deletes and flashes
-- [ ] 2.8 Delete the last event: empty-state and green flash coexist without visual overlap
-- [ ] 2.9 Two-tab race: delete in tab B, submit edit for same event in tab A → 404 (URL-guess guard)
-- [ ] 2.10 iCal feed: edit title propagates as VEVENT update (same UID, new summary) in a non-Google client; delete removes the VEVENT entirely on the next poll
+- [x] 2.5 On `/app`, each row shows **Edytuj** + **Usuń** with comfortable spacing and tap-friendly hit areas
+- [x] 2.6 **Edytuj** → prefilled form; **Anuluj** returns to `/app` without saving; submit saves and flashes
+- [x] 2.7 **Usuń** opens native `confirm()` with the literal Polish title; cancel does nothing; OK deletes and flashes
+- [x] 2.8 Delete the last event: empty-state and green flash coexist without visual overlap
+- [x] 2.9 Two-tab race: delete in tab B, submit edit for same event in tab A → 404 (URL-guess guard)
+- [x] 2.10 iCal feed: edit title propagates as VEVENT update (same UID, new summary) in a non-Google client; delete removes the VEVENT entirely on the next poll
 
 ### Phase 3: Closeout — `lessons.md`, test-plan cookbook backfill, roadmap sync, `change.md` flip
 

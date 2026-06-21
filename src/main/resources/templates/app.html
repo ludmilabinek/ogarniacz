@@ -19,6 +19,15 @@
             <strong th:text="${e.title}">Event title</strong>
             <p class="event-requirements" th:if="${e.requirements != null and !#strings.isEmpty(e.requirements)}" th:text="${e.requirements}"></p>
             <p class="event-notes" th:if="${e.notes != null and !#strings.isEmpty(e.notes)}" th:text="${e.notes}"></p>
+            <div class="row-actions">
+                <a th:href="@{/events/{id}/edit(id=${e.id})}" class="row-action">Edytuj</a>
+                <form th:action="@{/events/{id}/delete(id=${e.id})}" method="post"
+                      class="row-action-form"
+                      th:attr="data-title=${e.title}"
+                      onsubmit="return confirm('Usunąć wydarzenie „' + this.dataset.title + '”?');">
+                    <button type="submit" class="row-action row-action--danger">Usuń</button>
+                </form>
+            </div>
         </li>
     </ul>
     <p class="empty-state" th:if="${#lists.isEmpty(events)}">No events yet. Add one above.</p>

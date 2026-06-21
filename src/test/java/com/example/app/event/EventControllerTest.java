@@ -346,6 +346,104 @@ class EventControllerTest {
     }
 
     @Test
+    void postEventDeleteHappyPathRedirectsToAppWithFlash() throws Exception {
+        String email = "alice-delete-happy@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        String uniqueTitle = "delete-happy-" + System.nanoTime();
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(3), null, uniqueTitle, null, null));
+
+        mvc.perform(post("/events/" + event.getId() + "/delete")
+                        .with(user(email))
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/app"))
+                .andExpect(flash().attribute(
+                        "successMessage",
+                        "Usunięto wydarzenie „" + uniqueTitle + "”."));
+
+        assertThat(eventRepository.findById(event.getId())).isEmpty();
+    }
+
+    @Test
+    void postEventDeleteForForeignUserReturns404() throws Exception {
+        String bobEmail = "bob-delete-foreign@example.com";
+        String aliceEmail = "alice-delete-foreign@example.com";
+        AppUser bob = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, bobEmail);
+        UserTestFixtures.saveUser(appUserRepository, passwordEncoder, aliceEmail);
+
+        Event event = eventRepository.save(
+                new Event(bob, LocalDate.now().plusDays(2), null, "bob-only-delete-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId() + "/delete")
+                        .with(user(aliceEmail))
+                        .with(csrf()))
+                .andExpect(status().isNotFound());
+
+        assertThat(eventRepository.findById(event.getId())).isPresent();
+    }
+
+    @Test
+    void postEventDeleteForPastEventReturns404() throws Exception {
+        String email = "alice-delete-past@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().minusDays(1), null, "past-delete-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId() + "/delete")
+                        .with(user(email))
+                        .with(csrf()))
+                .andExpect(status().isNotFound());
+
+        assertThat(eventRepository.findById(event.getId())).isPresent();
+    }
+
+    @Test
+    void postEventDeleteWithoutCsrfIs403() throws Exception {
+        String email = "alice-delete-csrf@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event event = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(2), null, "csrf-delete-" + System.nanoTime(), null, null));
+
+        mvc.perform(post("/events/" + event.getId() + "/delete")
+                        .with(user(email)))
+                .andExpect(status().isForbidden());
+
+        assertThat(eventRepository.findById(event.getId())).isPresent();
+    }
+
+    @Test
+    void appShowsEditAndDeleteAffordancesPerRow() throws Exception {
+        String email = "alice-affordances@example.com";
+        AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+
+        Event e1 = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(2), null, "affordance-row-one-" + System.nanoTime(), null, null));
+        Event e2 = eventRepository.save(
+                new Event(alice, LocalDate.now().plusDays(3), null, "affordance-row-two-" + System.nanoTime(), null, null));
+
+        mvc.perform(get("/app").with(user(email)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Edytuj")))
+                .andExpect(content().string(containsString("Usuń")))
+                .andExpect(content().string(containsString("action=\"/events/" + e1.getId() + "/delete\"")))
+                .andExpect(content().string(containsString("action=\"/events/" + e2.getId() + "/delete\"")))
+                .andExpect(content().string(containsString("href=\"/events/" + e1.getId() + "/edit\"")))
+                .andExpect(content().string(containsString("href=\"/events/" + e2.getId() + "/edit\"")));
+    }
+
+    @Test
+    void createFormCarriesPastDateSoftWarnOnsubmit() throws Exception {
+        mvc.perform(get("/events/new").with(user("alice-create-softwarn@example.com")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("onsubmit=\"return this.eventDate.value &gt;=")))
+                .andExpect(content().string(containsString("confirm('Data jest w przeszłości — kontynuować?')")));
+    }
+
+    @Test
     void appHidesPastEventsForCurrentUser() throws Exception {
         String email = "alice-pasthide@example.com";
         AppUser alice = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);

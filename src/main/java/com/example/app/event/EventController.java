@@ -38,14 +38,17 @@ public class EventController {
         if (!model.containsAttribute("eventForm")) {
             model.addAttribute("eventForm", new EventForm());
         }
+        model.addAttribute("minDate", LocalDate.now(clock).minusYears(5).toString());
         return "events/new";
     }
 
     @PostMapping("/events")
     public String create(@Valid @ModelAttribute("eventForm") EventForm form,
                          BindingResult result,
-                         Authentication auth) {
+                         Authentication auth,
+                         Model model) {
         if (result.hasErrors()) {
+            model.addAttribute("minDate", LocalDate.now(clock).minusYears(5).toString());
             return "events/new";
         }
 
@@ -107,6 +110,19 @@ public class EventController {
         ra.addFlashAttribute(
                 "successMessage",
                 "Zapisano zmiany w wydarzeniu „" + event.getTitle() + "”.");
+        return "redirect:/app";
+    }
+
+    @PostMapping("/events/{id}/delete")
+    @Transactional
+    public String delete(@PathVariable UUID id, Authentication auth, RedirectAttributes ra) {
+        AppUser user = appUserRepository.findByEmail(auth.getName()).orElseThrow();
+        Event event = findOwnUpcomingEvent(id, user);
+
+        String title = event.getTitle();
+        eventRepository.delete(event);
+
+        ra.addFlashAttribute("successMessage", "Usunięto wydarzenie „" + title + "”.");
         return "redirect:/app";
     }
 
