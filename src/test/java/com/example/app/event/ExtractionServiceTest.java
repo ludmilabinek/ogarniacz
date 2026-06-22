@@ -6,6 +6,7 @@ import com.example.app.event.ProposedEvent.ProposedEventStatus;
 import com.example.app.llm.LlmExtractionException;
 import com.example.app.llm.LlmExtractionResult;
 import com.example.app.llm.LlmVisionClient;
+import com.example.app.testsupport.FixedClockTestConfig;
 import com.example.app.testsupport.UserTestFixtures;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -31,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
+@Import(FixedClockTestConfig.class)
 @TestPropertySource(properties = "REMEMBER_ME_KEY=test-key-not-for-production")
 @ExtendWith(OutputCaptureExtension.class)
 class ExtractionServiceTest {
@@ -92,10 +95,11 @@ class ExtractionServiceTest {
         SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
         assertThat(reloaded.getLastErrorKind()).isNull();
         assertThat(reloaded.getCorrelationId()).isNull();
+        assertThat(reloaded.getResolvedAt()).isEqualTo(FixedClockTestConfig.FIXED_INSTANT);
     }
 
     @Test
-    void successWithEmptyListPersistsZeroRowsAndMarksDone() {
+    void successWithEmptyListPersistsZeroRowsAndMarksDoneAndStampsResolvedAt() {
         SourceImage image = persistImage("alice-extract-empty@example.com");
         UUID jobId = jobRegistry.register(image.getId());
         when(llmVisionClient.extract(any(), any()))
@@ -110,6 +114,7 @@ class ExtractionServiceTest {
                 .isEmpty();
         SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
         assertThat(reloaded.getLastErrorKind()).isNull();
+        assertThat(reloaded.getResolvedAt()).isEqualTo(FixedClockTestConfig.FIXED_INSTANT);
     }
 
     @Test
@@ -134,6 +139,7 @@ class ExtractionServiceTest {
         SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
         assertThat(reloaded.getLastErrorKind()).isEqualTo("TIMEOUT");
         assertThat(reloaded.getCorrelationId()).isEqualTo(entry.correlationId());
+        assertThat(reloaded.getResolvedAt()).isNull();
     }
 
     @Test
@@ -153,6 +159,7 @@ class ExtractionServiceTest {
 
         SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
         assertThat(reloaded.getLastErrorKind()).isEqualTo("PROVIDER_ERROR");
+        assertThat(reloaded.getResolvedAt()).isNull();
 
         assertThat(output.getAll()).contains("503");
         assertThat(output.getAll()).contains("upstream busy");
@@ -174,6 +181,27 @@ class ExtractionServiceTest {
         assertThat(entry.errorKind()).isEqualTo("MALFORMED_RESPONSE");
         SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
         assertThat(reloaded.getLastErrorKind()).isEqualTo("MALFORMED_RESPONSE");
+        assertThat(reloaded.getResolvedAt()).isNull();
+    }
+
+    @Test
+    void unexpectedRuntimeExceptionMarksFailedAndDoesNotStampResolvedAt() {
+        SourceImage image = persistImage("alice-extract-unexpected@example.com");
+        UUID jobId = jobRegistry.register(image.getId());
+        when(llmVisionClient.extract(any(), any()))
+                .thenThrow(new RuntimeException("synthetic non-Llm failure"));
+
+        extractionService.runExtraction(jobId, image.getId());
+
+        awaitTerminal(jobId);
+        JobStatusEntry entry = jobRegistry.get(jobId).orElseThrow();
+        assertThat(entry.state()).isEqualTo(JobState.FAILED);
+        assertThat(entry.errorKind()).isEqualTo("UNEXPECTED");
+        assertThat(entry.correlationId()).isNotBlank();
+
+        SourceImage reloaded = sourceImageRepository.findById(image.getId()).orElseThrow();
+        assertThat(reloaded.getLastErrorKind()).isEqualTo("UNEXPECTED");
+        assertThat(reloaded.getResolvedAt()).isNull();
     }
 
     private SourceImage persistImage(String email) {

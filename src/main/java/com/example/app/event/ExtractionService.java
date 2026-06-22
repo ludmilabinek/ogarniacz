@@ -9,6 +9,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -29,15 +31,18 @@ public class ExtractionService {
     private final SourceImageRepository sourceImageRepository;
     private final ProposedEventRepository proposedEventRepository;
     private final ExtractionJobRegistry jobRegistry;
+    private final Clock clock;
 
     public ExtractionService(LlmVisionClient llmVisionClient,
                              SourceImageRepository sourceImageRepository,
                              ProposedEventRepository proposedEventRepository,
-                             ExtractionJobRegistry jobRegistry) {
+                             ExtractionJobRegistry jobRegistry,
+                             Clock clock) {
         this.llmVisionClient = llmVisionClient;
         this.sourceImageRepository = sourceImageRepository;
         this.proposedEventRepository = proposedEventRepository;
         this.jobRegistry = jobRegistry;
+        this.clock = clock;
     }
 
     @Async("extractionExecutor")
@@ -56,6 +61,10 @@ public class ExtractionService {
             for (LlmExtractionResult.ProposedEvent p : result.proposedEvents()) {
                 proposedEventRepository.save(new ProposedEvent(
                         image, p.date(), p.time(), p.title(), p.requirements(), p.notes()));
+            }
+            if (image.getResolvedAt() == null) {
+                image.setResolvedAt(Instant.now(clock));
+                sourceImageRepository.save(image);
             }
             jobRegistry.markDone(jobId);
         } catch (LlmExtractionException ex) {
