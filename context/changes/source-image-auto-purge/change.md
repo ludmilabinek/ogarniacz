@@ -1,7 +1,7 @@
 ---
 change_id: source-image-auto-purge
 title: Source image auto purge
-status: plan_reviewed
+status: implementing
 created: 2026-06-21
 updated: 2026-06-21
 archived_at: null

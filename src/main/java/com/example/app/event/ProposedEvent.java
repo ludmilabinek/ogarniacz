@@ -12,6 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,7 +24,10 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "proposed_event",
-        indexes = { @Index(name = "ix_proposed_event_source_image", columnList = "source_image_id") }
+        indexes = {
+                @Index(name = "ix_proposed_event_source_image", columnList = "source_image_id"),
+                @Index(name = "ix_proposed_event_source_image_status", columnList = "source_image_id, status")
+        }
 )
 public class ProposedEvent {
 
@@ -38,6 +43,7 @@ public class ProposedEvent {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "source_image_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private SourceImage sourceImage;
 
     @Column(name = "event_date", nullable = false)

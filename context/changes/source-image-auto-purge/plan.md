@@ -345,12 +345,13 @@ The `application.properties` knob `app.event.source-image.purge.interval-ms` def
 
 #### Automated
 
-- [ ] 1.1 ./gradlew build compiles with the new annotations
-- [ ] 1.2 New SourceImageRepositoryTest (file's first test) seeds a SourceImage + ProposedEvent pair, calls sourceImageRepository.delete(image), asserts the child ProposedEvent is also gone (proves H2 honors the cascade annotation) — ./gradlew test --tests com.example.app.event.SourceImageRepositoryTest
+- [x] 1.1 ./gradlew build compiles with the new annotations
+- [x] 1.2 New SourceImageRepositoryTest (file's first test) seeds a SourceImage + ProposedEvent pair, calls sourceImageRepository.delete(image), asserts the child ProposedEvent is also gone (proves H2 honors the cascade annotation) — ./gradlew test --tests com.example.app.event.SourceImageRepositoryTest
 
 #### Manual
 
 - [ ] 1.3 Operator runs migration.sql against the Neon DB before deploying Phase 3+; \d proposed_event shows ON DELETE CASCADE on the FK and lists ix_proposed_event_source_image_status
+  > **Deferred to Phase 3+ deployment.** Verified 2026-06-22 against current Neon DB (`neondb`): schema is still pre-S-05 — only `app_event`, `app_user`, `persistent_logins` exist; `source_image` and `proposed_event` have never been created on this environment. Running `migration.sql` now would fail (`CREATE INDEX ... ON proposed_event` errors because the table does not exist; the DO block would find no FK and no-op). Sequence to follow when Phase 3+ deploys to Neon: (1) `bootRun` against Neon so Hibernate `ddl-auto=update` creates `source_image` + `proposed_event` from the current entity shape, (2) immediately run `migration.sql` to flip the FK to `ON DELETE CASCADE` (Hibernate's `@OnDelete` on a `@ManyToOne` is unreliable on `ddl-auto=update`, so the manual ALTER is still load-bearing), (3) re-run `\d proposed_event` to confirm `ON DELETE CASCADE` on the FK and `ix_proposed_event_source_image_status` in the indexes list.
 
 ### Phase 2: Close the success-empty leak (ExtractionService)
 
