@@ -387,5 +387,5 @@ The `application.properties` knob `app.event.source-image.purge.interval-ms` def
 
 #### Automated
 
-- [x] 5.1 New getReviewAfterPurgeReturns404 test passes
-- [x] 5.2 ./gradlew test --tests com.example.app.event.EventReviewControllerTest passes (full class — no regression on existing cases)
+- [x] 5.1 New getReviewAfterPurgeReturns404 test passes — 6400523
+- [x] 5.2 ./gradlew test --tests com.example.app.event.EventReviewControllerTest passes (full class — no regression on existing cases) — 6400523
