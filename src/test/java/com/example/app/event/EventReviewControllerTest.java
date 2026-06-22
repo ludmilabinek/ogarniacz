@@ -15,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -59,6 +60,9 @@ class EventReviewControllerTest {
 
     @Autowired
     ExtractionJobRegistry jobRegistry;
+
+    @Autowired
+    SourceImagePurgeService purgeService;
 
     @MockitoBean
     ExtractionService extractionService;
@@ -299,6 +303,30 @@ class EventReviewControllerTest {
         mvc.perform(post("/events/from-image/{id}/retry", image.getId())
                         .with(user(intruderEmail))
                         .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getReviewAfterPurgeReturns404() throws Exception {
+        // S-06 post-purge contract: a purged image collapses to plain 404, indistinguishable
+        // from wrong-user / unknown-id. Seed State D (resolvedAt set, no PENDING children, no
+        // lastErrorKind), run the purge service inline, then assert the GET 404.
+        String email = "alice-review-postpurge@example.com";
+        AppUser user = UserTestFixtures.saveUser(appUserRepository, passwordEncoder, email);
+        SourceImage image = new SourceImage(user, new byte[]{1, 2}, "image/jpeg");
+        image.setResolvedAt(Instant.parse("2026-01-15T12:00:00Z"));
+        sourceImageRepository.save(image);
+        ProposedEvent accepted = saveProposal(image, LocalDate.of(2026, 9, 1),
+                "review-postpurge-accepted", null);
+        accepted.setStatus(ProposedEventStatus.ACCEPTED);
+        proposedEventRepository.save(accepted);
+        UUID imageId = image.getId();
+
+        int purged = purgeService.purgeEligible();
+        assertThat(purged).isGreaterThanOrEqualTo(1);
+        assertThat(sourceImageRepository.findById(imageId)).isEmpty();
+
+        mvc.perform(get("/events/from-image/{id}/review", imageId).with(user(email)))
                 .andExpect(status().isNotFound());
     }
 

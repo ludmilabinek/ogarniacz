@@ -374,18 +374,18 @@ The `application.properties` knob `app.event.source-image.purge.interval-ms` def
 
 #### Automated
 
-- [x] 4.1 Three scheduler test methods pass
-- [x] 4.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeSchedulerTest
-- [x] 4.3 ./gradlew test whole-suite passes — verifies no context-cache pollution from the new @Import(FixedClockTestConfig.class) + @MockitoBean service (the test config is opt-in @Import, not a global @MockitoBean Clock)
-- [x] 4.4 ./gradlew bootRun (manual smoke) — observe a single INFO line every 10 minutes only when a purge happened; verify silence on no-op cycles
+- [x] 4.1 Three scheduler test methods pass — 55feb91
+- [x] 4.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeSchedulerTest — 55feb91
+- [x] 4.3 ./gradlew test whole-suite passes — verifies no context-cache pollution from the new @Import(FixedClockTestConfig.class) + @MockitoBean service (the test config is opt-in @Import, not a global @MockitoBean Clock) — 55feb91
+- [x] 4.4 ./gradlew bootRun (manual smoke) — observe a single INFO line every 10 minutes only when a purge happened; verify silence on no-op cycles — 55feb91
 
 #### Manual
 
-- [x] 4.5 Run ./gradlew bootRun with app.event.source-image.purge.interval-ms=60000 (1 minute) for a quick smoke; trigger a manual review-submit to create a State-D image; within 1 minute observe the INFO line in the console; no logs on idle cycles
+- [x] 4.5 Run ./gradlew bootRun with app.event.source-image.purge.interval-ms=60000 (1 minute) for a quick smoke; trigger a manual review-submit to create a State-D image; within 1 minute observe the INFO line in the console; no logs on idle cycles — 55feb91
 
 ### Phase 5: 404 post-purge contract on EventReviewController
 
 #### Automated
 
-- [ ] 5.1 New getReviewAfterPurgeReturns404 test passes
-- [ ] 5.2 ./gradlew test --tests com.example.app.event.EventReviewControllerTest passes (full class — no regression on existing cases)
+- [x] 5.1 New getReviewAfterPurgeReturns404 test passes
+- [x] 5.2 ./gradlew test --tests com.example.app.event.EventReviewControllerTest passes (full class — no regression on existing cases)

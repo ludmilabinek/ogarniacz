@@ -58,18 +58,28 @@ public class EventReviewController {
     /**
      * Renders the review page for a previously uploaded image.
      *
-     * <p>404 contract — two cases collapse to the same response on purpose:
+     * <p>404 contract — three cases collapse to the same response on purpose:
      * <ul>
      *   <li>image belongs to a different user (do not leak existence — return 404, not 403);</li>
-     *   <li>image row is gone (deleted, or {@link ExtractionService} ran for an unpersisted id).
-     *       The hosted localized error template ({@code events/review-error}) is only reachable
-     *       when the row exists with a {@code lastErrorKind}; an orphaned poll falls through to
-     *       the generic 404 page. This is acceptable at the current MVP scale (no concurrent
-     *       delete path); revisit when S-06 purge or any other flow can delete {@link SourceImage}
-     *       rows while extraction is in flight — at that point surface a synthetic
-     *       {@code errorKind=IMAGE_GONE} via the status response so the polling client lands
-     *       on {@code review-error} instead of a 404.</li>
+     *   <li>image row never existed (unknown id);</li>
+     *   <li>image row was purged by the S-06 sweep ({@link SourceImagePurgeService}).</li>
      * </ul>
+     *
+     * <p><b>Post-purge contract on {@code GET /events/from-image/{id}/review}</b>:
+     * a purged image is indistinguishable from never-existed / wrong-user / unknown-id —
+     * all three collapse to HTTP 404 via {@code findByIdAndUser().orElseThrow(NOT_FOUND)}.
+     * This is intentional: introducing a tombstone / {@code IMAGE_GONE} branch would
+     * reintroduce the audit-row coupling rejected in S-06 plan Q2 and add a table whose
+     * only purpose is to soften an edge-case copy. Test coverage:
+     * {@code EventReviewControllerTest#getReviewAfterPurgeReturns404} purges an image
+     * and asserts the GET returns 404; reuses the existing 404-on-wrong-user test as
+     * the contract anchor.
+     *
+     * <p><b>Accepted tradeoff</b>: the review URL is a transient process-flow URL
+     * ({@code /events/from-image/{uuid}/review}), not a stable product deep-link;
+     * bookmarking it is outside the intended use case. A soft-copy 404 (the global
+     * error page) covers the rare bookmark-after-purge case at lower cost than
+     * per-controller logic.
      */
     @GetMapping("/events/from-image/{imageId}/review")
     public String review(@PathVariable UUID imageId,
