@@ -357,18 +357,18 @@ The `application.properties` knob `app.event.source-image.purge.interval-ms` def
 
 #### Automated
 
-- [x] 2.1 New ExtractionServiceTest case: @Import(FixedClockTestConfig.class) on the class; given an image with resolvedAt=null, LlmVisionClient mocked to return LlmExtractionResult with empty list, after runExtraction returns, the image's resolvedAt equals FixedClockTestConfig.FIXED_INSTANT
-- [x] 2.2 Existing ExtractionServiceTest failure-branch cases (TIMEOUT, PROVIDER_ERROR, MALFORMED_RESPONSE, UNEXPECTED) still pass and verify resolvedAt is not stamped on failure paths
-- [x] 2.3 New case asserts non-empty success (N proposals) also stamps resolvedAt equal to FixedClockTestConfig.FIXED_INSTANT — symmetric with empty-success
-- [x] 2.4 ./gradlew test --tests com.example.app.event.ExtractionServiceTest
+- [x] 2.1 New ExtractionServiceTest case: @Import(FixedClockTestConfig.class) on the class; given an image with resolvedAt=null, LlmVisionClient mocked to return LlmExtractionResult with empty list, after runExtraction returns, the image's resolvedAt equals FixedClockTestConfig.FIXED_INSTANT — d2f2f4b
+- [x] 2.2 Existing ExtractionServiceTest failure-branch cases (TIMEOUT, PROVIDER_ERROR, MALFORMED_RESPONSE, UNEXPECTED) still pass and verify resolvedAt is not stamped on failure paths — d2f2f4b
+- [x] 2.3 New case asserts non-empty success (N proposals) also stamps resolvedAt equal to FixedClockTestConfig.FIXED_INSTANT — symmetric with empty-success — d2f2f4b
+- [x] 2.4 ./gradlew test --tests com.example.app.event.ExtractionServiceTest — d2f2f4b
 
 ### Phase 3: Source-image purge service — 3-clause predicate
 
 #### Automated
 
-- [ ] 3.1 All eight truth-table tests pass
-- [ ] 3.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeServiceTest
-- [ ] 3.3 ./gradlew build passes (no regression in surrounding service wiring)
+- [x] 3.1 All eight truth-table tests pass
+- [x] 3.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeServiceTest
+- [x] 3.3 ./gradlew build passes (no regression in surrounding service wiring)
 
 ### Phase 4: @Scheduled sweep + logging contract
 

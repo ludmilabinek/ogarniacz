@@ -3,7 +3,7 @@ change_id: source-image-auto-purge
 title: Source image auto purge
 status: implementing
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-22
 archived_at: null
 ---
 
