@@ -366,22 +366,22 @@ The `application.properties` knob `app.event.source-image.purge.interval-ms` def
 
 #### Automated
 
-- [x] 3.1 All eight truth-table tests pass
-- [x] 3.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeServiceTest
-- [x] 3.3 ./gradlew build passes (no regression in surrounding service wiring)
+- [x] 3.1 All eight truth-table tests pass — 00ff994
+- [x] 3.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeServiceTest — 00ff994
+- [x] 3.3 ./gradlew build passes (no regression in surrounding service wiring) — 00ff994
 
 ### Phase 4: @Scheduled sweep + logging contract
 
 #### Automated
 
-- [ ] 4.1 Three scheduler test methods pass
-- [ ] 4.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeSchedulerTest
-- [ ] 4.3 ./gradlew test whole-suite passes — verifies no context-cache pollution from the new @Import(FixedClockTestConfig.class) + @MockitoBean service (the test config is opt-in @Import, not a global @MockitoBean Clock)
-- [ ] 4.4 ./gradlew bootRun (manual smoke) — observe a single INFO line every 10 minutes only when a purge happened; verify silence on no-op cycles
+- [x] 4.1 Three scheduler test methods pass
+- [x] 4.2 ./gradlew test --tests com.example.app.event.SourceImagePurgeSchedulerTest
+- [x] 4.3 ./gradlew test whole-suite passes — verifies no context-cache pollution from the new @Import(FixedClockTestConfig.class) + @MockitoBean service (the test config is opt-in @Import, not a global @MockitoBean Clock)
+- [x] 4.4 ./gradlew bootRun (manual smoke) — observe a single INFO line every 10 minutes only when a purge happened; verify silence on no-op cycles
 
 #### Manual
 
-- [ ] 4.5 Run ./gradlew bootRun with app.event.source-image.purge.interval-ms=60000 (1 minute) for a quick smoke; trigger a manual review-submit to create a State-D image; within 1 minute observe the INFO line in the console; no logs on idle cycles
+- [x] 4.5 Run ./gradlew bootRun with app.event.source-image.purge.interval-ms=60000 (1 minute) for a quick smoke; trigger a manual review-submit to create a State-D image; within 1 minute observe the INFO line in the console; no logs on idle cycles
 
 ### Phase 5: 404 post-purge contract on EventReviewController
 
