@@ -31,7 +31,7 @@ Inline CSS lives entirely in [fragments/layout.html:7-94](src/main/resources/tem
 
 - Every visible string in signed-in and auth pages is Polish, using short imperative wording (`Ustawienia`, `Wyloguj`, `Dodaj wydarzenie`, `Dodaj ze zdjęcia`, `Edytuj`, `Usuń`).
 - The topbar renders a left-aligned brand-link `Ogarniacz` that routes to `/app` from every signed-in page; the right side keeps email + `Ustawienia` + `Wyloguj`.
-- Primary buttons on `/app` and elsewhere sit in a `.button-group` with consistent gap. **Interactive color is green** (brand alignment with the logo, decided mid-change): `.primary-action`, solid form-submit buttons, and all default links use `#1a7f37` (AA-safe with white text; the logo's lighter `#4FBA89` stays decorative in the imagery); hover `#15692e`; focus ring tint `#d2f4dd`. `.row-action` keeps the neutral `#f6f8fa` hover fill and `.row-action--danger` keeps `#ffebe9`.
+- Primary buttons on `/app` and elsewhere sit in a `.button-group` with consistent gap. **Interactive color is green** (brand alignment with the logo, decided mid-change): `.primary-action`, solid form-submit buttons, and all default links use `#1a7f37` (contrast 5.08:1 on white — passes WCAG 2.1 AA normal text; the logo's lighter `#4FBA89` stays decorative in the imagery); hover `#15692e`; focus ring tint `#d2f4dd`. `.row-action` keeps the neutral `#f6f8fa` hover fill and `.row-action--danger` keeps `#ffebe9`.
 - The "Dodano N wydarzeń." flash uses the correct Polish plural for every `N ∈ {0, 1, 2, 3, 4, 5, 11, 12, 14, 21, …}`.
 - The create/edit forms (and `login`/`signup`, which share `form.stacked`) look finished: inputs and textareas share one bordered, rounded, focus-highlighted style; the submit button is a solid blue primary; the cancel link is a muted secondary.
 - `./gradlew test` is green; no test asserts an EN literal that no longer ships.
@@ -242,7 +242,7 @@ Run `grep -RIn '"Log in\|"Settings\|"Add event\|"Log out\|"Sign up\|"Signed in a
 
 **Contract**:
 - Topbar brand-link (`fragments/layout.html`): `Ogarniacz` text → `<img class="brand-mark">` (height 34px) + `<img class="brand-wordmark">` (height 19px) inside the `/app` link; link gets `aria-label`, wordmark img `alt=""`. `.brand` becomes `inline-flex` with `gap`; hover drops opacity to 0.8.
-- Auth pages (`login.html`, `signup.html`): `<img class="auth-logo" src="/img/logo-lockup.png">` (height 96px, centered) above the `<h1>`.
+- Auth pages (`login.html`, `signup.html`): `<img class="auth-logo" src="/img/logo-lockup.png">` (height 96px, centered) above the `<h1>`. **Addendum (2026-06-23)**: implemented at 128px after visual review — the 96px target felt too small once rendered; impl-review F2 confirmed the deviation and accepted it.
 - `SecurityConfig.java`: add `/img/**` to the `permitAll()` matcher list — the auth-page logo loads before authentication, so without this the image 302-redirects to `/login`.
 - Asset generation is a one-off (PIL crop + LANCZOS downscale); the master `ogarniacz-logo.png` stays in the repo as source-of-truth.
 

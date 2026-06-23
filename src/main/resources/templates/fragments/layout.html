@@ -19,8 +19,9 @@
         }
         header.topbar .brand .brand-mark { height: 34px; width: auto; display: block; }
         header.topbar .brand .brand-wordmark { height: 19px; width: auto; display: block; }
-        header.topbar .brand:hover, header.topbar .brand:focus-visible {
-            opacity: 0.8; outline: none;
+        header.topbar .brand:hover { opacity: 0.8; }
+        header.topbar .brand:focus-visible {
+            outline: none; box-shadow: 0 0 0 3px #d2f4dd;
         }
         header.topbar .topbar-right { display: flex; align-items: center; gap: 1rem; }
         header.topbar .topbar-right a { color: #1a7f37; text-decoration: none; }
@@ -70,7 +71,8 @@
         .event-list .row-action--danger {
             border-color: #cf222e; color: #cf222e;
         }
-        .event-list .row-action--danger:hover { background: #ffebe9; }
+        .event-list .row-action--danger:hover,
+        .event-list .row-action--danger:focus-visible { background: #ffebe9; }
         form.stacked label { display: block; margin: 1rem 0; font-weight: 500; font-size: 0.9375rem; }
         form.stacked input,
         form.stacked textarea {
@@ -147,7 +149,7 @@
 <body>
 <header th:fragment="topbar" class="topbar">
     <a th:href="@{/app}" class="brand" aria-label="Ogarniacz — strona główna">
-        <img class="brand-mark" th:src="@{/img/logo-mark.png}" alt="Ogarniacz"/>
+        <img class="brand-mark" th:src="@{/img/logo-mark.png}" alt=""/>
         <img class="brand-wordmark" th:src="@{/img/logo-wordmark.png}" alt=""/>
     </a>
     <div class="topbar-right">
