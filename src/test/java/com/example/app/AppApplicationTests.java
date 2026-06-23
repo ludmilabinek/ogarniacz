@@ -132,7 +132,7 @@ class AppApplicationTests {
 						.param("password", "verylongpassword12")
 						.with(csrf()))
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("Email already in use")));
+				.andExpect(content().string(containsString("Email jest już używany")));
 	}
 
 	@Test
@@ -152,7 +152,7 @@ class AppApplicationTests {
 						.param("password", "verylongpassword12")
 						.with(csrf()))
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("Email already in use")));
+				.andExpect(content().string(containsString("Email jest już używany")));
 	}
 
 	@Test
@@ -162,7 +162,7 @@ class AppApplicationTests {
 						.param("password", "tooshort")
 						.with(csrf()))
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString("at least 12")));
+				.andExpect(content().string(containsString("co najmniej 12 znaków")));
 	}
 
 	@Test

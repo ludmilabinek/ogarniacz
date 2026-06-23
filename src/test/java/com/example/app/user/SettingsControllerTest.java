@@ -111,7 +111,7 @@ class SettingsControllerTest {
         mvc.perform(get("/settings").with(user(alice.getEmail())))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Google")))
-                .andExpect(content().string(containsString("subscribed")));
+                .andExpect(content().string(containsString("Jak subskrybować")));
     }
 
     private AppUser saveUser(String email) {

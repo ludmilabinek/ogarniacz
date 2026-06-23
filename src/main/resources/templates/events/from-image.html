@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Dodaj z obrazka')}"></head>
+<head th:replace="~{fragments/layout :: head('Dodaj ze zdjęcia')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="auth-page">
-    <h1>Dodaj z obrazka</h1>
+    <h1>Dodaj ze zdjęcia</h1>
     <p>Wybierz zdjęcie lub screenshot ogłoszenia z przedszkola. Wyciągniemy z niego wydarzenia do akceptacji.</p>
 
     <form id="upload-form" th:action="@{/events/from-image}" method="post" enctype="multipart/form-data" class="stacked">
@@ -22,9 +22,11 @@
             </div>
         </div>
         <div id="upload-error" class="form-error" hidden></div>
-        <button type="submit">Wyślij</button>
+        <div class="form-actions">
+            <button type="submit">Wyślij</button>
+            <a th:href="@{/app}" class="btn-secondary">Anuluj</a>
+        </div>
     </form>
-    <p><a th:href="@{/app}">Anuluj</a></p>
 </main>
 <script th:inline="javascript">
     /*<![CDATA[*/

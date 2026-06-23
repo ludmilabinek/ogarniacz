@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Log in')}"></head>
+<head th:replace="~{fragments/layout :: head('Logowanie')}"></head>
 <body>
 <main class="auth-page">
-    <h1>Log in</h1>
-    <div th:if="${param.error}" class="form-error">Invalid email or password.</div>
-    <div th:if="${param.logout}" class="form-notice">You have been logged out.</div>
+    <img class="auth-logo" th:src="@{/img/logo-lockup.png}" alt="Ogarniacz"/>
+    <h1>Logowanie</h1>
+    <div th:if="${param.error}" class="form-error">Nieprawidłowy email lub hasło.</div>
+    <div th:if="${param.logout}" class="form-notice">Wylogowano.</div>
     <form th:action="@{/login}" method="post" class="stacked">
         <label>Email
             <input type="email" name="username" autocomplete="email" required/>
         </label>
-        <label>Password
+        <label>Hasło
             <input type="password" name="password" autocomplete="current-password" required/>
         </label>
-        <button type="submit">Log in</button>
+        <button type="submit">Zaloguj</button>
     </form>
-    <p>No account? <a th:href="@{/signup}">Sign up</a></p>
+    <p>Nie masz konta? <a th:href="@{/signup}">Zarejestruj się</a></p>
 </main>
 </body>
 </html>

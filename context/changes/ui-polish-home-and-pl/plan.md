@@ -31,8 +31,9 @@ Inline CSS lives entirely in [fragments/layout.html:7-94](src/main/resources/tem
 
 - Every visible string in signed-in and auth pages is Polish, using short imperative wording (`Ustawienia`, `Wyloguj`, `Dodaj wydarzenie`, `Dodaj ze zdjęcia`, `Edytuj`, `Usuń`).
 - The topbar renders a left-aligned brand-link `Ogarniacz` that routes to `/app` from every signed-in page; the right side keeps email + `Ustawienia` + `Wyloguj`.
-- Primary buttons on `/app` and elsewhere sit in a `.button-group` with consistent gap; `.primary-action` carries a subtle hover/focus state matching the existing blue palette (`#1f6feb` border + text, `#ddf4ff` hover fill); `.row-action` uses the neutral `#f6f8fa` hover fill and `.row-action--danger` uses `#ffebe9`.
+- Primary buttons on `/app` and elsewhere sit in a `.button-group` with consistent gap. **Interactive color is green** (brand alignment with the logo, decided mid-change): `.primary-action`, solid form-submit buttons, and all default links use `#1a7f37` (AA-safe with white text; the logo's lighter `#4FBA89` stays decorative in the imagery); hover `#15692e`; focus ring tint `#d2f4dd`. `.row-action` keeps the neutral `#f6f8fa` hover fill and `.row-action--danger` keeps `#ffebe9`.
 - The "Dodano N wydarzeń." flash uses the correct Polish plural for every `N ∈ {0, 1, 2, 3, 4, 5, 11, 12, 14, 21, …}`.
+- The create/edit forms (and `login`/`signup`, which share `form.stacked`) look finished: inputs and textareas share one bordered, rounded, focus-highlighted style; the submit button is a solid blue primary; the cancel link is a muted secondary.
 - `./gradlew test` is green; no test asserts an EN literal that no longer ships.
 - `./gradlew bootRun` (with the usual `SPRING_DATASOURCE_*` env vars) starts; a manual click-through of `/login → /signup → /login → /app → /settings → /events/new → /app → /events/from-image → /app` shows no EN string and a working brand-link on every page.
 
@@ -45,7 +46,7 @@ Inline CSS lives entirely in [fragments/layout.html:7-94](src/main/resources/tem
 
 ## What We're NOT Doing
 
-- No introduction of `src/main/resources/static/` or a CSS asset pipeline. Styles stay inline in `fragments/layout.html`.
+- No CSS asset pipeline. Styles stay inline in `fragments/layout.html`. _(Scope note: `src/main/resources/static/img/` was introduced mid-change to host the logo assets — see Phase 2 #9. This is image hosting, not a CSS/build pipeline.)_
 - No design-token system, CSS variables refactor, or third-party CSS framework (Pico, Tailwind). That belongs to a separate change after `/10x-shape`.
 - No `messages.properties` / Spring `LocaleResolver` setup. Strings stay hard-coded — the app is single-locale today, and adding i18n machinery is out of scope.
 - No URL / route changes. `/events/from-image` stays under that path even though the visible label switches to "Dodaj ze zdjęcia".
@@ -132,7 +133,7 @@ One coordinated sweep across user-visible strings, the topbar layout, button spa
 **Contract**:
 - Topbar HTML layout (currently `fragments/layout.html:91-99`): the `<span class="user-email">` currently sits on the LEFT — it moves to the right side. Left side becomes `<a th:href="@{/app}" class="brand">Ogarniacz</a>`; right side becomes `<span class="user-email">` + Ustawienia link + Wyloguj form (email is pulled into the existing `.topbar-right` flex container so the brand-link can take the left slot). The fragment name (`topbar`) and its consumers in `app.html`, `settings.html`, `events/new.html`, `events/edit.html`, `events/from-image.html`, `events/review*.html` stay unchanged.
 - New CSS rules in the `<style>` block:
-  - `header.topbar .brand` — text decoration none, font-weight 600, color `#1f2328`, hover color `#1f6feb`.
+  - `header.topbar .brand` — originally a text link; superseded by the image logo (see Phase 2 #9): `inline-flex`, `gap`, opacity-0.8 hover.
   - `.button-group` — `display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;` for `app.html`'s two primary actions and any future similar grouping.
   - `.primary-action:hover, .primary-action:focus-visible` — `background: #ddf4ff; outline: none;` (matches existing palette).
   - `.event-list .row-action:hover, .event-list .row-action:focus-visible` — `background: #f6f8fa; outline: none;`. Match the existing `.event-list`-prefixed specificity in this block (specificity 0,2,1) so the new rule actually wins; a bare `.row-action:hover` would lose to `.event-list .row-action`.
@@ -185,13 +186,22 @@ One coordinated sweep across user-visible strings, the topbar layout, button spa
 
 **Files**: `src/main/resources/templates/events/new.html`, `src/main/resources/templates/events/edit.html`
 
-**Intent**: Translate labels and the submit button on `new.html`; the `edit.html` buttons are already PL but its labels are EN.
+**Intent**: Translate labels and the submit button on `new.html`; the `edit.html` buttons are already PL but its labels are EN. **Also polish the shared `form.stacked` styling** — the create/edit forms (which share a structure) looked unfinished after the translation-only pass: textareas were unstyled, inputs were borderless, and the submit button was a default gray.
 
 **Contract**:
 - Title args `'Add event'` / `'Edit event'` → `'Dodaj wydarzenie'` / `'Edytuj wydarzenie'`.
 - `<h1>` text matches the title.
 - Labels (same in both files): `Date` → `Data`; `Time (optional)` → `Godzina (opcjonalnie)`; `Title` → `Tytuł`; `Requirements` → `Wymagania`; `Notes` → `Notatki`.
 - `new.html` submit button `Save event` → `Zapisz wydarzenie`; cancel link `Cancel` → `Anuluj`. (`edit.html` already has `Zapisz zmiany` / `Anuluj`.)
+- The `Anuluj` link on `new.html`/`edit.html` (and `Wyślij`'s neighbor on `from-image.html`) is restyled as a secondary button (`.btn-secondary`) and placed in a `.form-actions` flex row beside the primary submit button, so cancel sits next to save/send. It stays an `<a>` → `/app` (no form submit); on `from-image.html` it moves inside the `<form>` to join the row.
+
+**`form.stacked` visual polish** (in `fragments/layout.html` `<style>`, applies to `new`, `edit`, `login`, `signup`):
+- `input` AND `textarea` get a shared rule: `border: 1px solid #d0d7de`, `border-radius: 6px`, `font: inherit`, `0.5rem 0.625rem` padding, `margin-top: 0.35rem` to separate field from label text. (Previously only `input` was styled — textareas fell back to browser defaults.)
+- `textarea { resize: vertical; }`.
+- Focus state on both: `border-color: #1a7f37` + `box-shadow: 0 0 0 3px #d2f4dd` (green palette).
+- Labels get `font-weight: 500; font-size: 0.9375rem`.
+- Submit button becomes a solid primary: `background: #1a7f37`, white text, `border: 1px solid #1a7f37`, hover/`:focus-visible` → `#15692e`. (Previously a default gray button.)
+- New `.cancel-link` rule: muted `#57606a`, no underline, underline on hover/focus.
 
 #### 6. "Dodaj z obrazka" → "Dodaj ze zdjęcia" wording sync
 
@@ -223,6 +233,18 @@ One coordinated sweep across user-visible strings, the topbar layout, button spa
 - `SettingsControllerTest.java:113,114`: `containsString("Google")` stays (proper noun, still present). `containsString("subscribed")` → `containsString("Jak subskrybować")` — anchor to the exact H2 wording so the test does not accidentally pass on the body string `subskrybowane kalendarze` if the H2 is renamed.
 
 Run `grep -RIn '"Log in\|"Settings\|"Add event\|"Log out\|"Sign up\|"Signed in as\|"No events yet\|"Save event\|"Edit event\|"Calendar subscription\|"Cancel\|"Email already in use\|"at least 12\|"subscribed\|"How to subscribe' src/test` as the first move of this step to catch any assertion that was missed.
+
+#### 9. Logo assets (added mid-change at user request)
+
+**Files**: `src/main/resources/static/img/{logo-mark,logo-wordmark,logo-lockup}.png` (derived crops), `fragments/layout.html`, `login.html`, `signup.html`, `SecurityConfig.java`.
+
+**Intent**: Replace the plain text brand-link with the brand logo, and add the full logo to the auth pages. The user supplied a 1254×1254 master (`ogarniacz-logo.png`); it was sliced into a transparent brain mark, a transparent "ogarniacz" wordmark (keeps the green dot over the "i"), and a transparent full lockup, then downscaled for web.
+
+**Contract**:
+- Topbar brand-link (`fragments/layout.html`): `Ogarniacz` text → `<img class="brand-mark">` (height 34px) + `<img class="brand-wordmark">` (height 19px) inside the `/app` link; link gets `aria-label`, wordmark img `alt=""`. `.brand` becomes `inline-flex` with `gap`; hover drops opacity to 0.8.
+- Auth pages (`login.html`, `signup.html`): `<img class="auth-logo" src="/img/logo-lockup.png">` (height 96px, centered) above the `<h1>`.
+- `SecurityConfig.java`: add `/img/**` to the `permitAll()` matcher list — the auth-page logo loads before authentication, so without this the image 302-redirects to `/login`.
+- Asset generation is a one-off (PIL crop + LANCZOS downscale); the master `ogarniacz-logo.png` stays in the repo as source-of-truth.
 
 ### Success Criteria:
 
@@ -290,26 +312,30 @@ None. No schema changes, no data backfills, no config migrations. Templates and 
 
 #### Automated
 
-- [x] 1.1 New `PluralsTest` passes: `./gradlew test --tests com.example.app.util.PluralsTest`
-- [x] 1.2 `EventReviewControllerTest` still green: `./gradlew test --tests com.example.app.event.EventReviewControllerTest`
-- [x] 1.3 Full build green: `./gradlew build`
+- [x] 1.1 New `PluralsTest` passes: `./gradlew test --tests com.example.app.util.PluralsTest` — 62ad31e
+- [x] 1.2 `EventReviewControllerTest` still green: `./gradlew test --tests com.example.app.event.EventReviewControllerTest` — 62ad31e
+- [x] 1.3 Full build green: `./gradlew build` — 62ad31e
 
 #### Manual
 
-- [ ] 1.4 Success banner reads "Dodano N wydarzenia." (or "wydarzeń" for 5+) after accepting events from an uploaded image
+- [x] 1.4 Success banner reads "Dodano N wydarzenia." (or "wydarzeń" for 5+) after accepting events from an uploaded image — 62ad31e
 
 ### Phase 2: Templates + topbar + visual polish + EN validation messages + test sweep
 
 #### Automated
 
-- [ ] 2.1 `./gradlew test` is green (full suite)
-- [ ] 2.2 No EN strings remain in templates (the `>Log in<|>Settings<|…` grep returns nothing)
-- [ ] 2.3 No EN validation messages remain in Java (the `"Email already in use"|"Password must be at least 12"` grep returns nothing)
+- [x] 2.1 `./gradlew test` is green (full suite)
+- [x] 2.2 No EN strings remain in templates (the `>Log in<|>Settings<|…` grep returns nothing)
+- [x] 2.3 No EN validation messages remain in Java (the `"Email already in use"|"Password must be at least 12"` grep returns nothing)
 
 #### Manual
 
-- [ ] 2.4 `./gradlew bootRun` starts cleanly and the full click-through (`/login → /signup → /login → /app → /settings → /events/new → /app → /events/from-image → /app`) shows only PL strings
-- [ ] 2.5 Brand-link "Ogarniacz" in the topbar routes to `/app` from every signed-in page
-- [ ] 2.6 Two primary buttons on `/app` sit side by side with consistent gap (`.button-group`)
-- [ ] 2.7 `.primary-action`, `.row-action`, `.row-action--danger` hover + `:focus-visible` states are visible
-- [ ] 2.8 `/signup` validation triggers PL error messages (`Hasło musi mieć co najmniej 12 znaków.`, `Email jest już używany.`)
+- [x] 2.4 `./gradlew bootRun` starts cleanly and the full click-through (`/login → /signup → /login → /app → /settings → /events/new → /app → /events/from-image → /app`) shows only PL strings
+- [x] 2.5 Brand-link "Ogarniacz" in the topbar routes to `/app` from every signed-in page
+- [x] 2.6 Two primary buttons on `/app` sit side by side with consistent gap (`.button-group`)
+- [x] 2.7 `.primary-action`, `.row-action`, `.row-action--danger` hover + `:focus-visible` states are visible
+- [x] 2.8 `/signup` validation triggers PL error messages (`Hasło musi mieć co najmniej 12 znaków.`, `Email jest już używany.`)
+- [x] 2.9 `/events/new` and `/events/{id}/edit` forms look finished: inputs + textareas share a bordered, rounded, focus-highlighted style; solid blue submit button; muted cancel link
+- [x] 2.10 Topbar shows brain mark + "ogarniacz" wordmark as the `/app` brand-link; logo lockup renders on `/login` and `/signup` (loads pre-auth via `/img/**` permitAll)
+- [x] 2.11 Interactive color is green (`#1a7f37`): primary actions, form-submit buttons, and links — verified against white-text contrast
+- [x] 2.12 `Anuluj` is a secondary button (`.btn-secondary`) sitting in a `.form-actions` row beside the green submit button, vertically aligned, on `new`/`edit`/`from-image`

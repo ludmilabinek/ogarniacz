@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Sign up')}"></head>
+<head th:replace="~{fragments/layout :: head('Rejestracja')}"></head>
 <body>
 <main class="auth-page">
-    <h1>Sign up</h1>
+    <img class="auth-logo" th:src="@{/img/logo-lockup.png}" alt="Ogarniacz"/>
+    <h1>Rejestracja</h1>
     <form th:action="@{/signup}" method="post" th:object="${signupForm}" class="stacked">
         <label>Email
             <input type="email" th:field="*{email}" autocomplete="email" required/>
             <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
         </label>
-        <label>Password (12+ characters)
+        <label>Hasło (min. 12 znaków)
             <input type="password" th:field="*{password}" autocomplete="new-password" required/>
             <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
         </label>
-        <button type="submit">Create account</button>
+        <button type="submit">Załóż konto</button>
     </form>
-    <p>Already have an account? <a th:href="@{/login}">Log in</a></p>
+    <p>Masz już konto? <a th:href="@{/login}">Zaloguj się</a></p>
 </main>
 </body>
 </html>

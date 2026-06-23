@@ -61,7 +61,7 @@ public class SignupController {
         form.setEmail(form.getEmail().toLowerCase(Locale.ROOT).trim());
 
         if (appUserRepository.existsByEmail(form.getEmail())) {
-            result.rejectValue("email", "duplicate", "Email already in use.");
+            result.rejectValue("email", "duplicate", "Email jest już używany.");
             return "signup";
         }
 
@@ -70,7 +70,7 @@ public class SignupController {
         try {
             saved = appUserRepository.saveAndFlush(new AppUser(form.getEmail(), hash));
         } catch (DataIntegrityViolationException dup) {
-            result.rejectValue("email", "duplicate", "Email already in use.");
+            result.rejectValue("email", "duplicate", "Email jest już używany.");
             return "signup";
         }
 

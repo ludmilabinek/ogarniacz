@@ -75,7 +75,7 @@ public class SecurityConfig {
             // shadowed if ordered after — CalendarControllerTest pins this).
             .requestMatchers(HttpMethod.GET, "/calendar/*.ics").permitAll()
             .requestMatchers("/", "/signup", "/login", "/actuator/health",
-                "/css/**", "/js/**", "/favicon.ico", "/error").permitAll()
+                "/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()
             .anyRequest().authenticated()
         )
         .formLogin(login -> login

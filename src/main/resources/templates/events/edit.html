@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Edit event')}"></head>
+<head th:replace="~{fragments/layout :: head('Edytuj wydarzenie')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="auth-page">
-    <h1>Edit event</h1>
+    <h1>Edytuj wydarzenie</h1>
     <form th:action="@{/events/{id}(id=${eventId})}" method="post" th:object="${eventForm}" class="stacked"
           th:attr="data-today=${todayIso}"
           onsubmit="return this.eventDate.value &gt;= this.dataset.today || confirm('Data jest w przeszłości — kontynuować?');">
-        <label>Date
+        <label>Data
             <input type="date" th:field="*{eventDate}" th:attr="min=${minDate}" required/>
             <span class="field-error" th:if="${#fields.hasErrors('eventDate')}" th:errors="*{eventDate}"></span>
         </label>
-        <label>Time (optional)
+        <label>Godzina (opcjonalnie)
             <input type="time" th:field="*{eventTime}"/>
             <span class="field-error" th:if="${#fields.hasErrors('eventTime')}" th:errors="*{eventTime}"></span>
         </label>
-        <label>Title
+        <label>Tytuł
             <input type="text" th:field="*{title}" required maxlength="200"/>
             <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
         </label>
-        <label>Requirements
+        <label>Wymagania
             <textarea th:field="*{requirements}" maxlength="2000" rows="3"></textarea>
             <span class="field-error" th:if="${#fields.hasErrors('requirements')}" th:errors="*{requirements}"></span>
         </label>
-        <label>Notes
+        <label>Notatki
             <textarea th:field="*{notes}" maxlength="2000" rows="3"></textarea>
             <span class="field-error" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}"></span>
         </label>
-        <button type="submit">Zapisz zmiany</button>
+        <div class="form-actions">
+            <button type="submit">Zapisz zmiany</button>
+            <a th:href="@{/app}" class="btn-secondary">Anuluj</a>
+        </div>
     </form>
-    <p><a th:href="@{/app}" class="cancel-link">Anuluj</a></p>
 </main>
 </body>
 </html>

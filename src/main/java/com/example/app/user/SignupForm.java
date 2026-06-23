@@ -12,7 +12,7 @@ public class SignupForm {
     private String email;
 
     @NotBlank
-    @Size(min = 12, max = 100, message = "Password must be at least 12 characters.")
+    @Size(min = 12, max = 100, message = "Hasło musi mieć co najmniej 12 znaków.")
     private String password;
 
     public String getEmail() {

@@ -5,11 +5,10 @@
 <header th:replace="~{fragments/layout :: topbar}"></header>
 <main class="app-page">
     <div class="flash-success" th:if="${successMessage != null}" th:text="${successMessage}"></div>
-    <p>Signed in as <span th:text="${userEmail}">user@example.com</span>.</p>
-    <p>
-        <a th:href="@{/events/new}" class="primary-action">Add event</a>
-        <a th:href="@{/events/from-image}" class="primary-action">Dodaj z obrazka</a>
-    </p>
+    <div class="button-group">
+        <a th:href="@{/events/new}" class="primary-action">Dodaj wydarzenie</a>
+        <a th:href="@{/events/from-image}" class="primary-action">Dodaj ze zdjęcia</a>
+    </div>
     <ul class="event-list" th:if="${!#lists.isEmpty(events)}">
         <li th:each="e : ${events}">
             <span class="event-when">
@@ -30,7 +29,7 @@
             </div>
         </li>
     </ul>
-    <p class="empty-state" th:if="${#lists.isEmpty(events)}">No events yet. Add one above.</p>
+    <p class="empty-state" th:if="${#lists.isEmpty(events)}">Nie masz jeszcze wydarzeń. Dodaj pierwsze powyżej.</p>
 </main>
 </body>
 </html>
