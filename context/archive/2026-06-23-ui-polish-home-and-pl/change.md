@@ -4,8 +4,8 @@ title: UI polish — Home button + Polish-language consistency
 created: 2026-06-23
 updated: 2026-06-23
 last_review: 2026-06-23
-status: impl_reviewed
-archived_at: null
+status: archived
+archived_at: 2026-06-23T18:58:27Z
 ---
 
 ## Notes
