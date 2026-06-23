@@ -31,7 +31,7 @@ Inline CSS lives entirely in [fragments/layout.html:7-94](src/main/resources/tem
 
 - Every visible string in signed-in and auth pages is Polish, using short imperative wording (`Ustawienia`, `Wyloguj`, `Dodaj wydarzenie`, `Dodaj ze zdjęcia`, `Edytuj`, `Usuń`).
 - The topbar renders a left-aligned brand-link `Ogarniacz` that routes to `/app` from every signed-in page; the right side keeps email + `Ustawienia` + `Wyloguj`.
-- Primary buttons on `/app` and elsewhere sit in a `.button-group` with consistent gap; `.primary-action` and `.row-action` carry a subtle hover/focus state matching the existing palette (`#1f6feb` borderline, `#f6f8fa` hover fill).
+- Primary buttons on `/app` and elsewhere sit in a `.button-group` with consistent gap; `.primary-action` carries a subtle hover/focus state matching the existing blue palette (`#1f6feb` border + text, `#ddf4ff` hover fill); `.row-action` uses the neutral `#f6f8fa` hover fill and `.row-action--danger` uses `#ffebe9`.
 - The "Dodano N wydarzeń." flash uses the correct Polish plural for every `N ∈ {0, 1, 2, 3, 4, 5, 11, 12, 14, 21, …}`.
 - `./gradlew test` is green; no test asserts an EN literal that no longer ships.
 - `./gradlew bootRun` (with the usual `SPRING_DATASOURCE_*` env vars) starts; a manual click-through of `/login → /signup → /login → /app → /settings → /events/new → /app → /events/from-image → /app` shows no EN string and a working brand-link on every page.
@@ -130,12 +130,13 @@ One coordinated sweep across user-visible strings, the topbar layout, button spa
 **Intent**: Add a left-aligned brand-link `Ogarniacz` that routes to `/app`. Keep the user email + Ustawienia + Wyloguj on the right. Add `.button-group` and tighter `.primary-action` hover/focus styling. Translate `Settings` → `Ustawienia` and `Log out` → `Wyloguj` in the topbar fragment.
 
 **Contract**:
-- Topbar HTML layout (line 78-87): left side becomes `<a th:href="@{/app}" class="brand">Ogarniacz</a>`; right side keeps `<span class="user-email">` + Ustawienia link + Wyloguj form. The fragment name (`topbar`) and its consumers in `app.html`, `settings.html`, `events/new.html`, `events/edit.html`, `events/from-image.html`, `events/review*.html` stay unchanged.
+- Topbar HTML layout (currently `fragments/layout.html:91-99`): the `<span class="user-email">` currently sits on the LEFT — it moves to the right side. Left side becomes `<a th:href="@{/app}" class="brand">Ogarniacz</a>`; right side becomes `<span class="user-email">` + Ustawienia link + Wyloguj form (email is pulled into the existing `.topbar-right` flex container so the brand-link can take the left slot). The fragment name (`topbar`) and its consumers in `app.html`, `settings.html`, `events/new.html`, `events/edit.html`, `events/from-image.html`, `events/review*.html` stay unchanged.
 - New CSS rules in the `<style>` block:
   - `header.topbar .brand` — text decoration none, font-weight 600, color `#1f2328`, hover color `#1f6feb`.
   - `.button-group` — `display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;` for `app.html`'s two primary actions and any future similar grouping.
   - `.primary-action:hover, .primary-action:focus-visible` — `background: #ddf4ff; outline: none;` (matches existing palette).
-  - `.row-action:hover, .row-action:focus-visible` — `background: #f6f8fa; outline: none;` (and a darker hover for `.row-action--danger`: `background: #ffebe9;`).
+  - `.event-list .row-action:hover, .event-list .row-action:focus-visible` — `background: #f6f8fa; outline: none;`. Match the existing `.event-list`-prefixed specificity in this block (specificity 0,2,1) so the new rule actually wins; a bare `.row-action:hover` would lose to `.event-list .row-action`.
+  - **Edit the existing rule at line 50** (`.event-list .row-action--danger:hover`) from `background: #fff5f5;` to `background: #ffebe9;` — replace in place, do not add a sibling `.row-action--danger:hover` (it would lose the specificity race and the delete-button hover would not change).
 
 #### 2. Home page (app.html)
 
@@ -172,8 +173,13 @@ One coordinated sweep across user-visible strings, the topbar layout, button spa
 - Button `Copy` → `Kopiuj`.
 - Hint `Anyone with this URL can read your accepted events. Share with your spouse or co-parent only.` → `Każda osoba z tym adresem może czytać Twoje zaakceptowane wydarzenia. Udostępniaj tylko partnerowi lub współrodzicowi.`
 - `<h2>How to subscribe</h2>` → `Jak subskrybować`.
-- Per-client paragraphs: `Settings → Add calendar → From URL — paste the URL above.` → `Ustawienia → Dodaj kalendarz → Z adresu URL — wklej powyższy adres.` Adapt the same pattern for Apple/Outlook/Thunderbird (`File → New Calendar Subscription` → `Plik → Nowa subskrypcja kalendarza`, etc.).
-- Google-Calendar limitations `<aside>`: translate the paragraph keeping the technical numbers (12–24 godziny, czasem do 48). Keep client names (Google, Apple, Outlook, Thunderbird) in their proper-noun form.
+- Per-client paragraphs — use these exact target strings (proper-noun client names stay; menu names match the Polish-locale UI of each client):
+  - **Google Calendar:** `Ustawienia → Dodaj kalendarz → Z adresu URL — wklej powyższy adres.`
+  - **Apple Calendar:** `Plik → Nowa subskrypcja kalendarza — wklej powyższy adres.`
+  - **Outlook:** `Dodaj kalendarz → Subskrybuj z Internetu — wklej powyższy adres.`
+  - **Thunderbird:** `Plik → Nowy → Kalendarz → W sieci — wklej powyższy adres.`
+- Google-Calendar limitations `<aside>`: target text:
+  > **Ograniczenia Google Calendar.** Google odpytuje subskrybowane kalendarze co 12–24 godziny (czasem do 48 godzin), bez możliwości przyspieszenia tego procesu po stronie klienta. Google nie pokazuje też przypomnień osadzonych w subskrybowanych kalendarzach — aby otrzymać przypomnienie rano dnia poprzedniego, ustaw domyślne przypomnienie dla danego kalendarza w samych ustawieniach Google Calendar. Apple Calendar, Outlook i Thunderbird w pełni respektują zarówno częstotliwość odświeżania, jak i osadzone przypomnienia.
 
 #### 5. Event create + edit forms
 
@@ -214,7 +220,7 @@ One coordinated sweep across user-visible strings, the topbar layout, button spa
 **Contract**:
 - `AppApplicationTests.java:135,155`: `containsString("Email already in use")` → `containsString("Email jest już używany")`.
 - `AppApplicationTests.java:165`: `containsString("at least 12")` → `containsString("co najmniej 12 znaków")`.
-- `SettingsControllerTest.java:113,114`: `containsString("Google")` stays (proper noun, still present). `containsString("subscribed")` → `containsString("subskrybować")` (matches the translated `<h2>Jak subskrybować</h2>`).
+- `SettingsControllerTest.java:113,114`: `containsString("Google")` stays (proper noun, still present). `containsString("subscribed")` → `containsString("Jak subskrybować")` — anchor to the exact H2 wording so the test does not accidentally pass on the body string `subskrybowane kalendarze` if the H2 is renamed.
 
 Run `grep -RIn '"Log in\|"Settings\|"Add event\|"Log out\|"Sign up\|"Signed in as\|"No events yet\|"Save event\|"Edit event\|"Calendar subscription\|"Cancel\|"Email already in use\|"at least 12\|"subscribed\|"How to subscribe' src/test` as the first move of this step to catch any assertion that was missed.
 

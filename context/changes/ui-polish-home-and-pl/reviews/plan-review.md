@@ -4,8 +4,8 @@
 - **Plan**: `context/changes/ui-polish-home-and-pl/plan.md`
 - **Mode**: Deep
 - **Date**: 2026-06-23
-- **Verdict**: REVISE
-- **Findings**: 0 critical, 2 warnings, 2 observations
+- **Verdict**: REVISE → SOUND (after triage; all 4 findings fixed in plan.md)
+- **Findings**: 0 critical, 2 warnings, 2 observations (all fixed)
 
 ## Verdicts
 
@@ -41,7 +41,7 @@
   - Tradeoff: Either introduces an awkward `body`-prefixed selector or duplicates the scope choice already made at line 50.
   - Confidence: MEDIUM — works, but resulting CSS is less idiomatic for this codebase.
   - Blind spot: Future addition of a non-`.event-list` row-action would not inherit these styles unless selectors are reworked again.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix A) — plan.md:138 rewritten so the existing rule at layout.html:50 is replaced in place and the new row-action hover uses `.event-list`-prefixed selectors.
 
 ### F2 — `.primary-action` hover color contradicts itself across plan
 
@@ -51,7 +51,7 @@
 - **Location**: Desired End State (plan line 34) vs. Phase 2 contract (plan line 138)
 - **Detail**: Desired End State says: `.primary-action` carries a subtle hover/focus state matching the existing palette (`#1f6feb` borderline, `#f6f8fa` hover fill). Phase 2 contract says: `.primary-action:hover, .primary-action:focus-visible` — `background: #ddf4ff; outline: none;`. `#f6f8fa` is a neutral gray (already used for the topbar background); `#ddf4ff` is a blue tint. They are visibly different fills. Implementer has no signal which one is the agreed final color.
 - **Fix**: Pick one and state it in both places. Recommend `#ddf4ff` — it matches the existing `.primary-action` blue palette (`#1f6feb` border + text) and gives a stronger hover signal than the topbar-background gray. Update line 34 to read `#ddf4ff`.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix applied) — Desired End State (plan line 34) rewritten to call out `#ddf4ff` hover fill for `.primary-action` and to disambiguate the row-action fills (`#f6f8fa` neutral, `#ffebe9` danger).
 
 ### F3 — Topbar contract says "right side keeps email" but email currently lives on the LEFT
 
@@ -61,7 +61,7 @@
 - **Location**: Phase 2 — #1 Topbar fragment (plan line 133)
 - **Detail**: Current `fragments/layout.html:91-99` has `<span class="user-email">` as a left-aligned sibling of `<div class="topbar-right">`. The plan's contract says "right side keeps `<span class="user-email">` + Ustawienia link + Wyloguj form" — implying the email already lives on the right. It does not; the email moves from left to right as part of this change. Same wording in Desired End State (line 33) and Current State Analysis (line 11) is correct ("user email sits at the left as plain text"). Only the Phase 2 contract muddles it.
 - **Fix**: Rephrase the Phase 2 #1 contract bullet from "right side keeps user-email + …" to "right side becomes user-email + Ustawienia link + Wyloguj form (email moves from the left so the brand-link can take its place)". One-line edit; prevents the implementer from leaving the email on the left next to the new brand-link.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix applied) — Phase 2 #1 contract bullet rewritten to call out the email's left→right move and corrected the file-line reference to `layout.html:91-99`.
 
 ### F4 — `settings.html` limitations `<aside>` and per-client paragraphs under-specified
 
@@ -71,4 +71,4 @@
 - **Location**: Phase 2 — #4 Settings page (plan lines 175-176)
 - **Detail**: Phase 2 #4 says "Adapt the same pattern for Apple/Outlook/Thunderbird" and "Google-Calendar limitations <aside>: translate the paragraph keeping the technical numbers (12–24 godziny, czasem do 48)." But the `<aside>` (settings.html:28-32) is a multi-sentence paragraph with proper-noun lists and "subscribed calendars" appearing twice. "Outlook → Subscribe from web → paste the URL" needs a real PL rendition ("Subskrybuj z internetu"? "Dodaj subskrypcję z sieci"?) that isn't specified. Two consequences: (1) Implementer drafts a translation, user pushes back on wording — second polish pass is likely. The "Implementation Note" pause at the end of Phase 2 catches this, but the cost is a re-edit after the click-through, not before. (2) The `SettingsControllerTest` assertion is anchored on `subskrybować`, which appears in both the H2 ("Jak subskrybować") and likely in the translated `<aside>` body. The assertion will be a weaker anchor than the plan implies (it could match a survival of the word in either place, including a clunky translation).
 - **Fix**: Spell out the target Polish for the four per-client paragraphs (e.g. Outlook: "Ustawienia → Dodaj kalendarz → Subskrybuj z internetu — wklej powyższy adres.") and provide a target rendition for the limitations `<aside>` body. Move the `SettingsControllerTest` anchor to a string only the H2 carries (e.g. "Jak subskrybować") so the assertion is unambiguous.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix applied) — plan.md Phase 2 #4 now spells out target PL for all four per-client paragraphs (Google/Apple/Outlook/Thunderbird) and the full `<aside>` body; SettingsControllerTest anchor at plan.md #8 tightened from `subskrybować` to `Jak subskrybować`.
