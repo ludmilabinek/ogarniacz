@@ -17,9 +17,9 @@ import static org.mockito.Mockito.when;
 /**
  * Pins the deterministic {@code @Scheduled} test pattern that
  * {@code test-plan.md §6.9} codifies: drive the scheduled method directly,
- * never go through Spring's scheduler thread. Reuses {@link FixedClockTestConfig}
- * so {@code duration_ms} in the INFO line resolves to a known {@code 0}
- * (clock is fixed; start == end).
+ * never go through Spring's scheduler thread. {@link FixedClockTestConfig}
+ * keeps any clock-derived state deterministic; the logging assertion only
+ * checks that {@code duration_ms} is emitted as a number, not its value.
  *
  * <p>The service is mocked at the class level to keep the scheduler test
  * focused on its own responsibility — the logging contract — without
@@ -47,7 +47,7 @@ class SourceImagePurgeSchedulerTest {
         assertThat(output.getAll())
                 .contains("source_image_purge_sweep")
                 .contains("purged_count=2")
-                .contains("duration_ms=0");
+                .containsPattern("duration_ms=\\d+");
     }
 
     @Test

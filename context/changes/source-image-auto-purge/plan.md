@@ -317,6 +317,7 @@ Document the post-purge contract on `EventReviewController.review` and pin it wi
 ## Performance Considerations
 
 - The predicate hits a composite index over `(source_image_id, status)` from Phase 1. At MVP scale (<1000 `source_image` rows expected over the first year), a sub-millisecond DELETE.
+- The `duration_ms` field in the sweep log line is the runtime canary for the composite index. If it ever exceeds ~100 ms in production, capture `EXPLAIN ANALYZE` on the predicate's `SELECT` form (substitute `SELECT id` for `DELETE`) and re-evaluate whether the composite index is actually being used. At MVP scale (<1000 rows) Postgres will almost certainly seq-scan and that is correct.
 - Sweep runs on Spring's single-threaded default `TaskScheduler`. `fixedDelay` (not `fixedRate`) means the next invocation waits the configured interval from the previous one's **completion**, so a slow sweep cannot queue invocations — at worst it delays `ExtractionJobRegistry.sweep` by the sweep duration.
 
 ## Migration Notes
