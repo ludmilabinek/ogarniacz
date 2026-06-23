@@ -290,9 +290,9 @@ None. No schema changes, no data backfills, no config migrations. Templates and 
 
 #### Automated
 
-- [ ] 1.1 New `PluralsTest` passes: `./gradlew test --tests com.example.app.util.PluralsTest`
-- [ ] 1.2 `EventReviewControllerTest` still green: `./gradlew test --tests com.example.app.event.EventReviewControllerTest`
-- [ ] 1.3 Full build green: `./gradlew build`
+- [x] 1.1 New `PluralsTest` passes: `./gradlew test --tests com.example.app.util.PluralsTest`
+- [x] 1.2 `EventReviewControllerTest` still green: `./gradlew test --tests com.example.app.event.EventReviewControllerTest`
+- [x] 1.3 Full build green: `./gradlew build`
 
 #### Manual
 

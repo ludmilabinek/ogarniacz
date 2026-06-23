@@ -102,7 +102,7 @@ class EventReviewControllerTest {
                         .param("decisions[1].title", "review-post-accept-two-edited"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/app"))
-                .andExpect(flash().attribute("successMessage", "Dodano 2 wydarzeń."));
+                .andExpect(flash().attribute("successMessage", "Dodano 2 wydarzenia."));
 
         assertThat(eventRepository.findUpcomingByUser(f.user, LocalDate.of(2026, 1, 1)))
                 .extracting(Event::getTitle)

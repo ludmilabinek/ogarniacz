@@ -4,6 +4,7 @@ import com.example.app.event.EventReviewForm.Action;
 import com.example.app.event.EventReviewForm.ProposedEventDecision;
 import com.example.app.user.AppUser;
 import com.example.app.user.AppUserRepository;
+import com.example.app.util.Plurals;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.springframework.http.ResponseEntity;
@@ -164,7 +165,7 @@ public class EventReviewController {
 
         int accepted = eventReviewService.applyDecisions(imageId, user, form);
         redirectAttributes.addFlashAttribute(
-                "successMessage", "Dodano " + accepted + " wydarzeń.");
+                "successMessage", "Dodano " + accepted + " " + Plurals.wydarzenia(accepted) + ".");
         return "redirect:/app";
     }
 
