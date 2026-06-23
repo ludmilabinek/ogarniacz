@@ -75,6 +75,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 2 | iCal feed serialization + freshness | Accepted events appear in the feed within one poll; deleted events disappear; reminder VALARM is correct on a DST day. | #3, #6 | integration (MockMvc / WebTestClient against the feed endpoint) | complete | `icalendar-feed-and-subscription` |
 | 3 | iCal feed access control (abuse lens) | Cross-account isolation by token; non-issued tokens return 404; token entropy contract asserted at the generator. | #4 | integration (cross-user MockMvc) + classic unit on the generator | complete | `icalendar-feed-and-subscription` |
 | 4 | Upload pipeline + lifecycle boundary | Edit / delete propagate to the feed; an LLM timeout surfaces the FR-005 user-visible error within 60s; "unreadable" maps to an actionable error, not an empty list. | #5, #7 | integration (MockMvc upload + edit + delete; `LlmVisionClient` mocked at the controller boundary) | not started | — |
+| 5 | Source image auto-purge (NFR retention) | Once every proposed event from a given image is accepted or rejected, the `SourceImage` row + bytea are deleted on the next sweep; a purged image's review GET collapses to plain 404. | NFR (PRD line 144) | integration (`@DataJpaTest` on the 3-clause predicate + cascade), `@SpringBootTest` on the `@Scheduled` logging contract, MockMvc on the post-purge 404 | complete | `source-image-auto-purge` |
 
 ## 4. Stack
 
@@ -336,6 +337,33 @@ The pinpoint exists to make the validation-symmetry decision (`EventForm` reused
 **Phase 2 + 3 — iCal feed (icalendar-feed-and-subscription, 2026-06-15).** The redirect-pattern matcher Spring uses for `redirectedUrlPattern` is ant-style; `/login` (the literal target Spring Security emits) matches `/login*` but NOT `**/login*` — the leading-segment-wildcard form looks safer but quietly fails. When pinning a redirect to `/login`, use `redirectedUrlPattern("/login*")` exactly. The pure-JUnit writer test pins `Event.id` via reflection on the private `id` field because JPA never runs in that test layer; this mirrors what `@GeneratedValue` would set and is preferable to threading a test-only constructor through the entity. VALARM-trigger DST tests should hard-code the expected `Instant`, not derive it via `EventReminder.reminderFor(event)` — the oracle is the PRD rule, not the implementation.
 
 **Phase 4 — Image extraction + review (image-extraction-and-review-acceptance, 2026-06-21).** Async LLM calls live on a separate `@Service` bean (`ExtractionService`) because Spring's `@Async` proxy does not intercept self-calls — the controller calls the service, not itself. The `@Async("extractionExecutor")` method runs on a bounded `ThreadPoolTaskExecutor` (core=2, max=2, queue=10, `setWaitForTasksToCompleteOnShutdown(true)`); the bound is the runaway-loop floor, not a throughput target. **Heap floor (measured 2026-06-21, single 12 MB JPEG, jcmd `GC.heap_info` polled every 400 ms across the POST→DONE cycle): baseline 167 MB used / 287 MB committed; peak at t≈4.5 s = 517 MB used / 557 MB committed; delta ≈ 350 MB per single in-flight extraction.** The plan's ~50 MB estimate was 7× low — JPA `bytea` round-trip, Spring AI's base64-inlined request body (~4/3× of the 12 MB original), Jackson serialization buffer, and the HTTP client's request buffer all hold the bytes simultaneously, and G1 does not collect mid-extraction (allocation runs ~50 MB/s linear). With `max=2` concurrent extractions the worst-case in-flight churn is **~700 MB**, **not survivable** on a 1 GB Fly Machine (heap ≈ 512 MB default) at two simultaneous extractions. Mitigations to consider before scale-up: (a) drop `extractionExecutor` `max=1` until heap is profiled per code-path, (b) reduce Spring AI's buffering (stream the base64 instead of materializing it), or (c) bump the Fly Machine class — see `OpenRouterLlmVisionClient.java:77-90` for the buffering site. The empty-extraction branch (`[]` from the model on a readable-but-irrelevant image) is treated as success-with-zero-rows, not as an error — `LlmExtractionException` has no `EMPTY` Kind, the review page handles the empty state. The `sourceImage.resolvedAt` stamp on first decision is guarded (`if (resolvedAt == null) resolvedAt = Instant.now()`) so a replay (browser back + re-POST) preserves S-06's purge-clock anchor.
+
+### 6.9 Adding a deterministic `@Scheduled` test
+
+The canonical pattern for any `@Scheduled` bean in this repo. Anchored by S-06's `SourceImagePurgeScheduler`; the same shape applies to any future scheduled sweep (cache warmers, retention jobs, registry vacuum).
+
+**The two non-negotiable rules.**
+
+1. **Drive the scheduled method directly. Never go through Spring's scheduler thread.** `@SpringBootTest` boots a real scheduler in the background; if a test waits for it to fire, it pays the full interval (and pollutes other tests). Inject the bean, call its `@Scheduled` method on the calling thread, assert against side effects. Reference: `SourceImagePurgeSchedulerTest:42-50` — `scheduler.sweep()` is called inline.
+2. **Mock the underlying service. Don't re-test its predicate here.** The scheduler is a thin wrapper around a service that already has its own integration tests (Phase 3 owns the 3-clause predicate; this phase owns the logging contract). A `@MockitoBean` on the service keeps the scheduler test focused — and lets each test stub the return shape it needs (positive count, zero, throw). Reference: `SourceImagePurgeSchedulerTest:38-39`.
+
+**Log assertions.** Use Spring Boot's `OutputCaptureExtension` + `CapturedOutput`, not a Logback `ListAppender`. Why:
+
+- Asserts the **rendered** log line — the exact bytes an operator sees in the console / Fly logs / Loki — not the in-memory `ILoggingEvent` shape. Closer to the real contract.
+- No Logback wiring (no `LoggerContext.getLogger(...).addAppender(...)`) and no risk of leaking an appender across tests in the same JVM.
+- Built into Boot's test starter; no extra dependency. Add `@ExtendWith(OutputCaptureExtension.class)` on the class, declare `CapturedOutput output` as a method parameter, assert with `assertThat(output.getAll())`. Reference: `SourceImagePurgeSchedulerTest:32, 42`.
+
+**Assert structured log fields by pattern, not exact value.** `containsPattern("duration_ms=\\d+")` — not `contains("duration_ms=0")`. Exact-value assertions on runtime-derived fields (durations, timestamps, retry counts) couple the test to clock-injection internals instead of the contract ("this field is emitted"). The regression-killing power is identical; the brittleness is gone. Reference: `SourceImagePurgeSchedulerTest:48-50`.
+
+**Deterministic clock.** When the scheduled method depends on `Instant.now(clock)` for behaviour (not just for the log line), import `FixedClockTestConfig` (see §6.8 — Phase 4 Clock-injection note). For log-line determinism alone, `FixedClockTestConfig` is enough; the actual assertion still uses the pattern form so a future Clock injection refactor doesn't cascade-break log tests.
+
+**Empty-result branch and exception branch are first-class.** Three tests, not one: positive sweep (asserts the count + duration line), zero sweep (asserts silence — the contract is "no log line on idle cycles"), service throws (asserts the failure line + stacktrace surface). Reference: `SourceImagePurgeSchedulerTest:42-73`.
+
+**Anti-patterns to refuse.**
+
+- Asserting on `Thread.sleep` + scheduler thread — guarantees a slow, flaky suite.
+- A class-level `@MockitoBean` for the `Clock` itself — rebuilds the context per class (see `lessons.md:47-55`) and propagates to every other Clock consumer. Use `FixedClockTestConfig` via `@Import`.
+- A `ListAppender` left registered across tests — silently captures unrelated emissions and produces sporadic failures in unrelated test classes. If you must use Logback fixtures (you usually don't), tear down in `@AfterEach`.
 
 ## 7. What We Deliberately Don't Test
 
