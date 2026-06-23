@@ -3,7 +3,7 @@ project: Ogarniacz
 version: 1
 status: draft
 created: 2026-05-25
-updated: 2026-06-21
+updated: 2026-06-23
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -35,7 +35,7 @@ The **product wedge** — the one trait that, if removed, makes the product indi
 | S-04  | [#4](https://github.com/ludmilabinek/ogarniacz/issues/4) | icalendar-feed-and-subscription              | view + copy their unique iCalendar URL from settings; events from the personal view appear in their subscribed calendar         | S-02             | FR-012, FR-013, US-03, NFR (token entropy, feed freshness) | done     |
 | S-05  | [#5](https://github.com/ludmilabinek/ogarniacz/issues/5) | image-extraction-and-review-acceptance       | upload an image, see AI-proposed events with editable fields, accept or reject each individually, see accepted ones in calendar | F-01, S-02       | FR-002, FR-004, FR-005, FR-006, FR-007, FR-008, US-01 (full) | done     |
 | S-03  | [#6](https://github.com/ludmilabinek/ogarniacz/issues/6) | edit-delete-accepted-events                  | edit or delete accepted events from the personal view; the change propagates to the iCalendar feed                              | S-02             | FR-010, FR-011, US-01 (lifecycle)              | done     |
-| S-06  | [#7](https://github.com/ludmilabinek/ogarniacz/issues/7) | source-image-auto-purge                      | (background) source images are auto-removed once every proposed event from them has been accepted or rejected                   | S-05             | NFR (image retention)                          | proposed |
+| S-06  | [#7](https://github.com/ludmilabinek/ogarniacz/issues/7) | source-image-auto-purge                      | (background) source images are auto-removed once every proposed event from them has been accepted or rejected                   | S-05             | NFR (image retention)                          | done     |
 
 ## Streams
 
@@ -156,7 +156,7 @@ What's already in place in the codebase as of 2026-05-25 (auto-researched + user
 - **Unknowns:**
   - Where do uploaded images live between upload and purge (Fly Machine ephemeral disk vs. an attached `[mounts]` vs. external object storage)? Owner: dev (decide in `/10x-plan` for S-05's upload-handling slice; S-06 then implements the purge against whatever S-05 chose). Block: no.
 - **Risk:** This is an NFR compliance slice, not a feature slice. If S-05 happens to land with images stored ephemerally on the Machine, the NFR is "accidentally satisfied" (every Machine restart purges everything), but the spec is "purge on event resolution" — those are different contracts. S-06 makes the contract explicit so a future move to persistent storage doesn't silently regress the retention guarantee.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -200,3 +200,4 @@ _Empty on first generation. `/10x-archive` appends here (and flips the matching 
 - **S-04: parent can view and copy their unique unguessable iCalendar URL from a settings screen; accepted events from the personal view are served at that URL as a standard iCalendar feed with the morning-of-day-before reminder; events deleted from the personal view no longer appear on the next poll.** — Archived 2026-06-16 → `context/archive/2026-06-15-icalendar-feed-and-subscription/`. Lesson: —.
 - **S-05: parent uploads an image (camera capture or screenshot) of a kindergarten announcement; within 60 seconds they see a list of one or more AI-proposed events with editable fields; they can accept or reject each individually; accepted events flow into the personal view (S-02's pipeline) and into the parent's subscribed calendar via the iCalendar feed (S-04's pipeline). Unreadable images surface an actionable error with a retry / manual-entry path.** — Archived 2026-06-21 → `context/archive/2026-06-16-image-extraction-and-review-acceptance/`. Lesson: —.
 - **S-03: Edit + delete of accepted events from `/app`; iCal propagation locked (UID stable across updates, deletions drop the VEVENT on the next poll).** — Archived 2026-06-21 → `context/archive/2026-06-21-edit-delete-accepted-events/`. Lesson: validation rules on a shared form DTO must stay symmetric across create + edit (see `lessons.md`).
+- **S-06: (background) once every proposed event from a given uploaded image has been accepted or rejected, the source image is automatically removed from operator-accessible storage.** — Archived 2026-06-23 → `context/archive/2026-06-21-source-image-auto-purge/`. Lesson: —.
