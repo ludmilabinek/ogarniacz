@@ -4,7 +4,8 @@ title: E2E (Playwright) adoption for Risk #3 — standalone impl-review + fixes
 created: 2026-06-28
 updated: 2026-06-28
 last_review: 2026-06-28
-status: impl_reviewed
+status: archived
+archived_at: 2026-06-28T15:49:47Z
 ---
 
 ## Notes
