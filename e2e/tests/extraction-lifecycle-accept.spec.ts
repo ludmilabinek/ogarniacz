@@ -2,8 +2,10 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 
 /**
- * Risk anchor: context/foundation/test-plan.md #3 (accepted events flow to /app
- * and the iCal feed; rejected/pending never do), exercised across the browser-only
+ * Risk anchor: context/foundation/test-plan.md #3 — the /app-view half of the
+ * risk (accepted events from the upload lifecycle land on /app; rejected/pending
+ * never do). The iCal-feed half of #3 is owned by Phase 2 / CalendarControllerTest;
+ * this spec deliberately does not re-assert it. Exercised across the browser-only
  * lifecycle from events/from-image.html (XHR upload → fetch polling → redirect on
  * READY) into review.html (ACCEPT/REJECT decisions) and finally /app rendering.
  *
@@ -59,13 +61,16 @@ const SAMPLE_PNG = path.join(__dirname, '..', '..', 'src', 'main', 'resources',
 test.afterEach(async ({ page }) => {
   // Best-effort: delete any E2E-prefixed events left on /app, in case an
   // assertion above failed before the inline cleanup ran. Auto-accepts the
-  // confirm() dialog the row's Usuń button raises.
+  // confirm() dialog the row's Usuń button raises. Same shape as the inline
+  // cleanup at the end of the test body — wait for a concrete state
+  // (toHaveCount(0)), never networkidle.
   page.on('dialog', d => d.accept().catch(() => {}));
   await page.goto('/app');
-  while (await page.getByText(/^E2E accepted/).first().isVisible().catch(() => false)) {
-    const row = page.getByRole('listitem').filter({ has: page.getByText(/^E2E accepted/) }).first();
+  const titles = await page.getByText(/^E2E accepted/).allTextContents();
+  for (const title of titles) {
+    const row = page.getByRole('listitem').filter({ hasText: title });
     await row.getByRole('button', { name: 'Usuń' }).click();
-    await page.waitForLoadState('networkidle');
+    await expect(row).toHaveCount(0, { timeout: 10_000 });
   }
 });
 
