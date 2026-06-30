@@ -662,30 +662,30 @@ No data migration. No DB schema change. No backwards-compatibility shim — the 
 
 #### Automated
 
-- [x] 2.1 Docker image accepts the build arg: `docker build --build-arg SENTRY_RELEASE=test123 -t ogarniacz:test .` succeeds
-- [x] 2.2 Image carries the env var: `docker run --rm --entrypoint env ogarniacz:test | grep SENTRY_RELEASE` outputs `SENTRY_RELEASE=test123`
-- [x] 2.3 `fly.toml` parses: locally substituted with `python3 -c "import tomllib; tomllib.load(open('fly.toml','rb'))"` (`flyctl config validate` needs platform auth — full platform-side validation happens on first deploy via CI)
-- [x] 2.4 `deploy.yml` syntax check: locally substituted with a structural grep confirming `--build-arg SENTRY_RELEASE=${{ github.sha }}` is on the `flyctl deploy` line (`actionlint` not installed locally; GitHub Actions UI parses the workflow on push)
+- [x] 2.1 Docker image accepts the build arg: `docker build --build-arg SENTRY_RELEASE=test123 -t ogarniacz:test .` succeeds — 248b3c9
+- [x] 2.2 Image carries the env var: `docker run --rm --entrypoint env ogarniacz:test | grep SENTRY_RELEASE` outputs `SENTRY_RELEASE=test123` — 248b3c9
+- [x] 2.3 `fly.toml` parses: locally substituted with `python3 -c "import tomllib; tomllib.load(open('fly.toml','rb'))"` (`flyctl config validate` needs platform auth — full platform-side validation happens on first deploy via CI) — 248b3c9
+- [x] 2.4 `deploy.yml` syntax check: locally substituted with a structural grep confirming `--build-arg SENTRY_RELEASE=${{ github.sha }}` is on the `flyctl deploy` line (`actionlint` not installed locally; GitHub Actions UI parses the workflow on push) — 248b3c9
 
 #### Manual
 
-- [x] 2.5 Stage-deploy dry run (optional): SKIPPED — no non-prod Fly app exists for this project; only `ogarniacz` (prod) is defined in `fly.toml`. The plan tags this step explicitly optional ("if a non-prod Fly app exists"). The Phase 4 prod deploy + verification covers the same observable (`env | grep SENTRY` on the live machine).
-- [x] 2.6 `flyctl secrets set SENTRY_DSN=<dummy>` triggers machine restart: DEFERRED to Phase 4 §1 — running with a dummy DSN first and then the real prod DSN is operator-churn (two machine restarts). Phase 4 §1's `flyctl secrets set SENTRY_DSN='<DSN_PROD>' --app ogarniacz` is the same operation with the real value; the deferred check (no Sentry-related startup errors in `flyctl logs`) folds into Phase 4 §1.
+- [x] 2.5 Stage-deploy dry run (optional): SKIPPED — no non-prod Fly app exists for this project; only `ogarniacz` (prod) is defined in `fly.toml`. The plan tags this step explicitly optional ("if a non-prod Fly app exists"). The Phase 4 prod deploy + verification covers the same observable (`env | grep SENTRY` on the live machine). — 248b3c9
+- [x] 2.6 `flyctl secrets set SENTRY_DSN=<dummy>` triggers machine restart: DEFERRED to Phase 4 §1 — running with a dummy DSN first and then the real prod DSN is operator-churn (two machine restarts). Phase 4 §1's `flyctl secrets set SENTRY_DSN='<DSN_PROD>' --app ogarniacz` is the same operation with the real value; the deferred check (no Sentry-related startup errors in `flyctl logs`) folds into Phase 4 §1. — 248b3c9
 
 ### Phase 3: Dev `__dev/force-error/{type}` smoke endpoint
 
 #### Automated
 
-- [ ] 3.1 Non-dev gating: `./gradlew test --tests com.example.app.observability.devtools.DevForceErrorControllerNonDevTest` passes (controller + both override beans absent under default profile)
-- [ ] 3.2 (Optional) Dev-profile bean activation: `DevForceErrorControllerDevTest` with `@ActiveProfiles("dev")` asserts controller + `DevFailableLlmVisionClient` + `DevFailableSourceImagePurgeService` ARE registered
+- [x] 3.1 Non-dev gating: `./gradlew test --tests com.example.app.observability.devtools.DevForceErrorControllerNonDevTest` passes (controller + both override beans + dev security overlay absent under default profile)
+- [x] 3.2 (Optional) Dev-profile bean activation: `DevForceErrorControllerDevTest` with `@ActiveProfiles("dev")` asserts controller + `DevFailableLlmVisionClient` + `DevFailableSourceImagePurgeService` + `DevForceErrorSecurityConfig` ARE registered
 
 #### Manual
 
-- [ ] 3.3 Smoke runbook step 1: dev Sentry project exists; `DSN_DEV` captured
-- [ ] 3.4 Smoke runbook step 2: app starts under `dev` profile with dev DSN + `SENTRY_ENVIRONMENT=dev`
-- [ ] 3.5 Smoke runbook steps 3–4: all three force-error endpoints trigger successfully
-- [ ] 3.6 Smoke runbook step 5: all three events arrive in dev Sentry ≤ 30s with `environment=dev` and scrubbed PII
-- [ ] 3.7 Smoke runbook step 6: dev events deleted from dashboard after verification
+- [x] 3.3 Smoke runbook step 1: dev Sentry project exists; `DSN_DEV` captured
+- [x] 3.4 Smoke runbook step 2: app starts under `dev` profile with dev DSN + `SENTRY_ENVIRONMENT=dev`
+- [x] 3.5 Smoke runbook steps 3–4: all three force-error endpoints trigger successfully
+- [x] 3.6 Smoke runbook step 5: all three events arrive in dev Sentry ≤ 30s with `environment=dev` and scrubbed PII
+- [x] 3.7 Smoke runbook step 6: dev events deleted from dashboard after verification
 
 ### Phase 4: Ship + verification
 
