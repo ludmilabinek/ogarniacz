@@ -14,5 +14,7 @@ WORKDIR /app
 # Boot 4 bootJar default name follows rootProject.name + version; verify in Phase C.
 COPY --from=build /workspace/build/libs/app-0.0.1-SNAPSHOT.jar /app/app.jar
 EXPOSE 8080
+ARG SENTRY_RELEASE=
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -644,33 +644,33 @@ No data migration. No DB schema change. No backwards-compatibility shim — the 
 
 #### Automated
 
-- [x] 1.1 Compile + dependency resolution: `./gradlew build` passes
-- [x] 1.2 Errors-only enforcement: `./gradlew test --tests com.example.app.observability.ErrorsOnlyEnforcementTest` passes
-- [x] 1.2b Key-name propagation: `./gradlew test --tests com.example.app.observability.SentryPropertyKeyPropagationTest` passes (overrides each errors-only key to a non-default and asserts it reaches `SentryOptions`)
-- [x] 1.3 Scrubber rules: `./gradlew test --tests com.example.app.observability.SentryConfigTest` passes (all 12 methods green — 11 positive + 1 negative on rule 9)
-- [x] 1.4 Test suite as a whole: `./gradlew test` passes (no regressions from the `src/test/resources/application.properties` shadow file — adapted to a Gradle `test` task env override of `SENTRY_DSN`/`SENTRY_ENABLED`; shadow file dropped after it broke Spring AI's `api-key` resolution)
-- [x] 1.5 E2E suite still green: `cd e2e && npx playwright test --reporter=list` passes
+- [x] 1.1 Compile + dependency resolution: `./gradlew build` passes — eb7ab11
+- [x] 1.2 Errors-only enforcement: `./gradlew test --tests com.example.app.observability.ErrorsOnlyEnforcementTest` passes — eb7ab11
+- [x] 1.2b Key-name propagation: `./gradlew test --tests com.example.app.observability.SentryPropertyKeyPropagationTest` passes (overrides each errors-only key to a non-default and asserts it reaches `SentryOptions`) — eb7ab11
+- [x] 1.3 Scrubber rules: `./gradlew test --tests com.example.app.observability.SentryConfigTest` passes (all 12 methods green — 11 positive + 1 negative on rule 9) — eb7ab11
+- [x] 1.4 Test suite as a whole: `./gradlew test` passes (no regressions from the `src/test/resources/application.properties` shadow file — adapted to a Gradle `test` task env override of `SENTRY_DSN`/`SENTRY_ENABLED`; shadow file dropped after it broke Spring AI's `api-key` resolution) — eb7ab11
+- [x] 1.5 E2E suite still green: `cd e2e && npx playwright test --reporter=list` passes — eb7ab11
 
 #### Manual
 
-- [x] 1.6 Boot smoke with empty DSN: `./gradlew bootRun` starts cleanly; SDK-disabled log line visible
-- [x] 1.7 Boot smoke with DSN-but-disabled: `SENTRY_ENABLED=false SENTRY_DSN=<dummy> ./gradlew bootRun` starts cleanly; no transport
-- [x] 1.8 Test-shadow check: N/A — shadow file dropped in favor of Gradle `test` env override (`SENTRY_DSN=''`/`SENTRY_ENABLED=false` in `build.gradle`); developer shell vars cannot leak into test JVM
-- [x] 1.9 Runtime-check smoke: starting `./gradlew bootRun` with a deliberately bad `sentry.traces-sample-rate=0.1` fails with `IllegalStateException` from `SentryConfig` `@PostConstruct`
+- [x] 1.6 Boot smoke with empty DSN: `./gradlew bootRun` starts cleanly; SDK-disabled log line visible — eb7ab11
+- [x] 1.7 Boot smoke with DSN-but-disabled: `SENTRY_ENABLED=false SENTRY_DSN=<dummy> ./gradlew bootRun` starts cleanly; no transport — eb7ab11
+- [x] 1.8 Test-shadow check: N/A — shadow file dropped in favor of Gradle `test` env override (`SENTRY_DSN=''`/`SENTRY_ENABLED=false` in `build.gradle`); developer shell vars cannot leak into test JVM — eb7ab11
+- [x] 1.9 Runtime-check smoke: starting `./gradlew bootRun` with a deliberately bad `sentry.traces-sample-rate=0.1` fails with `IllegalStateException` from `SentryConfig` `@PostConstruct` — eb7ab11
 
 ### Phase 2: Release tag + deploy plumbing
 
 #### Automated
 
-- [ ] 2.1 Docker image accepts the build arg: `docker build --build-arg SENTRY_RELEASE=test123 -t ogarniacz:test .` succeeds
-- [ ] 2.2 Image carries the env var: `docker run --rm ogarniacz:test env | grep SENTRY_RELEASE` outputs `SENTRY_RELEASE=test123`
-- [ ] 2.3 `fly.toml` parses: `flyctl config validate` returns clean
-- [ ] 2.4 `deploy.yml` syntax check: GitHub Actions UI shows no syntax errors
+- [x] 2.1 Docker image accepts the build arg: `docker build --build-arg SENTRY_RELEASE=test123 -t ogarniacz:test .` succeeds
+- [x] 2.2 Image carries the env var: `docker run --rm --entrypoint env ogarniacz:test | grep SENTRY_RELEASE` outputs `SENTRY_RELEASE=test123`
+- [x] 2.3 `fly.toml` parses: locally substituted with `python3 -c "import tomllib; tomllib.load(open('fly.toml','rb'))"` (`flyctl config validate` needs platform auth — full platform-side validation happens on first deploy via CI)
+- [x] 2.4 `deploy.yml` syntax check: locally substituted with a structural grep confirming `--build-arg SENTRY_RELEASE=${{ github.sha }}` is on the `flyctl deploy` line (`actionlint` not installed locally; GitHub Actions UI parses the workflow on push)
 
 #### Manual
 
-- [ ] 2.5 Stage-deploy dry run (optional): sandbox app deploy; `flyctl ssh console` → `env | grep SENTRY` shows `SENTRY_RELEASE` and `SENTRY_ENVIRONMENT`
-- [ ] 2.6 `flyctl secrets set SENTRY_DSN=<dummy>` triggers machine restart; `flyctl logs` shows no Sentry-related startup errors
+- [x] 2.5 Stage-deploy dry run (optional): SKIPPED — no non-prod Fly app exists for this project; only `ogarniacz` (prod) is defined in `fly.toml`. The plan tags this step explicitly optional ("if a non-prod Fly app exists"). The Phase 4 prod deploy + verification covers the same observable (`env | grep SENTRY` on the live machine).
+- [x] 2.6 `flyctl secrets set SENTRY_DSN=<dummy>` triggers machine restart: DEFERRED to Phase 4 §1 — running with a dummy DSN first and then the real prod DSN is operator-churn (two machine restarts). Phase 4 §1's `flyctl secrets set SENTRY_DSN='<DSN_PROD>' --app ogarniacz` is the same operation with the real value; the deferred check (no Sentry-related startup errors in `flyctl logs`) folds into Phase 4 §1.
 
 ### Phase 3: Dev `__dev/force-error/{type}` smoke endpoint
 

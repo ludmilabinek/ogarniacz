@@ -13,6 +13,9 @@ primary_region = "fra"
 
 [build]
 
+[env]
+  SENTRY_ENVIRONMENT = "production"
+
 [deploy]
   strategy = "immediate"
 
