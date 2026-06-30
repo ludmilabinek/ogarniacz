@@ -676,16 +676,16 @@ No data migration. No DB schema change. No backwards-compatibility shim — the 
 
 #### Automated
 
-- [x] 3.1 Non-dev gating: `./gradlew test --tests com.example.app.observability.devtools.DevForceErrorControllerNonDevTest` passes (controller + both override beans + dev security overlay absent under default profile)
-- [x] 3.2 (Optional) Dev-profile bean activation: `DevForceErrorControllerDevTest` with `@ActiveProfiles("dev")` asserts controller + `DevFailableLlmVisionClient` + `DevFailableSourceImagePurgeService` + `DevForceErrorSecurityConfig` ARE registered
+- [x] 3.1 Non-dev gating: `./gradlew test --tests com.example.app.observability.devtools.DevForceErrorControllerNonDevTest` passes (controller + both override beans + dev security overlay absent under default profile) — 3a7d5b3
+- [x] 3.2 (Optional) Dev-profile bean activation: `DevForceErrorControllerDevTest` with `@ActiveProfiles("dev")` asserts controller + `DevFailableLlmVisionClient` + `DevFailableSourceImagePurgeService` + `DevForceErrorSecurityConfig` ARE registered — 3a7d5b3
 
 #### Manual
 
-- [x] 3.3 Smoke runbook step 1: dev Sentry project exists; `DSN_DEV` captured
-- [x] 3.4 Smoke runbook step 2: app starts under `dev` profile with dev DSN + `SENTRY_ENVIRONMENT=dev`
-- [x] 3.5 Smoke runbook steps 3–4: all three force-error endpoints trigger successfully
-- [x] 3.6 Smoke runbook step 5: all three events arrive in dev Sentry ≤ 30s with `environment=dev` and scrubbed PII
-- [x] 3.7 Smoke runbook step 6: dev events deleted from dashboard after verification
+- [x] 3.3 Smoke runbook step 1: dev Sentry project exists; `DSN_DEV` captured — 3a7d5b3
+- [x] 3.4 Smoke runbook step 2: app starts under `dev` profile with dev DSN + `SENTRY_ENVIRONMENT=dev` — 3a7d5b3
+- [x] 3.5 Smoke runbook steps 3–4: all three force-error endpoints trigger successfully — 3a7d5b3
+- [x] 3.6 Smoke runbook step 5: all three events arrive in dev Sentry ≤ 30s with `environment=dev` and scrubbed PII — 3a7d5b3
+- [x] 3.7 Smoke runbook step 6: dev events deleted from dashboard after verification — 3a7d5b3
 
 ### Phase 4: Ship + verification
 

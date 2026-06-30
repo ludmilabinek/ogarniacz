@@ -42,3 +42,19 @@ After Phase 3 lands, walk through this against a dev Sentry project before turni
    - `request.url` for the controller event does not contain a calendar token (no calendar route involved, but verify the URL field is present and scrubbed if applicable).
    - The async extraction event carries the extraction correlation ID as a tag.
 6. Delete the three dev events from the dashboard after verification to keep the dev project clean.
+
+## Verification (Phase 4)
+
+After first production deploy that includes Phase 1–3 changes:
+
+- [ ] **Trigger a known 500.** Log in (or use an existing session); hit `GET /events/<nonexistent-id>` (any UUID-shape that does not exist in the DB) to trip [EventController](src/main/java/com/example/app/event/EventController.java) `Optional.orElseThrow()` → 500. Note the timestamp.
+- [ ] **Event visible in prod Sentry ≤ 30s.** Open the prod project's Issues view. The event for the 500 above should appear within 30 seconds (Sentry's default ingestion latency budget). If it does not, check `flyctl logs` for SDK errors and verify `flyctl ssh console` → `env | grep SENTRY` shows non-empty DSN.
+- [ ] **`release` tag matches deploy SHA.** Open the event; its `release` field should equal the full commit SHA of the deploy. Cross-check against `git log -1 --format=%H` on the deployed branch.
+- [ ] **No PII in payload.** Click into the raw event JSON. Grep against the test-account email, the test-account iCal token, **and an Authorization Bearer fragment** (defense-in-depth empirical confirmation of the rule 8 / `send-default-pii=false` responsibility split):
+  ```
+  pbpaste | grep -i 'test-account-email@example.com'   # expect: no output
+  pbpaste | grep -i '<test-account-ical-token>'         # expect: no output
+  pbpaste | grep -iE 'Bearer [A-Za-z0-9_\-\.]{16,}'    # expect: no output (any unscrubbed Bearer token, header or body)
+  ```
+  (Paste the raw event JSON into clipboard first.) Any match means a scrubber rule regressed or the SDK flag is misconfigured; **stop the rollout and open a bug** instead of ticking the box.
+- [ ] **Delete the verification event from Sentry.** Sentry → Issues → select the verification event → Delete Issue. Defense-in-depth: even though we expect the payload to be clean, deleting it removes any forgotten edge-case leak from the dashboard.
