@@ -1,6 +1,7 @@
 package com.example.app;
 
 import com.example.app.event.AppEventProperties;
+import io.sentry.spring7.SentryTaskDecorator;
 import java.time.Clock;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.ObjectProvider;
@@ -39,7 +40,7 @@ public class AppApplication {
 	// absorbs bursts at single-user MVP scale. Graceful shutdown lets in-flight
 	// calls finish (or hit the 55s read timeout) before SIGTERM kills the JVM.
 	@Bean("extractionExecutor")
-	public TaskExecutor extractionExecutor() {
+	public TaskExecutor extractionExecutor(ObjectProvider<SentryTaskDecorator> sentryTaskDecorator) {
 		ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
 		exec.setCorePoolSize(2);
 		exec.setMaxPoolSize(2);
@@ -47,6 +48,10 @@ public class AppApplication {
 		exec.setThreadNamePrefix("extraction-");
 		exec.setWaitForTasksToCompleteOnShutdown(true);
 		exec.setAwaitTerminationSeconds(60);
+		// Propagates request scope (user, tags, breadcrumbs) onto the worker so async LLM
+		// failures carry the originating request's breadcrumb trail. ObjectProvider keeps
+		// the dependency optional for sliced tests (@DataJpaTest) that don't load SentryConfig.
+		sentryTaskDecorator.ifAvailable(exec::setTaskDecorator);
 		exec.initialize();
 		return exec;
 	}
