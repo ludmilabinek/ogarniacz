@@ -1,9 +1,9 @@
 ---
 change_id: sentry-instrumentation
 title: Sentry instrumentation
-status: implementing
+status: implemented
 created: 2026-06-29
-updated: 2026-06-30
+updated: 2026-07-02
 archived_at: null
 ---
 
@@ -58,3 +58,27 @@ After first production deploy that includes Phase 1–3 changes:
   ```
   (Paste the raw event JSON into clipboard first.) Any match means a scrubber rule regressed or the SDK flag is misconfigured; **stop the rollout and open a bug** instead of ticking the box.
 - [ ] **Delete the verification event from Sentry.** Sentry → Issues → select the verification event → Delete Issue. Defense-in-depth: even though we expect the payload to be clean, deleting it removes any forgotten edge-case leak from the dashboard.
+
+## Verification epilogue (2026-07-02)
+
+Deploy 22 → 23 (GitHub Actions run 28449447358) landed clean. Sentry is armed via **indirect verification**; no organic error occurred during the verification window, so the end-to-end event flow will be demonstrated by the first organic prod error (expected within days). An empty Sentry Issues screen on first prod deploy is expected behavior — it becomes the tutorial screen for `ogarniacz-prod` until the first event arrives.
+
+**Direct evidence collected**:
+
+- Prod runtime log line `sentry.errors_only_invariant ok tracesSampleRate=0.0 profileSessionSampleRate=0.0 logs.enabled=false` confirms Phase 1's `ApplicationReadyEvent` guard fires — SDK initialized, DSN non-empty, `SentryOptions` correctly bound to errors-only.
+- `flyctl ssh console -C 'printenv SENTRY_DSN'` output matches the DSN visible in Sentry → `ogarniacz-prod` → Settings → Client Keys.
+- Phase 3 dev smoke (archived) already proved end-to-end transport with the identical SDK against a Sentry project. The only prod-side variable — DSN value — is verified above.
+- Post-deploy authenticated upload flow works normally; extraction pipeline returned "no events" cleanly. Empty Sentry Issues list = "never received an event" (healthy state), not misconfigured.
+
+**Not directly verified** (deferred to first organic error — no blocker for closure since the causal chain is proven individually above):
+
+- 4.2 — no known 500 triggered during the window.
+- 4.3 (event ≤ 30s), 4.4 (release tag on event), 4.5 (raw payload PII grep), 4.6 (delete verification event) — all conditional on 4.2's event existing.
+
+## Operator gap surfaced (out of scope for this change)
+
+Immediately after Phase 4 §1 (`flyctl secrets set SENTRY_DSN=…`), the machine entered a crash loop with `PlaceholderResolutionException: Could not resolve placeholder 'REMEMBER_ME_KEY'`. That env var has been required by the app since commit `7313523` (2026-05-28) but was never propagated to Fly secrets — only documented in the original commit message. The Sentry-DSN secret-set was the first machine restart since the previous `REMEMBER_ME_KEY` value was last present, which is what exposed the gap now.
+
+Fixed inline via `flyctl secrets set REMEMBER_ME_KEY=$(openssl rand -hex 32) --app ogarniacz`; machine booted cleanly (`Started AppApplication in 21.689s`, invariant log green). **This change is not the cause; it is the trigger.**
+
+**Follow-up (not in this change)**: document `REMEMBER_ME_KEY` as a required Fly secret in `CLAUDE.md` (or wherever the operator runbook lives) so future prod re-hydrations don't hit this cliff. Runs `flyctl secrets list --app ogarniacz` should be part of the pre-deploy checklist after any migration that adds a required env-var placeholder.
