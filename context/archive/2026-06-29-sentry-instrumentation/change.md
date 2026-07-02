@@ -1,10 +1,10 @@
 ---
 change_id: sentry-instrumentation
 title: Sentry instrumentation
-status: impl_reviewed
+status: archived
 created: 2026-06-29
 updated: 2026-07-02
-archived_at: null
+archived_at: 2026-07-02T21:26:57Z
 ---
 
 ## Notes
